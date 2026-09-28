@@ -74,7 +74,7 @@ function urgent(){return sorted().filter(function(r){return days(r)<=3})}
 function dot(){var n=document.querySelector('.bottom-nav .ffnav-more')||[].filter.call(document.querySelectorAll('.bottom-nav .nav-item'),function(b){return /Veterin/.test(b.textContent)})[0];if(!n)return;
 var on=sorted().some(function(r){return days(r)<=7}),i=n.querySelector('.ffvet-dot');
 if(on&&!i){i=document.createElement('i');i.className='ffvet-dot';i.setAttribute('aria-hidden','true');n.appendChild(i)}else if(!on&&i)i.remove()}
-setInterval(dot,1500);document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'){refresh()}});
+setInterval(function(){document.visibilityState==="visible"&&dot()},10000);document.addEventListener("click",function(){setTimeout(dot,400)},true);document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'){refresh()}});
 
 function banner(){var u=urgent();if(!u.length)return false;if(+localStorage.getItem(SZ)>Date.now())return false;
 var r=u[0],d=days(r),nav=document.querySelector('.bottom-nav'),el=document.createElement('div');el.id='ff-vetbn';el.setAttribute('role','status');
