@@ -2,12 +2,22 @@
 
 Uso:  python tests/correr.py            (todos)
       python tests/correr.py jarvis     (só os ficheiros cujo nome contém "jarvis")
+Variáveis opcionais:
+      FF_URL=v2/                        (caminho a testar, relativo à raiz, ou endereço completo)
+      FF_PREFIX=financas-v2:            (prefixo das chaves do localStorage; por omissão financas-familiar:)
 Requer: pip install playwright && python -m playwright install chromium
 """
-import asyncio, importlib.util, pathlib, sys, time, threading, http.server, functools, socket, traceback
+import asyncio, importlib.util, pathlib, sys, os, time, threading, http.server, functools, socket, traceback
 
 RAIZ = pathlib.Path(__file__).resolve().parent.parent
 DATA_FIXA = '2026-09-28T11:00:00Z'  # 12:00 em Lisboa
+PREFIXO_REAL = 'financas-familiar:'
+PREFIXO = os.environ.get('FF_PREFIX', PREFIXO_REAL)
+
+
+def chave(k):
+    """Traduz uma chave escrita com o prefixo real para o prefixo em teste."""
+    return PREFIXO + k[len(PREFIXO_REAL):] if k.startswith(PREFIXO_REAL) else k
 
 
 def servidor():
@@ -30,9 +40,10 @@ class App:
     async def abrir(self, dados=None, extra=None, sem_backup_aviso=True):
         p = self.page
         await p.goto(self.url); await p.wait_for_timeout(300)
-        await p.evaluate("""([d,x,s])=>{localStorage.clear();if(d)localStorage.setItem('financas-familiar:v3',JSON.stringify(d));
-          if(s)localStorage.setItem('financas-familiar:last-backup',new Date().toISOString());
-          for(const k in (x||{}))localStorage.setItem(k,typeof x[k]==='string'?x[k]:JSON.stringify(x[k]))}""", [dados, extra, sem_backup_aviso])
+        extra = {chave(k): v for k, v in (extra or {}).items()}
+        await p.evaluate("""([d,x,s,P])=>{localStorage.clear();if(d)localStorage.setItem(P+'v3',JSON.stringify(d));
+          if(s)localStorage.setItem(P+'last-backup',new Date().toISOString());
+          for(const k in (x||{}))localStorage.setItem(k,typeof x[k]==='string'?x[k]:JSON.stringify(x[k]))}""", [dados, extra, sem_backup_aviso, PREFIXO])
         await p.goto(self.url); await p.wait_for_timeout(1800)
 
     async def jarvis(self, pergunta):
@@ -44,7 +55,7 @@ class App:
         return await p.evaluate("[...document.querySelectorAll('.jarvis-msg-ai')].pop().textContent")
 
     async def movimentos(self):
-        return await self.page.evaluate("JSON.parse(localStorage.getItem('financas-familiar:v3')||'{}').transactions||[]")
+        return await self.page.evaluate("P=>JSON.parse(localStorage.getItem(P+'v3')||'{}').transactions||[]", PREFIXO)
 
     async def novo_movimento(self, titulo, valor, nota=None):
         p = self.page
@@ -61,9 +72,10 @@ def verificar(condicao, mensagem):
 
 async def main(filtro):
     from playwright.async_api import async_playwright
-    import os
     os.chdir(RAIZ)
     srv, url = servidor()
+    alvo = os.environ.get('FF_URL', '')
+    url = alvo if alvo.startswith('http') else url + alvo
     ficheiros = sorted(pathlib.Path(__file__).parent.glob('teste_*.py'))
     if filtro: ficheiros = [f for f in ficheiros if filtro in f.name]
     resultados = []

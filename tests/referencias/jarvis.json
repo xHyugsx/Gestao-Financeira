@@ -1,0 +1,1269 @@
+{
+ "dados": {
+  "accounts": [
+   {
+    "id": "principal",
+    "name": "Principal",
+    "balance": 800
+   },
+   {
+    "id": "revolut",
+    "name": "Revolut Conjunta",
+    "balance": 150
+   },
+   {
+    "id": "edenred",
+    "name": "Edenred",
+    "balance": 90
+   }
+  ],
+  "salaries": {
+   "2026": {
+    "Hugo": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     1500,
+     1500,
+     1520,
+     1520,
+     0,
+     0,
+     0
+    ],
+    "Marta": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     1100,
+     1100,
+     1100,
+     1150,
+     0,
+     0,
+     0
+    ]
+   }
+  },
+  "transactions": [
+   {
+    "id": 1,
+    "title": "Continente",
+    "amount": -95.4,
+    "date": "2026-06-04",
+    "detail": "4 junho · Alimentação",
+    "movementType": "expense"
+   },
+   {
+    "id": 2,
+    "title": "Galp",
+    "amount": -55,
+    "date": "2026-06-09",
+    "detail": "9 junho · Combustível",
+    "movementType": "expense"
+   },
+   {
+    "id": 3,
+    "title": "Restaurante Mar Azul",
+    "amount": -42.5,
+    "date": "2026-06-14",
+    "detail": "14 junho · Restauração",
+    "movementType": "expense"
+   },
+   {
+    "id": 4,
+    "title": "Farmácia Central",
+    "amount": -18.9,
+    "date": "2026-06-20",
+    "detail": "20 junho · Saúde",
+    "movementType": "expense"
+   },
+   {
+    "id": 5,
+    "title": "Pingo Doce",
+    "amount": -63.2,
+    "date": "2026-06-27",
+    "detail": "27 junho · Alimentação",
+    "movementType": "expense",
+    "account": "revolut"
+   },
+   {
+    "id": 6,
+    "title": "Continente",
+    "amount": -110.3,
+    "date": "2026-07-03",
+    "detail": "3 julho · Alimentação",
+    "movementType": "expense"
+   },
+   {
+    "id": 7,
+    "title": "Repsol",
+    "amount": -61.2,
+    "date": "2026-07-08",
+    "detail": "8 julho · Combustível",
+    "movementType": "expense"
+   },
+   {
+    "id": 8,
+    "title": "Clínica Vet Patas",
+    "amount": -45,
+    "date": "2026-07-12",
+    "detail": "12 julho · Veterinário",
+    "movementType": "expense",
+    "pet": "Sam",
+    "note": "vacina anual"
+   },
+   {
+    "id": 9,
+    "title": "Cinema Estrela",
+    "amount": -14,
+    "date": "2026-07-19",
+    "detail": "19 julho · Lazer",
+    "movementType": "expense",
+    "account": "revolut"
+   },
+   {
+    "id": 10,
+    "title": "Lidl",
+    "amount": -38.75,
+    "date": "2026-07-22",
+    "detail": "22 julho · Alimentação",
+    "movementType": "expense"
+   },
+   {
+    "id": 11,
+    "title": "Condomínio",
+    "amount": -45,
+    "date": "2026-07-01",
+    "detail": "1 julho · Habitação",
+    "movementType": "expense",
+    "recurring": true
+   },
+   {
+    "id": 12,
+    "title": "Reembolso seguro",
+    "amount": 80,
+    "date": "2026-07-25",
+    "detail": "25 julho · Outros",
+    "movementType": "income"
+   },
+   {
+    "id": 13,
+    "title": "Continente",
+    "amount": -120.5,
+    "date": "2026-08-03",
+    "detail": "3 agosto · Alimentação",
+    "movementType": "expense"
+   },
+   {
+    "id": 14,
+    "title": "Galp",
+    "amount": -60,
+    "date": "2026-08-10",
+    "detail": "10 agosto · Combustível",
+    "movementType": "expense"
+   },
+   {
+    "id": 15,
+    "title": "Continente",
+    "amount": -54.3,
+    "date": "2026-08-24",
+    "detail": "24 agosto · Alimentação",
+    "movementType": "expense"
+   },
+   {
+    "id": 16,
+    "title": "Pastelaria Sol",
+    "amount": -7.8,
+    "date": "2026-08-15",
+    "detail": "15 agosto · Restauração",
+    "movementType": "expense",
+    "account": "edenred"
+   },
+   {
+    "id": 17,
+    "title": "Via Verde",
+    "amount": -12.4,
+    "date": "2026-08-18",
+    "detail": "18 agosto · Transportes",
+    "movementType": "expense"
+   },
+   {
+    "id": 18,
+    "title": "Condomínio",
+    "amount": -45,
+    "date": "2026-08-01",
+    "detail": "1 agosto · Habitação",
+    "movementType": "expense",
+    "recurring": true
+   },
+   {
+    "id": 19,
+    "title": "Clínica Vet Patas",
+    "amount": -32,
+    "date": "2026-08-21",
+    "detail": "21 agosto · Veterinário",
+    "movementType": "expense",
+    "pet": "Lola",
+    "note": "desparasitação"
+   },
+   {
+    "id": 20,
+    "title": "Venda bicicleta",
+    "amount": 150,
+    "date": "2026-08-28",
+    "detail": "28 agosto · Outros",
+    "movementType": "income"
+   },
+   {
+    "id": 21,
+    "title": "Continente",
+    "amount": -88.1,
+    "date": "2026-09-02",
+    "detail": "2 setembro · Alimentação",
+    "movementType": "expense"
+   },
+   {
+    "id": 22,
+    "title": "Condomínio",
+    "amount": -45,
+    "date": "2026-09-01",
+    "detail": "1 setembro · Habitação",
+    "movementType": "expense",
+    "recurring": true
+   },
+   {
+    "id": 23,
+    "title": "Galp",
+    "amount": -58.4,
+    "date": "2026-09-07",
+    "detail": "7 setembro · Combustível",
+    "movementType": "expense"
+   },
+   {
+    "id": 24,
+    "title": "Farmácia Central",
+    "amount": -12,
+    "date": "2026-09-14",
+    "detail": "14 setembro · Saúde",
+    "movementType": "expense",
+    "note": "receita do médico"
+   },
+   {
+    "id": 25,
+    "title": "Restaurante Mar Azul",
+    "amount": -36,
+    "date": "2026-09-19",
+    "detail": "19 setembro · Restauração",
+    "movementType": "expense",
+    "account": "edenred"
+   },
+   {
+    "id": 26,
+    "title": "Lidl",
+    "amount": -27.35,
+    "date": "2026-09-21",
+    "detail": "21 setembro · Alimentação",
+    "movementType": "expense",
+    "account": "revolut"
+   },
+   {
+    "id": 27,
+    "title": "Transferência poupança",
+    "amount": 0,
+    "date": "2026-09-25",
+    "detail": "25 setembro · Transferência",
+    "movementType": "transfer",
+    "transferValue": 100,
+    "note": "Transferência entre contas"
+   }
+  ]
+ },
+ "extra": {
+  "financas-familiar:vet-reminders": [
+   {
+    "id": 1,
+    "pet": "Sam",
+    "type": "vacina",
+    "last": "2025-10-03",
+    "every": 12
+   },
+   {
+    "id": 2,
+    "pet": "Lola",
+    "type": "externa",
+    "last": "2026-08-26",
+    "every": 1
+   }
+  ],
+  "financas-familiar:vet-snooze": "9999999999999"
+ },
+ "casos": [
+  {
+   "perguntas": [
+    "Quanto gastei este mês?"
+   ],
+   "respostas": [
+    "Em setembro gastaste 266,85 €, menos 19,6% do que em agosto."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei em agosto?"
+   ],
+   "respostas": [
+    "Em agosto gastaste 332,00 €, mais 5,6% do que em julho."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei em julho?"
+   ],
+   "respostas": [
+    "Em julho gastaste 314,25 €, mais 14,3% do que em junho."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei em junho?"
+   ],
+   "respostas": [
+    "Em junho gastaste 275,00 €."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei no mês passado?"
+   ],
+   "respostas": [
+    "Em agosto gastaste 332,00 €, mais 5,6% do que em julho."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei este ano?"
+   ],
+   "respostas": [
+    "Em setembro gastaste 266,85 €, menos 19,6% do que em agosto."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei em agosto de 2026?"
+   ],
+   "respostas": [
+    "Em agosto gastaste 332,00 €, mais 5,6% do que em julho."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei no Continente?"
+   ],
+   "respostas": [
+    "Continente em setembro: 88,10 € em 1 compra."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei no Continente em agosto?"
+   ],
+   "respostas": [
+    "Continente em agosto: 174,80 € em 2 compras."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei na Galp?"
+   ],
+   "respostas": [
+    "Galp em setembro: 58,40 € em 1 compra."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei no Lidl em setembro?"
+   ],
+   "respostas": [
+    "Lidl em setembro: 27,35 € em 1 compra."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei em restaurantes?"
+   ],
+   "respostas": [
+    "Em setembro gastaste 266,85 €, menos 19,6% do que em agosto. (entendi: restaurantes → Restaurante)"
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei em alimentação em julho?"
+   ],
+   "respostas": [
+    "Alimentação em julho: 149,05 € em 2 movimentos (47,4% dos gastos)."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei em combustível?"
+   ],
+   "respostas": [
+    "Combustível em setembro: 58,40 € em 1 abastecimento. Média mensal de 2026: 26,07 €."
+   ]
+  },
+  {
+   "perguntas": [
+    "Combustível este mês"
+   ],
+   "respostas": [
+    "Combustível em setembro: 58,40 € em 1 abastecimento."
+   ]
+  },
+  {
+   "perguntas": [
+    "Combustível em agosto"
+   ],
+   "respostas": [
+    "Combustível em agosto: 60,00 € em 1 abastecimento."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei em gasolina este ano?"
+   ],
+   "respostas": [
+    "Combustível em setembro: 58,40 € em 1 abastecimento. Média mensal de 2026: 26,07 €."
+   ]
+  },
+  {
+   "perguntas": [
+    "Veterinário este mês"
+   ],
+   "respostas": [
+    "Veterinário em setembro: 0,00 € (Sam 0,00 € · Lola 0,00 €)."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei no veterinário?"
+   ],
+   "respostas": [
+    "Veterinário em setembro: 0,00 € (Sam 0,00 € · Lola 0,00 €)."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei com a Lola?"
+   ],
+   "respostas": [
+    "Veterinário em setembro: 0,00 € (Sam 0,00 € · Lola 0,00 €)."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei com o Sam?"
+   ],
+   "respostas": [
+    "Veterinário em setembro: 0,00 € (Sam 0,00 € · Lola 0,00 €)."
+   ]
+  },
+  {
+   "perguntas": [
+    "Maior categoria"
+   ],
+   "respostas": [
+    "A maior categoria em setembro é Alimentação: 115,45 € (43,3% dos gastos)."
+   ]
+  },
+  {
+   "perguntas": [
+    "Qual a maior categoria de agosto?"
+   ],
+   "respostas": [
+    "A maior categoria em agosto foi Alimentação: 174,80 € (52,7% dos gastos)."
+   ]
+  },
+  {
+   "perguntas": [
+    "Qual foi a maior despesa de agosto?"
+   ],
+   "respostas": [
+    "A maior despesa de agosto foi Continente: 120,50 € (3/08)."
+   ]
+  },
+  {
+   "perguntas": [
+    "Qual foi a maior despesa deste mês?"
+   ],
+   "respostas": [
+    "A maior despesa de setembro foi Continente: 88,10 € (2/09)."
+   ]
+  },
+  {
+   "perguntas": [
+    "Qual foi a menor despesa de julho?"
+   ],
+   "respostas": [
+    "A menor despesa de julho foi Cinema Estrela: 14,00 € (19/07)."
+   ]
+  },
+  {
+   "perguntas": [
+    "Compara agosto com julho"
+   ],
+   "respostas": [
+    "Gastos: agosto 332,00 € · julho 314,25 € — mais 17,75 € (+5,6%)."
+   ]
+  },
+  {
+   "perguntas": [
+    "Compara setembro com agosto"
+   ],
+   "respostas": [
+    "Gastos: setembro 266,85 € · agosto 332,00 € — menos 65,15 € (−19,6%)."
+   ]
+  },
+  {
+   "perguntas": [
+    "Compara junho e julho"
+   ],
+   "respostas": [
+    "Gastos: junho 275,00 € · julho 314,25 € — menos 39,25 € (−12,5%)."
+   ]
+  },
+  {
+   "perguntas": [
+    "Gastei mais em julho ou agosto?"
+   ],
+   "respostas": [
+    "Em julho gastaste 314,25 €, mais 14,3% do que em junho."
+   ]
+  },
+  {
+   "perguntas": [
+    "Média mensal de gastos"
+   ],
+   "respostas": [
+    "Média mensal de gastos (junho a agosto): 307,08 €. Em setembro vais em 266,85 €, abaixo da média."
+   ]
+  },
+  {
+   "perguntas": [
+    "Qual a média de combustível?"
+   ],
+   "respostas": [
+    "Média mensal de combustível (junho a agosto): 58,73 €. Em setembro vais em 58,40 €, abaixo da média."
+   ]
+  },
+  {
+   "perguntas": [
+    "Média no Continente"
+   ],
+   "respostas": [
+    "Média mensal em Continente (junho a agosto): 126,83 €. Em setembro vais em 88,10 €, abaixo da média."
+   ]
+  },
+  {
+   "perguntas": [
+    "Saldo das contas"
+   ],
+   "respostas": [
+    "Saldos — Principal: -9,75 € · Revolut Conjunta: 45,45 € · Edenred: 46,20 €."
+   ]
+  },
+  {
+   "perguntas": [
+    "Qual o saldo da Principal?"
+   ],
+   "respostas": [
+    "Saldos — Principal: -9,75 € · Revolut Conjunta: 45,45 € · Edenred: 46,20 €."
+   ]
+  },
+  {
+   "perguntas": [
+    "Saldo da Revolut"
+   ],
+   "respostas": [
+    "Saldos — Principal: -9,75 € · Revolut Conjunta: 45,45 € · Edenred: 46,20 €."
+   ]
+  },
+  {
+   "perguntas": [
+    "Saldo da Edenred"
+   ],
+   "respostas": [
+    "Saldos — Principal: -9,75 € · Revolut Conjunta: 45,45 € · Edenred: 46,20 €."
+   ]
+  },
+  {
+   "perguntas": [
+    "Rendimento do mês"
+   ],
+   "respostas": [
+    "Rendimento de setembro (salários de agosto): 2620,00 €, +0,8% face ao mês anterior."
+   ]
+  },
+  {
+   "perguntas": [
+    "Rendimento de agosto"
+   ],
+   "respostas": [
+    "Rendimento de agosto (salários de julho): 2600,00 €, +0% face ao mês anterior."
+   ]
+  },
+  {
+   "perguntas": [
+    "Qual foi o salário do Hugo em agosto?"
+   ],
+   "respostas": [
+    "Salários de agosto: 2620,00 €."
+   ]
+  },
+  {
+   "perguntas": [
+    "Salário da Marta em setembro"
+   ],
+   "respostas": [
+    "Salários de setembro: 2670,00 €."
+   ]
+  },
+  {
+   "perguntas": [
+    "Receitas do mês"
+   ],
+   "respostas": [
+    "Receitas registadas em setembro: 0,00 €."
+   ]
+  },
+  {
+   "perguntas": [
+    "Receitas de agosto"
+   ],
+   "respostas": [
+    "Receitas registadas em agosto: 150,00 €."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto recebi em julho?"
+   ],
+   "respostas": [
+    "Receitas registadas em julho: 80,00 €."
+   ]
+  },
+  {
+   "perguntas": [
+    "Mostra os movimentos de agosto"
+   ],
+   "respostas": [
+    "Resumo de agosto: gastos 332,00 € · receitas 150,00 € · rendimento 2600,00 €."
+   ]
+  },
+  {
+   "perguntas": [
+    "Lista as despesas de setembro"
+   ],
+   "respostas": [
+    "Em setembro gastaste 266,85 €, menos 19,6% do que em agosto."
+   ]
+  },
+  {
+   "perguntas": [
+    "Mostra os movimentos do Continente"
+   ],
+   "respostas": [
+    "Continente em setembro: 88,10 € em 1 compra."
+   ]
+  },
+  {
+   "perguntas": [
+    "Últimos movimentos"
+   ],
+   "respostas": [
+    "Últimos 5 movimentos: 25/09 · Transferência poupança 0,00 € 21/09 · Lidl -27,35 € 19/09 · Restaurante Mar Azul -36,00 € 14/09 · Farmácia Central -12,00 € 7/09 · Galp -58,40 €"
+   ]
+  },
+  {
+   "perguntas": [
+    "Quantas vezes fui ao Continente?"
+   ],
+   "respostas": [
+    "Continente em setembro: 88,10 € em 1 compra."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quantos abastecimentos fiz em agosto?"
+   ],
+   "respostas": [
+    "Combustível em agosto: 60,00 € em 1 abastecimento."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quando foi a última vez que fui à Galp?"
+   ],
+   "respostas": [
+    "Galp em setembro: 58,40 € em 1 compra."
+   ]
+  },
+  {
+   "perguntas": [
+    "Qual era a nota da Farmácia?"
+   ],
+   "respostas": [
+    "Movimentos com nota: 25/09 · Transferência poupança 0,00 € — «Transferência entre contas» 14/09 · Farmácia Central -12,00 € — «receita do médico» 21/08 · Clínica Vet Patas -32,00 € — «desparasitação» 12/07 · Clínica Vet Patas -45,00 € — «vacina anual»"
+   ]
+  },
+  {
+   "perguntas": [
+    "Que nota tem a Clínica Vet Patas?"
+   ],
+   "respostas": [
+    "Nota — Clínica Vet Patas (21/08): «desparasitação»"
+   ]
+  },
+  {
+   "perguntas": [
+    "Movimentos com notas"
+   ],
+   "respostas": [
+    "Movimentos com nota: 25/09 · Transferência poupança 0,00 € — «Transferência entre contas» 14/09 · Farmácia Central -12,00 € — «receita do médico» 21/08 · Clínica Vet Patas -32,00 € — «desparasitação» 12/07 · Clínica Vet Patas -45,00 € — «vacina anual»"
+   ]
+  },
+  {
+   "perguntas": [
+    "Despesas recorrentes"
+   ],
+   "respostas": [
+    "Em setembro gastaste 266,85 €, menos 19,6% do que em agosto."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto pago de condomínio?"
+   ],
+   "respostas": [
+    "Condomínio em setembro: 45,00 € em 1 compra. (entendi: pago → pagou)"
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei em transportes?"
+   ],
+   "respostas": [
+    "Não há gastos em Transportes em setembro."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei na Edenred?"
+   ],
+   "respostas": [
+    "Em setembro gastaste 266,85 €, menos 19,6% do que em agosto."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei com a Revolut em setembro?"
+   ],
+   "respostas": [
+    "O saldo das contas é sempre o atual, não depende do mês — Principal: -9,75 € · Revolut Conjunta: 45,45 € · Edenred: 46,20 €."
+   ]
+  },
+  {
+   "perguntas": [
+    "Transferências deste mês"
+   ],
+   "respostas": [
+    "Resumo de setembro: gastos 266,85 € · receitas 0,00 € · rendimento 2620,00 €. (entendi: Transferências → Transferência)"
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei esta semana?"
+   ],
+   "respostas": [
+    "Em setembro gastaste 266,85 €, menos 19,6% do que em agosto."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei hoje?"
+   ],
+   "respostas": [
+    "Não há gastos registados hoje."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei ontem?"
+   ],
+   "respostas": [
+    "Não há gastos registados ontem."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei no fim de semana?"
+   ],
+   "respostas": [
+    "Em setembro gastaste 266,85 €, menos 19,6% do que em agosto."
+   ]
+  },
+  {
+   "perguntas": [
+    "Lembretes veterinários"
+   ],
+   "respostas": [
+    "Próximos lembretes: • Lola · Desparasitação externa — em atraso há 2 dias (26 set) • Sam · Vacina anual — daqui a 5 dias (3 out) (entendi: veterinários → veterinário)"
+   ]
+  },
+  {
+   "perguntas": [
+    "Quando é a próxima vacina do Sam?"
+   ],
+   "respostas": [
+    "A próxima Vacina anual do Sam é a 3 de outubro (daqui a 5 dias)."
+   ]
+  },
+  {
+   "perguntas": [
+    "A Lola tem alguma desparasitação em atraso?"
+   ],
+   "respostas": [
+    "Tens 1 lembrete em atraso: • Desparasitação externa — em atraso há 2 dias"
+   ]
+  },
+  {
+   "perguntas": [
+    "Há lembretes em atraso?"
+   ],
+   "respostas": [
+    "Tens 1 lembrete em atraso: • Lola · Desparasitação externa — em atraso há 2 dias"
+   ]
+  },
+  {
+   "perguntas": [
+    "qto gastei em agosot?"
+   ],
+   "respostas": [
+    "Em agosto gastaste 332,00 €, mais 5,6% do que em julho. (entendi: qto → quanto, agosot → agosto)"
+   ]
+  },
+  {
+   "perguntas": [
+    "quanto gastei no contnente?"
+   ],
+   "respostas": [
+    "Continente em setembro: 88,10 € em 1 compra. (entendi: contnente → Continente)"
+   ]
+  },
+  {
+   "perguntas": [
+    "saldo das cotnas"
+   ],
+   "respostas": [
+    "Saldos — Principal: -9,75 € · Revolut Conjunta: 45,45 € · Edenred: 46,20 €. (entendi: cotnas → contas)"
+   ]
+  },
+  {
+   "perguntas": [
+    "quanto gastei em cumbustivel?"
+   ],
+   "respostas": [
+    "Combustível em setembro: 58,40 € em 1 abastecimento. Média mensal de 2026: 26,07 €. (entendi: cumbustivel → combustível)"
+   ]
+  },
+  {
+   "perguntas": [
+    "maior despeza de agosto"
+   ],
+   "respostas": [
+    "A maior despesa de agosto foi Continente: 120,50 € (3/08). (entendi: despeza → despesa)"
+   ]
+  },
+  {
+   "perguntas": [
+    "rendimeto do mes"
+   ],
+   "respostas": [
+    "Rendimento de setembro (salários de agosto): 2620,00 €, +0,8% face ao mês anterior. (entendi: rendimeto → rendimento)"
+   ]
+  },
+  {
+   "perguntas": [
+    "veterinaro este mes"
+   ],
+   "respostas": [
+    "Veterinário em setembro: 0,00 € (Sam 0,00 € · Lola 0,00 €). (entendi: veterinaro → veterinário)"
+   ]
+  },
+  {
+   "perguntas": [
+    "Altera o valor da Galp para 65,90"
+   ],
+   "respostas": [
+    "Vou alterar Galp (7/09): valor -58,40 € → -65,90 €. É o mais recente de 3 com esse nome. Confirmas?"
+   ]
+  },
+  {
+   "perguntas": [
+    "Remove a Galp"
+   ],
+   "respostas": [
+    "Vou remover: Galp -55,00 € (9/06). Confirmas que queres apagar?"
+   ]
+  },
+  {
+   "perguntas": [
+    "Apaga o último movimento"
+   ],
+   "respostas": [
+    "Vou remover: Continente -95,40 € (4/06). Confirmas que queres apagar?"
+   ]
+  },
+  {
+   "perguntas": [
+    "Muda a categoria da Via Verde para Lazer"
+   ],
+   "respostas": [
+    "Vou alterar Via Verde (18/08): categoria Transportes → Lazer. Confirmas?"
+   ]
+  },
+  {
+   "perguntas": [
+    "Acrescenta a nota \"teste\" ao Lidl"
+   ],
+   "respostas": [
+    "Lidl não tem nenhuma nota."
+   ]
+  },
+  {
+   "perguntas": [
+    "Marca a desparasitação da Lola como feita"
+   ],
+   "respostas": [
+    "Vou marcar como feito hoje: Lola · Desparasitação externa. A próxima data passa a ser calculada a partir de hoje. Confirmas?"
+   ]
+  },
+  {
+   "perguntas": [
+    "Olá"
+   ],
+   "respostas": [
+    "Olá! Pergunta-me por gastos, saldo, rendimento, categorias, combustível ou veterinário."
+   ]
+  },
+  {
+   "perguntas": [
+    "Obrigado"
+   ],
+   "respostas": [
+    "De nada! Sempre que precisares, estou aqui."
+   ]
+  },
+  {
+   "perguntas": [
+    "Ajuda"
+   ],
+   "respostas": [
+    "Ainda não sei responder a isso. Experimenta perguntar por gastos, saldo, rendimento, receitas, categorias, combustível ou veterinário."
+   ]
+  },
+  {
+   "perguntas": [
+    "O que sabes fazer?"
+   ],
+   "respostas": [
+    "Ainda não sei responder a isso. Experimenta perguntar por gastos, saldo, rendimento, receitas, categorias, combustível ou veterinário."
+   ]
+  },
+  {
+   "perguntas": [
+    "Bom dia Jarvis"
+   ],
+   "respostas": [
+    "Olá! Pergunta-me por gastos, saldo, rendimento, categorias, combustível ou veterinário."
+   ]
+  },
+  {
+   "perguntas": [
+    "Qual é a capital de França?"
+   ],
+   "respostas": [
+    "Ainda não sei responder a isso. Experimenta perguntar por gastos, saldo, rendimento, receitas, categorias, combustível ou veterinário."
+   ]
+  },
+  {
+   "perguntas": [
+    "asdfgh"
+   ],
+   "respostas": [
+    "Ainda não sei responder a isso. Experimenta perguntar por gastos, saldo, rendimento, receitas, categorias, combustível ou veterinário."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei em dezembro?"
+   ],
+   "respostas": [
+    "Não há gastos registados em dezembro de 2025."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei em 2025?"
+   ],
+   "respostas": [
+    "Em setembro gastaste 266,85 €, menos 19,6% do que em agosto."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei na Worten?"
+   ],
+   "respostas": [
+    "Não encontrei gastos com «Worten». Verifica se o nome está igual ao dos teus movimentos."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei em saúde?"
+   ],
+   "respostas": [
+    "Saúde em setembro: 12,00 € em 1 movimento (4,5% dos gastos)."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei em lazer este ano?"
+   ],
+   "respostas": [
+    "Lazer em 2026: 14,00 € em 1 movimento (1,2% dos gastos)."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei em habitação?"
+   ],
+   "respostas": [
+    "Habitação em setembro: 45,00 € em 1 movimento (16,9% dos gastos)."
+   ]
+  },
+  {
+   "perguntas": [
+    "Qual a percentagem de gastos em alimentação?"
+   ],
+   "respostas": [
+    "Alimentação em setembro: 115,45 € em 2 movimentos (43,3% dos gastos)."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto sobrou este mês?"
+   ],
+   "respostas": [
+    "Resumo de setembro: gastos 266,85 € · receitas 0,00 € · rendimento 2620,00 €."
+   ]
+  },
+  {
+   "perguntas": [
+    "Poupança do mês"
+   ],
+   "respostas": [
+    "Ainda não sei responder a isso. Experimenta perguntar por gastos, saldo, rendimento, receitas, categorias, combustível ou veterinário."
+   ]
+  },
+  {
+   "perguntas": [
+    "Balanço de agosto"
+   ],
+   "respostas": [
+    "Resumo de agosto: gastos 332,00 € · receitas 150,00 € · rendimento 2600,00 €."
+   ]
+  },
+  {
+   "perguntas": [
+    "Resumo do mês"
+   ],
+   "respostas": [
+    "Ainda não sei responder a isso. Experimenta perguntar por gastos, saldo, rendimento, receitas, categorias, combustível ou veterinário."
+   ]
+  },
+  {
+   "perguntas": [
+    "Resumo de julho"
+   ],
+   "respostas": [
+    "Resumo de julho: gastos 314,25 € · receitas 80,00 € · rendimento 2600,00 €."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei por dia em média?"
+   ],
+   "respostas": [
+    "Média mensal de gastos (junho a agosto): 307,08 €. Em setembro vais em 266,85 €, abaixo da média."
+   ]
+  },
+  {
+   "perguntas": [
+    "Qual o dia em que gastei mais?"
+   ],
+   "respostas": [
+    "Em setembro gastaste 266,85 €, menos 19,6% do que em agosto."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei entre 1 e 15 de agosto?"
+   ],
+   "respostas": [
+    "Em agosto gastaste 332,00 €, mais 5,6% do que em julho."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei nos últimos 30 dias?"
+   ],
+   "respostas": [
+    "Últimos 10 gastos: 21/09 · Lidl -27,35 € 19/09 · Restaurante Mar Azul -36,00 € 14/09 · Farmácia Central -12,00 € 7/09 · Galp -58,40 € 2/09 · Continente -88,10 € …e mais 5."
+   ]
+  },
+  {
+   "perguntas": [
+    "Despesas acima de 100 euros"
+   ],
+   "respostas": [
+    "Em setembro gastaste 266,85 €, menos 19,6% do que em agosto."
+   ]
+  },
+  {
+   "perguntas": [
+    "Despesas acima de 50€ em agosto"
+   ],
+   "respostas": [
+    "Em agosto gastaste 332,00 €, mais 5,6% do que em julho."
+   ]
+  },
+  {
+   "perguntas": [
+    "Backup"
+   ],
+   "respostas": [
+    "Ainda não sei responder a isso. Experimenta perguntar por gastos, saldo, rendimento, receitas, categorias, combustível ou veterinário."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quando fiz o último backup?"
+   ],
+   "respostas": [
+    "Ainda não sei responder a isso. Experimenta perguntar por gastos, saldo, rendimento, receitas, categorias, combustível ou veterinário."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei no Continente em agosto?",
+    "E em julho?"
+   ],
+   "respostas": [
+    "Continente em agosto: 174,80 € em 2 compras.",
+    "Continente em julho: 110,30 € em 1 compra."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei em agosto?",
+    "E em setembro?"
+   ],
+   "respostas": [
+    "Em agosto gastaste 332,00 €, mais 5,6% do que em julho.",
+    "Em setembro gastaste 266,85 €, menos 19,6% do que em agosto."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei na Galp?",
+    "E no Continente?"
+   ],
+   "respostas": [
+    "Galp em setembro: 58,40 € em 1 compra.",
+    "Continente em setembro: 88,10 € em 1 compra."
+   ]
+  },
+  {
+   "perguntas": [
+    "Combustível em agosto",
+    "E em junho?"
+   ],
+   "respostas": [
+    "Combustível em agosto: 60,00 € em 1 abastecimento.",
+    "Combustível em junho: 55,00 € em 1 abastecimento."
+   ]
+  },
+  {
+   "perguntas": [
+    "Qual foi a maior despesa de agosto?",
+    "E de julho?"
+   ],
+   "respostas": [
+    "A maior despesa de agosto foi Continente: 120,50 € (3/08).",
+    "A maior categoria em julho foi Alimentação: 149,05 € (47,4% dos gastos)."
+   ]
+  },
+  {
+   "perguntas": [
+    "Saldo da Principal",
+    "E da Revolut?"
+   ],
+   "respostas": [
+    "Saldos — Principal: -9,75 € · Revolut Conjunta: 45,45 € · Edenred: 46,20 €.",
+    "Saldos — Principal: -9,75 € · Revolut Conjunta: 45,45 € · Edenred: 46,20 €."
+   ]
+  },
+  {
+   "perguntas": [
+    "Rendimento de agosto",
+    "E de setembro?"
+   ],
+   "respostas": [
+    "Rendimento de agosto (salários de julho): 2600,00 €, +0% face ao mês anterior.",
+    "Rendimento de setembro (salários de agosto): 2620,00 €, +0,8% face ao mês anterior."
+   ]
+  },
+  {
+   "perguntas": [
+    "Quanto gastei em restaurantes em junho?",
+    "E em setembro?",
+    "E em agosto?"
+   ],
+   "respostas": [
+    "Em junho gastaste 275,00 €. (entendi: restaurantes → Restaurante)",
+    "Em setembro gastaste 266,85 €, menos 19,6% do que em agosto.",
+    "Em agosto gastaste 332,00 €, mais 5,6% do que em julho."
+   ]
+  },
+  {
+   "perguntas": [
+    "Adiciona despesa de 12,50 no Café Central"
+   ],
+   "respostas": [
+    "Adicionado: Outros — 12,50 € · hoje. Escreve «desfazer» para reverter."
+   ]
+  },
+  {
+   "perguntas": [
+    "Adiciona receita de 200 de venda"
+   ],
+   "respostas": [
+    "Adicionado: Outras receitas — 200,00 € · hoje. Escreve «desfazer» para reverter."
+   ]
+  }
+ ]
+}

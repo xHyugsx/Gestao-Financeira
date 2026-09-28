@@ -2,7 +2,7 @@
 
 App web instalável (PWA) para gerir as finanças da família, com assistente **Jarvis**, ecrã de bloqueio com PIN e impressão digital, lembretes veterinários e importação de extratos bancários.
 
-**Versão:** 1.9.2
+**Versão:** 1.9.3
 
 ## Estrutura
 
@@ -39,6 +39,8 @@ Os dados ficam guardados no navegador do telemóvel; fazer backup em Definiçõe
 
 ## Testes automáticos
 
-- `tests/`: testes de interface com dados **fictícios** (arranque, bloqueio, movimentos, Jarvis, extratos, veterinário, calendário, offline e compatibilidade de dados).
+- `tests/`: testes de interface com dados **fictícios** (arranque, bloqueio, movimentos, Jarvis, respostas de referência, extratos, veterinário, calendário, offline e compatibilidade de dados).
 - No computador: `pip install playwright`, `python -m playwright install chromium` e depois `python tests/correr.py` (ou `python tests/correr.py jarvis` para correr só um grupo).
 - No GitHub: correm sozinhos a cada envio (separador **Actions**). Visto verde = tudo bem; cruz vermelha = algo falhou (o GitHub envia um email).
+- **Respostas de referência do Jarvis**: `tests/referencias/jarvis.json` guarda as respostas da versão atual a ~120 perguntas; o teste `referencias` avisa se alguma mudar. Para fixar um novo comportamento de propósito: `python tests/capturar_referencias.py`.
+- Opcional: `FF_URL=v2/` e `FF_PREFIX=financas-v2:` para correr os mesmos testes contra a versão de teste.
