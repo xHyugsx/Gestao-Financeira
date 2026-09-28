@@ -1,0 +1,282 @@
+# Plano — Fase 2 da app «Finanças»
+
+> Estado: **proposta para aprovação**. Nenhum código foi alterado nesta sessão.
+> Base de referência: versão **1.9.2**, **36/36 testes a passar** (medido a 28-09-2026).
+
+---
+
+## 1. Diagnóstico
+
+### 1.1 `js/app.js` (473 KB, minificado)
+
+Bundle Vite/Rollup de uma app originalmente feita com **TanStack Start** (há vestígios: `createFileRoute` e `createServerFn` substituídos por funções vazias; o Jarvis original era um serviço online — hoje responde `"O Jarvis precisa da versão online da app"` nesse caminho morto).
+
+| Bloco (posição aprox.) | Conteúdo |
+|---|---|
+| 0 – 190 KB | **React 19.2.8** + React DOM + scheduler |
+| 190 – 250 KB | **lucide-react** (ícones, com ícones extra acrescentados: `ffBaby`, …), `clsx`/**tailwind-merge** (padrão shadcn/ui) |
+| 250 – 285 KB | **Radix UI** (Dialog, foco, `DismissableLayer`, bloqueio de scroll) |
+| 285 – 334 KB | **Zod** (validação dos formulários) |
+| 334 – 357 KB | Sub-vistas das Definições, leitura/gravação do `localStorage` (`rc()` lê `financas-familiar:v3`, `ic()` grava e chama `ffSaveOk`/`ffSaveFail`), conversa do Jarvis |
+| 357 – 473 KB | **Um único componente gigante** (`xc`, ~115 KB): 62 `useState`, 11 `useEffect`, todas as páginas, diálogos, Jarvis por regras (datas, lojas, categorias, confirmações), leitura de recibos PDF (pdf.js por CDN), PIN (`Rn()` = SHA-256), saldos, rendimento, swipe entre páginas |
+
+Remendos identificados: ~190 identificadores `ff*` injetados (`ffNow`, `ffSub`, `ffInc`, `ffPet`, `ffJm`, `ffAccTx`, …), com nomes minificados partilhados entre âmbitos (`p`, `f`, `Bn`, `vt`…). É isto que torna cada alteração arriscada.
+
+### 1.2 `js/modulos/` (JavaScript simples, ~65 KB)
+
+Carregados por `<script>` **antes** do núcleo (exceto `atualizacoes.js`, no fim do `<body>`). Injetam HTML diretamente no DOM e falam com o núcleo por globais.
+
+| Módulo | Função | Expõe | Consome |
+|---|---|---|---|
+| `bloqueio.js` | Ecrã de bloqueio, PIN, WebAuthn | `ffBio`, `ffBioSettings`, `ffLockMount` | `ffPrivacyOff`, `ffRelockPending` |
+| `autobloqueio.js` | Bloquear ao voltar | `ffAutoLockSettings`, `ffRelockPending` | `ffRelock`, `ffPrivacyOff` |
+| `privacidade.js` | Imagem desfocada no gestor de apps | `ffPrivacyOff` | `ffRelockPending` |
+| `veterinario.js` | Lembretes veterinários | `ffVet` | `ffGoPg` |
+| `extratos.js` | Importação XLSX/XLS/CSV (SheetJS por CDN) | `ffStmt` | `ffImpApi` |
+| `armazenamento.js` | Indicador de espaço, falha de gravação | `ffStorage`, `ffSaveFail`, `ffSaveOk` | `ffBk`, `ffOpenBackup` |
+| `lembrete-backup.js` | Lembrete de backup | — | `ffBk`, `ffVet` |
+| `jarvis-sugestoes.js` | Sugestões por página | `ffJvS` | — |
+| `jarvis-correcao.js` | Correção de erros de escrita | `ffFix` | — |
+| `animacoes.js` | Fecho animado das Definições | `ffSheetOut` | — |
+| `atualizacoes.js` | Regista o SW e mostra "Nova versão" | — | cache `financas-app` |
+
+**O núcleo expõe** para os módulos: `ffBk` (backup), `ffImpApi` (gravar importação), `ffRelock`, `ffGoPg`, `ffOpenBackup`, `ffVocab`, `ffJvChips`, `ffJvClose`, `ffMoreClose`.
+
+```
+            ┌──────────── window.ff* (≈23 globais) ────────────┐
+ módulos ──►│ ffSaveOk/Fail  ffVet  ffStmt  ffFix  ffJvS  ffBio │◄── núcleo (xc)
+ núcleo  ──►│ ffBk  ffImpApi  ffRelock  ffGoPg  ffOpenBackup    │◄── módulos
+            └───────────────────────────────────────────────────┘
+      ordem de carregamento é implícita; qualquer erro num lado parte o outro
+```
+
+### 1.3 Outros achados (importantes)
+
+| # | Achado | Impacto |
+|---|---|---|
+| A1 | A pasta do CI chama-se **`.github/wrokflows/`** (gralha) | **Os testes não correm no GitHub**, ao contrário do que diz o README |
+| A2 | `service-worker.js` (raiz) responde a **qualquer navegação** dentro do seu âmbito com o `index.html` da raiz | Abrir `/v2/` num telemóvel com a app atual instalada mostraria a **app antiga** — tem de ser corrigido antes de existir `/v2/` |
+| A3 | O SW, ao ativar, **apaga todas as caches** que não se chamem `financas-app` | Apagaria a cache offline da `/v2/` a cada atualização |
+| A4 | SheetJS e pdf.js vêm de **cdnjs** e não entram na cache offline | Importar extratos e ler recibos não funciona sem rede |
+| A5 | `ffVer` existe em 2 sítios do bundle + `version.json` + README | Versão manual em 3–4 locais; lista `files` também manual |
+| A6 | Nomes de pessoas, entidades patronais e dos animais estão no código (`extratos.js`, `app.js`, `veterinario.js`) | Repositório público (ver secção 7) |
+| A7 | `localStorage` é partilhado por **toda a origem** `xhyugsx.github.io` (todos os repositórios Pages do mesmo utilizador) | Justifica prefixo separado na `/v2/` |
+| A8 | `css/app.css` = Tailwind 4.3.3 compilado + 20 secções `ff-*` | Pode ser reaproveitado tal como está (garante aspeto igual) |
+
+---
+
+## 2. Proposta de stack
+
+### Opção A — Módulos JavaScript sem compilação (Preact + `htm`, ficheiros locais)
+
+| Prós | Contras |
+|---|---|
+| Edita-se um ficheiro no telemóvel e fica publicado | Sem Radix: diálogos, foco e scroll reescritos à mão → **risco de diferenças de comportamento** |
+| Sem dependência do GitHub Actions para publicar | Sem JSX nem tipos: erros só aparecem em execução |
+| O que está no repositório é o que corre | Versão e lista `files` continuam **manuais** (causa atual de esquecimentos) |
+| | Sem nomes com hash → problemas de cache mais prováveis |
+
+### Opção B — React 19 + Vite + TypeScript, compilado por GitHub Actions ⭐ recomendada
+
+| Prós | Contras |
+|---|---|
+| **Mesmas bibliotecas** do bundle atual (React 19, Radix Dialog, lucide-react, Zod) → aspeto e comportamento iguais com menos esforço | Precisa de um passo de compilação (Actions, ~3–5 min por publicação) |
+| Reaproveita o `app.css` e os nomes de classes atuais | Editar no telemóvel continua possível, mas o resultado só aparece depois do Actions |
+| TypeScript protege o **formato dos dados** (secção 3 do CLAUDE.md) | Mudança única nas definições: *Settings › Pages › Source: GitHub Actions* |
+| **Versão num só sítio** (`package.json`) → `ffVer` e `version.json` (incluindo `files`) gerados automaticamente | Mais ficheiros de configuração no repositório |
+| **Testes a travar a publicação**: se falharem, a versão antiga continua no ar | |
+| Publicar = aprovar/fundir um PR a partir da app do GitHub (sem carregar ficheiros um a um) | |
+
+### Opção C — Híbrida (módulos sem compilação + `// @ts-check` validado no CI)
+
+Meio-termo: mantém a edição direta, ganha alguma verificação de tipos. Tem os mesmos contras de comportamento da Opção A (sem Radix) e a versão continua manual.
+
+### Recomendação
+
+**Opção B.** O objetivo principal é "sem mudar aspeto nem comportamento", e isso é muito mais seguro com as mesmas bibliotecas. O argumento "publico do telemóvel" até melhora: em vez de carregar 3–5 ficheiros e lembrar-se do `version.json`, passa a ser **um botão "Merge"** no PR, e o Actions trata do resto.
+
+⚠️ **Parceiro crítico:** com a Opção B, a regra "dar a lista exata de ficheiros alterados para publicar" passa a ser "lista de ficheiros alterados no PR" — já não é preciso copiar ficheiros à mão. Proponho atualizar o CLAUDE.md nessa altura (etapa 13).
+
+---
+
+## 3. Estrutura de pastas final
+
+```
+/
+├── app/                        ← código-fonte da app (raiz do Vite)
+│   ├── index.html
+│   ├── public/                 ← copiado tal como está
+│   │   ├── img/  fonts/  icons/
+│   │   └── manifest.webmanifest
+│   └── src/
+│       ├── main.tsx            ← arranque, registo do SW
+│       ├── config.ts           ← prefixo de armazenamento, versão, base URL
+│       ├── dados/              ← NÚCLEO DE DADOS (sem UI)
+│       │   ├── chaves.ts       ← todas as chaves `financas-familiar:*`
+│       │   ├── armazenamento.ts← ler/gravar, aviso de falha, medição de espaço
+│       │   ├── esquema.ts      ← tipos + Zod tolerante (preserva campos desconhecidos)
+│       │   ├── backup.ts       ← exportar/restaurar (inclui vetReminders, jarvisThreads)
+│       │   ├── saldos.ts       ← saldo guardado + movimentos; Edenred transita
+│       │   ├── rendimento.ts   ← rendimento do mês X = salários de X−1
+│       │   └── datas.ts
+│       ├── estado/             ← store React (contexto + reducer) sobre `dados/`
+│       ├── ui/                 ← Dialog, Button, Sheet… (Radix, iguais aos atuais)
+│       ├── layout/             ← App, cabeçalho, barra inferior, painel «Mais», swipe
+│       ├── paginas/            ← Principal, Analise, Calendario, Categorias,
+│       │                          Resumo, Combustivel, Veterinario
+│       ├── movimentos/         ← diálogo, lista, filtro, pesquisa, notas
+│       ├── definicoes/         ← perfil, aparência, backup, armazenamento, PIN
+│       ├── bloqueio/           ← EcraBloqueio, pin.ts, biometria.ts,
+│       │                          autobloqueio.ts, privacidade.ts
+│       ├── jarvis/
+│       │   ├── motor/          ← intenções, datas, lojas, comparações (funções puras)
+│       │   ├── correcao.ts  sugestoes.ts  acoes.ts (com confirmação)
+│       │   └── Jarvis.tsx
+│       ├── importacao/
+│       │   ├── leitores/       ← csv, xlsx, pdf (recibos)
+│       │   ├── regras-gerais.ts← só regras genéricas (lojas → categorias)
+│       │   ├── regras-pessoais.ts ← lê a configuração do telemóvel
+│       │   └── Revisao.tsx
+│       ├── veterinario/  lembrete-backup/  atualizacoes/
+│       ├── sw/service-worker.ts
+│       └── estilos/            ← app.css dividido pelas secções atuais
+├── vendor/                     ← SheetJS e pdf.js locais (funcionam offline)
+├── tests/
+│   ├── correr.py  teste_*.py   ← 36 testes atuais (parametrizados)
+│   ├── visual/                 ← capturas de referência (dados fictícios)
+│   ├── unit/                   ← Vitest: dados, saldos, motor do Jarvis, importação
+│   └── dados/                  ← apenas dados fictícios
+├── legado/                     ← (temporário) app 1.9.x, servida em /v1/ para recuo
+├── docs/                       ← este plano, decisões, notas de migração
+├── .github/workflows/          ← testes + compilação + publicação
+├── package.json  vite.config.ts  tsconfig.json
+└── CLAUDE.md  README.md
+```
+
+---
+
+## 4. Ordem de migração
+
+Princípio: **a produção (raiz) só muda nas etapas 0 e 12.** Todas as outras publicam apenas em `/v2/`, isolada dos dados reais.
+
+| # | Etapa | Onde publica | O que se testa no telemóvel | Testes atuais no ar |
+|---|---|---|---|---|
+| **0** | **Preparação segura** — corrigir `wrokflows` → `workflows`; SW da raiz ignora `/v2/` e `/v1/` (A2) e só apaga as suas caches (A3); parametrizar `correr.py` (URL e prefixo); capturar **referências** (visuais e respostas do Jarvis) da 1.9.x | **Raiz** (v1.9.3) | App igual; aparece "Nova versão" e atualiza normalmente | 36/36 raiz |
+| **1** | **Pipeline + `/v2/` espelho** — projeto Vite em `app/`; Actions: testes → compila → publica (raiz = ficheiros atuais sem alterações; `/v2/` = build nova). A `/v2/` arranca **a app atual** com prefixo `financas-v2:`, manifesto próprio («Finanças V2»), SW e cache próprios, faixa "V2 · teste" e botão **"Copiar dados da versão atual"** (só leitura das chaves reais) | `/v2/` | Instalar «Finanças V2» ao lado da atual; copiar dados; confirmar que a app real não mudou | 36/36 raiz · 36/36 v2 |
+| **2** | **Núcleo de dados** (`dados/`) em TypeScript + testes unitários com o ficheiro `dados_versao_antiga.json` e dados fictícios grandes | `/v2/` (sem mudança visível) | — (só testes automáticos) | 36/36 raiz · 36/36 v2 |
+| **3** | **Esqueleto React** — layout, barra inferior, painel «Mais», swipe e ordem das páginas, página **Principal** (anel do rendimento, caixas das contas, lista) | `/v2/` passa a ser a app nova | Aspeto da Principal, navegação, swipe | 36/36 raiz · grupo `arranque` na v2 |
+| **4** | **Movimentos** — criar/editar/apagar, transferências, notas, filtro por conta, pesquisa, saldos | `/v2/` | Registar movimentos reais de teste | + `movimentos` |
+| **5** | **Bloqueio** — PIN (mesmo hash), impressão digital, autobloqueio, privacidade | `/v2/` | Deslizar, PIN, digital, voltar à app | + `bloqueio` |
+| **6** | **Análise, Calendário, Categorias, Resumo** | `/v2/` | Comparar lado a lado com a app atual | + `calendario` |
+| **7** | **Combustível e Veterinário** (+ lembretes) | `/v2/` | Lembretes, "feito" | + `veterinario` |
+| **8** | **Definições** — perfil, aparência, backup/restauro, espaço, lembrete de backup, recibos PDF | `/v2/` | Exportar backup e restaurar na V2 | + `compatibilidade` |
+| **9** | **Importação de extratos** + **regras pessoais no telemóvel** (secção 7) | `/v2/` | Importar um extrato real na V2 | + `extratos` |
+| **10** | **Jarvis** — motor por regras + interface + ações com confirmação | `/v2/` | Perguntas do dia a dia | + `jarvis` |
+| **11** | **Offline e atualizações** — SW gerado com lista de ficheiros automática, aviso "Nova versão" | `/v2/` | Modo avião; publicar 2 versões seguidas | 36/36 v2 |
+| **12** | **Troca** — build nova passa para a raiz com o prefixo real `financas-familiar:`; app 1.9.x fica em `/v1/` para recuo | **Raiz** (v2.x — ver secção 9) | Backup obrigatório antes; atualizar; confirmar dados, PIN e digital | 36/36 raiz |
+| **13** | **Limpeza** — remover `legado/`/`/v1/` após 2–4 semanas sem problemas; atualizar CLAUDE.md e README | Raiz | — | 36/36 |
+
+Notas:
+- As etapas 3–10 podem ter subetapas (ex.: 6a Análise, 6b Calendário) se ficarem grandes. **Uma etapa por vez, com preview antes.**
+- Enquanto uma página ainda não estiver migrada, a `/v2/` mostra "Em construção" nesse separador.
+
+---
+
+## 5. Estratégia de testes
+
+### 5.1 Os 36 testes atuais
+
+- **Na raiz (produção): 36/36 em todas as etapas**, sempre, porque a produção só muda nas etapas 0 e 12.
+- **Na `/v2/`**: o `correr.py` passa a aceitar `FF_URL` e `FF_PREFIX`; o CI corre os 36 contra a raiz **e** contra a `/v2/`. A partir da etapa 3, cada grupo é ativado na `/v2/` quando a respetiva parte é migrada (tabela da secção 4). **Condição para a troca (etapa 12): 36/36 na `/v2/`.**
+- ⚠️ **Honestidade:** entre as etapas 3 e 10 a `/v2/` não passa os 36 (as páginas ainda não existem). A alternativa — manter a app antiga "dentro" da nova — obrigaria a continuar a remendar o bundle, que é precisamente o que queremos eliminar.
+- Dois testes dependem do ficheiro `js/app.js` (`versao_igual…`, `todos_os_ficheiros…`). Com a build, os nomes levam hash; adapto-os para ler a versão da build **mantendo a mesma intenção**. Mostro a diferença antes.
+
+### 5.2 Testes novos
+
+| Tipo | Testes | Porquê |
+|---|---|---|
+| **Visual** (Playwright, capturas) | Cada página, ecrã de bloqueio, diálogos, painel «Mais», Jarvis — referência tirada da 1.9.x na etapa 0, tolerância pequena | Garantir "aspeto igual" |
+| **Respostas do Jarvis** ("golden master") | Banco de ~150 perguntas com dados fictícios; respostas da 1.9.x gravadas na etapa 0 e comparadas com a v2 | O Jarvis é a parte com mais regras escondidas |
+| **Compatibilidade de dados** | Abrir dados antigos → usar → exportar: campos desconhecidos preservados; backup da v2 restaura na 1.9.x e vice-versa | Secção 3 do CLAUDE.md |
+| **Isolamento da `/v2/`** | Espiar o `localStorage`: a v2 **nunca escreve** em `financas-familiar:*` | Proteger os dados reais |
+| **PIN** | PIN fictício → hash conhecido (valor fixo no teste) | O formato não pode mudar |
+| **Impressão digital** | Autenticador WebAuthn **virtual** do Chromium: registar, desbloquear, invalidar ao mudar o PIN | Evitar ficar sem acesso |
+| **Atualização** | Servir 1.9.x, instalar SW, trocar para a v2, carregar "Atualizar" → dados, PIN e digital intactos | Etapa 12 |
+| **Offline** | Importar extrato e ler recibo em modo avião (bibliotecas locais) | Achado A4 |
+| **Acessibilidade de movimento** | Com `prefers-reduced-motion`, sem animações | Regra do CLAUDE.md |
+| **Unitários** (Vitest) | Saldos (Edenred transita), rendimento X−1, datas, leitura CSV/XLSX, classificador, deteção de duplicados, motor do Jarvis | Rápidos, correm em segundos |
+| **Privacidade** | Verificação no CI que falha se aparecerem nomes/entidades pessoais (lista guardada como **hashes**, para não revelar os próprios nomes) | Secção 7 |
+
+---
+
+## 6. Como testar cada etapa no telemóvel
+
+| Item | Produção (atual) | Teste |
+|---|---|---|
+| Endereço | `…github.io/Gestao-Financeira/` | `…github.io/Gestao-Financeira/v2/` |
+| Nome instalado | Finanças | **Finanças V2** (ícone com marca "V2") |
+| Prefixo do armazenamento | `financas-familiar:` | **`financas-v2:`** |
+| Service worker / cache | `service-worker.js` · `financas-app` | `v2/service-worker.js` (âmbito `/v2/`) · `financas-v2` |
+| Impressão digital | registo atual | registo próprio (volta a registar na V2) |
+
+Fluxo em cada etapa:
+1. Eu mostro a **preview** (descrição + capturas com dados fictícios) e espero pelo "avança".
+2. Implemento, corro os testes e abro um **PR**; o CI corre tudo.
+3. Faz **Merge** no telemóvel → o Actions publica em `/v2/` (a raiz não muda).
+4. Abre «Finanças V2» → "Nova versão disponível" → Atualizar.
+5. (Opcional) Definições › **"Copiar dados da versão atual"**: lê as chaves reais **só para leitura** e grava cópias em `financas-v2:*`. Alternativa: restaurar um backup JSON.
+6. Aprova ou pede correções. A app real nunca é tocada.
+
+Pré-requisito: a **etapa 0 tem de estar instalada no telemóvel** antes de abrir a `/v2/` (achado A2). A `/v2/` confirma isso ao arrancar e, se detetar o SW antigo, mostra um aviso em vez de arrancar.
+
+---
+
+## 7. Privacidade — regras pessoais da importação
+
+### Situação atual
+- `js/modulos/extratos.js` tem regras com **nomes de pessoas** (transferências a confirmar), **entidades patronais** (salário → pessoa), um **empréstimo pessoal ignorado** e **investimentos recorrentes**.
+- O núcleo e `veterinario.js` têm os **nomes das pessoas e dos animais** fixos no código (salários por pessoa, fotos, Jarvis).
+
+### Proposta
+1. **Nova chave** `financas-familiar:import-config` (acrescentar não quebra nada; nenhuma chave existente muda):
+   ```json
+   { "v": 1, "regras": [ { "contem": "…", "acao": "salario|transferir|ignorar|investimento", "pessoa": "…", "categorias": ["…"] } ] }
+   ```
+2. No código ficam **só as regras genéricas** (lojas → categorias, portagens, combustível…).
+3. Ecrã **Definições › Importação › Regras pessoais**: listar, acrescentar, editar, apagar.
+4. A configuração entra no **backup** e no **restauro** (compatível: backups antigos sem ela continuam a restaurar).
+5. **Passagem para o telemóvel sem pôr os nomes no repositório**: a versão da etapa 9 lê as regras que já existem nas "regras memorizadas" (`:import-rules`) e, se a configuração estiver vazia, mostra um assistente curto para as criar (preenchido com sugestões a partir dos últimos movimentos importados, que já estão no telemóvel).
+6. Nomes das pessoas e animais: passar a vir do `profile` (já existe nos dados) — mesmo tratamento, na etapa correspondente (4, 7 e 10).
+
+⚠️ **Parceiro crítico:** retirar do código **não apaga o histórico do Git**. Os nomes continuam visíveis em commits antigos. Apagá-los exige reescrever o histórico (`git filter-repo` + *force-push*), o que é irreversível e parte cópias locais. Recomendo decidir isto à parte, depois da etapa 9; não faço nada disso sem ordem explícita. Os ficheiros de teste também têm nomes reais em `tests/dados/dados_versao_antiga.json` e `teste_veterinario.py` — passam a nomes fictícios na etapa 0.
+
+---
+
+## 8. Riscos e mitigação
+
+| Risco | Mitigação |
+|---|---|
+| **Perda de dados na troca** | Produção só muda na etapa 12; `/v2/` usa prefixo separado; teste de isolamento; **backup obrigatório** antes da troca; esquema Zod **tolerante** (nunca apaga campos desconhecidos); nenhuma migração que reescreva `financas-familiar:v3` sem necessidade; recuo possível para `/v1/` |
+| **Dados antigos com formatos variados** | Testes com `dados_versao_antiga.json` e dados fictícios grandes; leitura defensiva igual à atual (`rc()` devolve `{}` se falhar) |
+| **Espaço de armazenamento** (~5 MB) | Não duplicar dados na mesma chave; a cópia para a V2 avisa se não houver espaço; indicador de espaço mantido |
+| **PIN** | Hash **exatamente igual**: `SHA-256("financas-familiar:" + PIN)` em hex; teste com valor fixo; sem "hash reforçado" (decisão já tomada) |
+| **Impressão digital** | Mesmo formato em `:bio` (`{id, pin}`) e mesmo hostname (o WebAuthn usa o domínio, não a pasta) → o registo atual continua válido após a troca; teste com autenticador virtual; o PIN continua sempre disponível como alternativa |
+| **SW antigo interfere com a `/v2/`** | Etapa 0 corrige a navegação (A2) e a limpeza de caches (A3); a `/v2/` verifica ao arrancar |
+| **Atualização 1.9.x → 2.x falha** | O `service-worker.js` mantém o **mesmo caminho e âmbito**; o `version.json` mantém o formato (`version` + `files`), por isso o "Atualizar" da 1.9.x descarrega a v2 corretamente; teste automático de atualização |
+| **Telemóvel fica com versão meio atualizada** | O SW só troca quando todos os ficheiros estão em cache; nomes com hash evitam misturar ficheiros de versões diferentes |
+| **Build partida publicada** | O Actions só publica se os testes passarem; se falhar, fica no ar a versão anterior |
+| **Diferenças visuais subtis** | Mesmo CSS e mesmas classes; testes visuais contra a 1.9.x; comparação lado a lado no telemóvel |
+| **Comportamento escondido no bundle** (ex.: regras do Jarvis) | Golden master de respostas; leitura sistemática do bundle por área antes de cada etapa, com notas em `docs/` |
+| **CDN indisponível** | SheetJS e pdf.js locais em `vendor/` (etapa 1, na v2) |
+
+---
+
+## 9. Decisões que preciso que confirmes
+
+1. **Stack:** Opção B (React + Vite + TypeScript + Actions)?
+2. **Publicação pelo Actions:** mudar *Settings › Pages › Source* para "GitHub Actions" na etapa 1? (Alternativa mais conservadora: o Actions grava a build na pasta `v2/` do próprio repositório, sem mexer nas definições — mais ruído nos commits.)
+3. **Versões:** a atual é `1.9.2`, mas o formato combinado é `v#.##.#`. Proponho: produção `1.9.3` (etapa 0); builds de teste `2.00.1 … 2.00.9`, `2.01.0…` na `/v2/`; troca como **`2.10.0`** ou outro número à tua escolha.
+4. **Bibliotecas locais** (SheetJS, pdf.js): importar/ler recibos passa a funcionar offline. É uma melhoria de comportamento — aceitas?
+5. **Histórico do Git** com nomes: tratar à parte, depois da etapa 9?
+
+**Próximo passo proposto:** preview da **etapa 0** (lista exata de alterações e ficheiros), só depois do teu "avança".
