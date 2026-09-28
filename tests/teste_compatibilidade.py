@@ -19,6 +19,6 @@ async def t_backup_mantem_as_chaves(app):
 async def t_aviso_quando_a_gravacao_falha(app):
     await app.abrir()
     p = app.page
-    await p.evaluate("K=>{const o=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k===K)throw new DOMException('cheio','QuotaExceededError');return o.call(this,k,v)};return null}", chave('financas-familiar:v3'))
+    await p.evaluate("K=>{const o=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k===K||k==='financas-familiar:v3')throw new DOMException('cheio','QuotaExceededError');return o.call(this,k,v)};return null}", chave('financas-familiar:v3'))
     await app.novo_movimento('Teste', '1,00')
     verificar(await p.query_selector('#ffsto-bn.err'), 'não avisou que a gravação falhou')

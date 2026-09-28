@@ -1,0 +1,11 @@
+{
+  "name": "financas",
+  "private": true,
+  "description": "App Finanças (PWA). Atalhos: montar o site publicado e correr os testes.",
+  "type": "module",
+  "scripts": {
+    "montar": "node scripts/montar-site.mjs",
+    "testes": "python tests/correr.py",
+    "testes:v2": "FF_URL=v2/ FF_PREFIX=financas-v2: python tests/correr.py"
+  }
+}

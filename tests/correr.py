@@ -5,11 +5,12 @@ Uso:  python tests/correr.py            (todos)
 Variáveis opcionais:
       FF_URL=v2/                        (caminho a testar, relativo à raiz, ou endereço completo)
       FF_PREFIX=financas-v2:            (prefixo das chaves do localStorage; por omissão financas-familiar:)
-Requer: pip install playwright && python -m playwright install chromium
+Requer: pip install playwright && python -m playwright install chromium, e Node.js (monta o site em _site/)
 """
-import asyncio, importlib.util, pathlib, sys, os, time, threading, http.server, functools, socket, traceback
+import asyncio, importlib.util, pathlib, sys, os, time, threading, http.server, functools, socket, subprocess, traceback
 
 RAIZ = pathlib.Path(__file__).resolve().parent.parent
+SITE = RAIZ / '_site'
 DATA_FIXA = '2026-09-28T11:00:00Z'  # 12:00 em Lisboa
 PREFIXO_REAL = 'financas-familiar:'
 PREFIXO = os.environ.get('FF_PREFIX', PREFIXO_REAL)
@@ -20,12 +21,18 @@ def chave(k):
     return PREFIXO + k[len(PREFIXO_REAL):] if k.startswith(PREFIXO_REAL) else k
 
 
+def montar():
+    """Monta o site publicado (raiz = app atual, /v2/ = versão de teste) em _site/."""
+    subprocess.run(['node', str(RAIZ / 'scripts' / 'montar-site.mjs')], check=True, stdout=subprocess.DEVNULL)
+
+
 def servidor():
+    montar()
     s = socket.socket(); s.bind(('127.0.0.1', 0)); porta = s.getsockname()[1]; s.close()
     class Silencioso(http.server.SimpleHTTPRequestHandler):
         def log_message(self, *a):
             pass
-    h = functools.partial(Silencioso, directory=str(RAIZ))
+    h = functools.partial(Silencioso, directory=str(SITE))
     srv = http.server.ThreadingHTTPServer(('127.0.0.1', porta), h)
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     return srv, f'http://127.0.0.1:{porta}/'
@@ -33,18 +40,31 @@ def servidor():
 
 class App:
     """Ajudas partilhadas pelos testes."""
-    def __init__(self, page, url):
+    def __init__(self, page, url, raiz=None):
         self.page, self.url, self.erros = page, url, []
+        self.raiz = raiz or url  # raiz do site (a app atual); a versão de teste está em raiz + 'v2/'
         page.on('pageerror', lambda e: self.erros.append(str(e)))
 
     async def abrir(self, dados=None, extra=None, sem_backup_aviso=True):
         p = self.page
-        await p.goto(self.url); await p.wait_for_timeout(300)
+        await p.goto(self.url); await self.esperar_sw()
         extra = {chave(k): v for k, v in (extra or {}).items()}
         await p.evaluate("""([d,x,s,P])=>{localStorage.clear();if(d)localStorage.setItem(P+'v3',JSON.stringify(d));
           if(s)localStorage.setItem(P+'last-backup',new Date().toISOString());
           for(const k in (x||{}))localStorage.setItem(k,typeof x[k]==='string'?x[k]:JSON.stringify(x[k]))}""", [dados, extra, sem_backup_aviso, PREFIXO])
         await p.goto(self.url); await p.wait_for_timeout(1800)
+
+    async def esperar_sw(self, limite=15):
+        """Na 1.ª visita, a app recarrega quando o service worker fica ativo; espera por isso."""
+        p = self.page
+        for _ in range(limite * 5):
+            try:
+                if await p.evaluate("!!navigator.serviceWorker.controller"):
+                    break
+            except Exception:
+                pass  # a página estava a recarregar
+            await p.wait_for_timeout(200)
+        await p.wait_for_timeout(500); await p.wait_for_load_state('load')
 
     async def jarvis(self, pergunta):
         p = self.page
@@ -73,9 +93,9 @@ def verificar(condicao, mensagem):
 async def main(filtro):
     from playwright.async_api import async_playwright
     os.chdir(RAIZ)
-    srv, url = servidor()
+    srv, raiz = servidor()
     alvo = os.environ.get('FF_URL', '')
-    url = alvo if alvo.startswith('http') else url + alvo
+    url = alvo if alvo.startswith('http') else raiz + alvo
     ficheiros = sorted(pathlib.Path(__file__).parent.glob('teste_*.py'))
     if filtro: ficheiros = [f for f in ficheiros if filtro in f.name]
     resultados = []
@@ -86,7 +106,7 @@ async def main(filtro):
             for nome, fn in [(n, getattr(mod, n)) for n in dir(mod) if n.startswith('t_')]:
                 ctx = await browser.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, timezone_id='Europe/Lisbon', locale='pt-PT', accept_downloads=True)
                 page = await ctx.new_page(); await page.clock.set_system_time(DATA_FIXA)
-                app = App(page, url); t0 = time.time()
+                app = App(page, url, raiz); t0 = time.time()
                 try:
                     await fn(app)
                     verificar(not app.erros, f'erros na página: {app.erros[:2]}')

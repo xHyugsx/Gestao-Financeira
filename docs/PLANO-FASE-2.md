@@ -1,6 +1,6 @@
 # Plano — Fase 2 da app «Finanças»
 
-> Estado: **aprovado**. Etapa 0 **concluída** (v1.9.3, 39/39 testes).
+> Estado: **aprovado**. Etapa 0 **concluída** (v1.9.3). Etapa 1 **concluída** (`/v2/` 2.00.1, 44/44 na raiz e na `/v2/`).
 > Base de referência: versão **1.9.2**, **36/36 testes a passar** (medido a 28-09-2026).
 
 ---
@@ -164,8 +164,8 @@ Princípio: **a produção (raiz) só muda nas etapas 0 e 12.** Todas as outras 
 | # | Etapa | Onde publica | O que se testa no telemóvel | Testes atuais no ar |
 |---|---|---|---|---|
 | **0** | **Preparação segura** — corrigir `wrokflows` → `workflows`; SW da raiz ignora `/v2/` e `/v1/` (A2) e só apaga as suas caches (A3); parametrizar `correr.py` (URL e prefixo); gravar as **respostas de referência do Jarvis** da 1.9.x ✅ | **Raiz** (v1.9.3) | App igual; aparece "Nova versão" e atualiza normalmente | 39/39 raiz |
-| **1** | **Pipeline + `/v2/` espelho** — projeto Vite em `app/`; Actions: testes → compila → publica (raiz = ficheiros atuais sem alterações; `/v2/` = build nova). A `/v2/` arranca **a app atual** com prefixo `financas-v2:`, manifesto próprio («Finanças V2»), SW e cache próprios, faixa "V2 · teste" e botão **"Copiar dados da versão atual"** (só leitura das chaves reais) | `/v2/` | Instalar «Finanças V2» ao lado da atual; copiar dados; confirmar que a app real não mudou | 36/36 raiz · 36/36 v2 |
-| **2** | **Núcleo de dados** (`dados/`) em TypeScript + testes unitários com o ficheiro `dados_versao_antiga.json` e dados fictícios grandes | `/v2/` (sem mudança visível) | — (só testes automáticos) | 36/36 raiz · 36/36 v2 |
+| **1** | **Publicação pelo Actions + `/v2/` espelho** ✅ — `scripts/montar-site.mjs` monta `_site/` (raiz = ficheiros atuais sem alterações; `/v2/` = cópia adaptada); Actions: testes (raiz e `/v2/`) → publica. A `/v2/` arranca **a app atual** com os dados isolados (`espelho-v2/prefixo.js` traduz `financas-familiar:*` → `financas-v2:*` em tempo de execução, sem mexer no código minificado), manifesto próprio («Finanças V2»), SW e cache próprios, SheetJS e pdf.js locais (`vendor/`), faixa "V2 · teste" com **"Copiar dados da versão atual"** e **"Apagar dados da V2"**. O projeto Vite passa para a etapa 2 (só é preciso quando houver código novo para compilar) | `/v2/` | Instalar «Finanças V2» ao lado da atual; copiar dados; confirmar que a app real não mudou | 44/44 raiz · 44/44 v2 |
+| **2** | **Núcleo de dados** (`dados/`) em TypeScript + testes unitários com o ficheiro `dados_versao_antiga.json` e dados fictícios grandes; **arranque do projeto Vite + TypeScript + Vitest em `app/`** | `/v2/` (sem mudança visível) | — (só testes automáticos) | 36/36 raiz · 36/36 v2 |
 | **3** | **Esqueleto React** — layout, barra inferior, painel «Mais», swipe e ordem das páginas, página **Principal** (anel do rendimento, caixas das contas, lista) | `/v2/` passa a ser a app nova | Aspeto da Principal, navegação, swipe | 36/36 raiz · grupo `arranque` na v2 |
 | **4** | **Movimentos** — criar/editar/apagar, transferências, notas, filtro por conta, pesquisa, saldos | `/v2/` | Registar movimentos reais de teste | + `movimentos` |
 | **5** | **Bloqueio** — PIN (mesmo hash), impressão digital, autobloqueio, privacidade | `/v2/` | Deslizar, PIN, digital, voltar à app | + `bloqueio` |
