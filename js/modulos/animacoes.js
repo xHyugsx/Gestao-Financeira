@@ -1,0 +1,1 @@
+window.ffSheetOut=function(cb){var s=document.querySelector(".settings-sheet");if(!s||matchMedia("(prefers-reduced-motion: reduce)").matches)return cb();if(s.classList.contains("is-out"))return;s.classList.add("is-out");setTimeout(function(){s.classList.remove("is-out");cb()},260)};

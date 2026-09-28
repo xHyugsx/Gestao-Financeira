@@ -1,0 +1,31 @@
+{
+  "version": "1.9.0",
+  "files": [
+    "css/app.css",
+    "fonts/dm-sans-1.woff2",
+    "fonts/dm-sans-4.woff2",
+    "fonts/space-grotesk-2.woff2",
+    "fonts/space-grotesk-3.woff2",
+    "icons/apple-touch-icon.png",
+    "icons/icon-192.png",
+    "icons/icon-512.png",
+    "icons/icon-maskable-512.png",
+    "img/bloqueio.webp",
+    "img/fundo-cosmico.webp",
+    "img/jarvis.webp",
+    "index.html",
+    "js/app.js",
+    "js/modulos/animacoes.js",
+    "js/modulos/armazenamento.js",
+    "js/modulos/atualizacoes.js",
+    "js/modulos/autobloqueio.js",
+    "js/modulos/bloqueio.js",
+    "js/modulos/extratos.js",
+    "js/modulos/jarvis-correcao.js",
+    "js/modulos/jarvis-sugestoes.js",
+    "js/modulos/lembrete-backup.js",
+    "js/modulos/privacidade.js",
+    "js/modulos/veterinario.js",
+    "manifest.webmanifest"
+  ]
+}
