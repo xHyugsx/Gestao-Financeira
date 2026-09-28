@@ -5,12 +5,18 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   testes:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -18,5 +24,33 @@ jobs:
         run: |
           pip install playwright
           python -m playwright install --with-deps chromium
-      - name: Correr os testes
+      - name: Testes da app atual (raiz)
         run: python tests/correr.py
+      - name: Testes da versão de teste (/v2/)
+        run: python tests/correr.py
+        env:
+          FF_URL: v2/
+          FF_PREFIX: 'financas-v2:'
+      - name: Guardar o site montado
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  publicar:
+    # Só publica a partir do main e só se todos os testes passarem.
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: testes
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

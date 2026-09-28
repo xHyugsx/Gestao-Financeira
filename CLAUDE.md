@@ -47,6 +47,11 @@ Contém o contexto do projeto e as regras de trabalho acordadas com o dono da ap
 
 Os módulos comunicam com o núcleo através de globais `window.ff*` (ex.: `ffImpApi`, `ffBk`, `ffVet`, `ffStmt`, `ffStorage`, `ffGoPg`, `ffRelock`).
 
+### Fase 2 em curso
+- Plano e estado de cada etapa: `docs/PLANO-FASE-2.md`.
+- O site publicado é montado por `scripts/montar-site.mjs` em `_site/` e publicado pelo GitHub Actions: raiz = app atual (sem alterações); `/v2/` = versão de teste com dados isolados (prefixo `financas-v2:`), que **nunca** pode ler/escrever as chaves `financas-familiar:*` exceto pelo menu "Copiar dados" (só leitura).
+- Testes: `python tests/correr.py` (raiz) e `FF_URL=v2/ FF_PREFIX=financas-v2: python tests/correr.py` (`/v2/`).
+
 ---
 
 ## 3. Regras críticas — dados do utilizador (NÃO QUEBRAR)
