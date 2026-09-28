@@ -2,7 +2,7 @@
 
 App web instalável (PWA) para gerir as finanças da família, com assistente **Jarvis**, ecrã de bloqueio com PIN e impressão digital, lembretes veterinários e importação de extratos bancários.
 
-**Versão:** 1.9.0
+**Versão:** 1.9.2
 
 ## Estrutura
 
@@ -36,3 +36,9 @@ App web instalável (PWA) para gerir as finanças da família, com assistente **
 3. Na app, carregar em **Atualizar**.
 
 Os dados ficam guardados no navegador do telemóvel; fazer backup em Definições › Backup.
+
+## Testes automáticos
+
+- `tests/`: testes de interface com dados **fictícios** (arranque, bloqueio, movimentos, Jarvis, extratos, veterinário, calendário, offline e compatibilidade de dados).
+- No computador: `pip install playwright`, `python -m playwright install chromium` e depois `python tests/correr.py` (ou `python tests/correr.py jarvis` para correr só um grupo).
+- No GitHub: correm sozinhos a cada envio (separador **Actions**). Visto verde = tudo bem; cruz vermelha = algo falhou (o GitHub envia um email).

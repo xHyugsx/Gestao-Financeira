@@ -1,0 +1,9 @@
+{
+  "transactions": [
+    {"id": 1700000000003, "title": "Talho", "amount": -18.4, "date": "2026-09-12", "detail": "12 setembro · Alimentação", "kind": "food"},
+    {"id": 1700000000002, "title": "Padaria", "amount": -2.1, "date": "2026-09-11", "detail": "11 setembro · Alimentação", "kind": "food", "movementType": "expense"},
+    {"id": 1700000000001, "title": "Venda de livros", "amount": 15, "date": "2026-09-02", "detail": "2 setembro · Outras receitas", "kind": "income", "movementType": "income"}
+  ],
+  "accounts": [{"id": "principal", "name": "Principal", "balance": 500}, {"id": "revolut", "name": "Revolut Conjunta", "balance": 50}],
+  "salaries": {"2026": {"Hugo": [0,0,0,0,0,0,0,1200,0,0,0,0], "Marta": [0,0,0,0,0,0,0,1000,0,0,0,0]}}
+}
