@@ -1,6 +1,6 @@
 # Plano — Fase 2 da app «Finanças»
 
-> Estado: **proposta para aprovação**. Nenhum código foi alterado nesta sessão.
+> Estado: **aprovado**. Etapa 0 **concluída** (v1.9.3, 39/39 testes).
 > Base de referência: versão **1.9.2**, **36/36 testes a passar** (medido a 28-09-2026).
 
 ---
@@ -62,6 +62,8 @@ Carregados por `<script>` **antes** do núcleo (exceto `atualizacoes.js`, no fim
 | A6 | Nomes de pessoas, entidades patronais e dos animais estão no código (`extratos.js`, `app.js`, `veterinario.js`) | Repositório público (ver secção 7) |
 | A7 | `localStorage` é partilhado por **toda a origem** `xhyugsx.github.io` (todos os repositórios Pages do mesmo utilizador) | Justifica prefixo separado na `/v2/` |
 | A8 | `css/app.css` = Tailwind 4.3.3 compilado + 20 secções `ff-*` | Pode ser reaproveitado tal como está (garante aspeto igual) |
+| A9 | O Jarvis **grava logo** «Adiciona despesa/receita de …» (oferece «desfazer»), sem os botões Confirmar/Cancelar | Contradiz a decisão do CLAUDE.md («registar pede sempre confirmação»). A v2 reproduz o comportamento atual até o dono decidir |
+| A10 | Várias perguntas do Jarvis caem numa resposta genérica (ex.: «este ano», «esta semana», «entre 1 e 15 de agosto», «acima de 100 €» respondem com o mês atual) | Ficam gravadas tal como estão na referência; melhorias só depois da troca, uma a uma |
 
 ---
 
@@ -161,7 +163,7 @@ Princípio: **a produção (raiz) só muda nas etapas 0 e 12.** Todas as outras 
 
 | # | Etapa | Onde publica | O que se testa no telemóvel | Testes atuais no ar |
 |---|---|---|---|---|
-| **0** | **Preparação segura** — corrigir `wrokflows` → `workflows`; SW da raiz ignora `/v2/` e `/v1/` (A2) e só apaga as suas caches (A3); parametrizar `correr.py` (URL e prefixo); capturar **referências** (visuais e respostas do Jarvis) da 1.9.x | **Raiz** (v1.9.3) | App igual; aparece "Nova versão" e atualiza normalmente | 36/36 raiz |
+| **0** | **Preparação segura** — corrigir `wrokflows` → `workflows`; SW da raiz ignora `/v2/` e `/v1/` (A2) e só apaga as suas caches (A3); parametrizar `correr.py` (URL e prefixo); gravar as **respostas de referência do Jarvis** da 1.9.x ✅ | **Raiz** (v1.9.3) | App igual; aparece "Nova versão" e atualiza normalmente | 39/39 raiz |
 | **1** | **Pipeline + `/v2/` espelho** — projeto Vite em `app/`; Actions: testes → compila → publica (raiz = ficheiros atuais sem alterações; `/v2/` = build nova). A `/v2/` arranca **a app atual** com prefixo `financas-v2:`, manifesto próprio («Finanças V2»), SW e cache próprios, faixa "V2 · teste" e botão **"Copiar dados da versão atual"** (só leitura das chaves reais) | `/v2/` | Instalar «Finanças V2» ao lado da atual; copiar dados; confirmar que a app real não mudou | 36/36 raiz · 36/36 v2 |
 | **2** | **Núcleo de dados** (`dados/`) em TypeScript + testes unitários com o ficheiro `dados_versao_antiga.json` e dados fictícios grandes | `/v2/` (sem mudança visível) | — (só testes automáticos) | 36/36 raiz · 36/36 v2 |
 | **3** | **Esqueleto React** — layout, barra inferior, painel «Mais», swipe e ordem das páginas, página **Principal** (anel do rendimento, caixas das contas, lista) | `/v2/` passa a ser a app nova | Aspeto da Principal, navegação, swipe | 36/36 raiz · grupo `arranque` na v2 |
@@ -195,11 +197,11 @@ Notas:
 
 | Tipo | Testes | Porquê |
 |---|---|---|
-| **Visual** (Playwright, capturas) | Cada página, ecrã de bloqueio, diálogos, painel «Mais», Jarvis — referência tirada da 1.9.x na etapa 0, tolerância pequena | Garantir "aspeto igual" |
-| **Respostas do Jarvis** ("golden master") | Banco de ~150 perguntas com dados fictícios; respostas da 1.9.x gravadas na etapa 0 e comparadas com a v2 | O Jarvis é a parte com mais regras escondidas |
+| **Visual** (Playwright, capturas) | Cada página, ecrã de bloqueio, diálogos, painel «Mais», Jarvis — comparação **ao vivo** entre a raiz (1.9.x) e a `/v2/` na mesma execução, tolerância pequena (sem imagens guardadas → sem falsos alarmes por versões do navegador) | Garantir "aspeto igual" |
+| **Respostas do Jarvis** ("golden master") ✅ | 118 conversas (126 perguntas) com dados fictícios, gravadas da 1.9.3 em `tests/referencias/jarvis.json` (`tests/capturar_referencias.py`); `teste_referencias.py` compara | O Jarvis é a parte com mais regras escondidas |
 | **Compatibilidade de dados** | Abrir dados antigos → usar → exportar: campos desconhecidos preservados; backup da v2 restaura na 1.9.x e vice-versa | Secção 3 do CLAUDE.md |
 | **Isolamento da `/v2/`** | Espiar o `localStorage`: a v2 **nunca escreve** em `financas-familiar:*` | Proteger os dados reais |
-| **PIN** | PIN fictício → hash conhecido (valor fixo no teste) | O formato não pode mudar |
+| **PIN** | PIN fictício → hash conhecido (valor fixo no teste). O sal `financas-familiar:` **não depende do prefixo de armazenamento** (também na `/v2/`) | O formato não pode mudar |
 | **Impressão digital** | Autenticador WebAuthn **virtual** do Chromium: registar, desbloquear, invalidar ao mudar o PIN | Evitar ficar sem acesso |
 | **Atualização** | Servir 1.9.x, instalar SW, trocar para a v2, carregar "Atualizar" → dados, PIN e digital intactos | Etapa 12 |
 | **Offline** | Importar extrato e ler recibo em modo avião (bibliotecas locais) | Achado A4 |
@@ -248,7 +250,7 @@ Pré-requisito: a **etapa 0 tem de estar instalada no telemóvel** antes de abri
 5. **Passagem para o telemóvel sem pôr os nomes no repositório**: a versão da etapa 9 lê as regras que já existem nas "regras memorizadas" (`:import-rules`) e, se a configuração estiver vazia, mostra um assistente curto para as criar (preenchido com sugestões a partir dos últimos movimentos importados, que já estão no telemóvel).
 6. Nomes das pessoas e animais: passar a vir do `profile` (já existe nos dados) — mesmo tratamento, na etapa correspondente (4, 7 e 10).
 
-⚠️ **Parceiro crítico:** retirar do código **não apaga o histórico do Git**. Os nomes continuam visíveis em commits antigos. Apagá-los exige reescrever o histórico (`git filter-repo` + *force-push*), o que é irreversível e parte cópias locais. Recomendo decidir isto à parte, depois da etapa 9; não faço nada disso sem ordem explícita. Os ficheiros de teste também têm nomes reais em `tests/dados/dados_versao_antiga.json` e `teste_veterinario.py` — passam a nomes fictícios na etapa 0.
+⚠️ **Parceiro crítico:** retirar do código **não apaga o histórico do Git**. Os nomes continuam visíveis em commits antigos. Apagá-los exige reescrever o histórico (`git filter-repo` + *force-push*), o que é irreversível e parte cópias locais. Recomendo decidir isto à parte, depois da etapa 9; não faço nada disso sem ordem explícita. Os ficheiros de teste também têm nomes reais (`tests/dados/dados_versao_antiga.json`, `teste_veterinario.py`, `tests/referencias/jarvis.json`). Como o núcleo tem esses nomes fixos no código, só podem passar a fictícios quando os nomes migrarem para o `profile` (etapas 4, 7 e 10).
 
 ---
 
