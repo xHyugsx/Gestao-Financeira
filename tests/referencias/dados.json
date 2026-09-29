@@ -1,0 +1,2076 @@
+{
+ "data": "2026-09-28T11:00:00Z",
+ "casos": {
+  "vazio": {
+   "entrada": null,
+   "gravado": {
+    "transactions": [],
+    "petPhotos": {},
+    "notifications": true,
+    "hideValues": false,
+    "annualExpenses": [],
+    "salaries": {},
+    "profile": "(perfil por omissão da 1.9.x — não guardado)",
+    "categories": [
+     "Habitação",
+     "Alimentação",
+     "Transportes",
+     "Animais",
+     "Lazer",
+     "Saúde",
+     "Educação",
+     "Seguros"
+    ],
+    "incomeCategories": [
+     "Salário",
+     "Investimentos",
+     "Reembolsos",
+     "Outras receitas"
+    ],
+    "categoryIcons": {},
+    "accounts": [
+     {
+      "id": "principal",
+      "name": "Principal",
+      "balance": 0
+     },
+     {
+      "id": "revolut",
+      "name": "Revolut Conjunta",
+      "balance": 0
+     }
+    ],
+    "appearance": {
+     "accent": "violet",
+     "backgroundIntensity": 75,
+     "fontScale": 100,
+     "haptics": true,
+     "autoHide": "now"
+    }
+   },
+   "backup": {
+    "app": "financas-familiar",
+    "version": 4,
+    "data": {
+     "transactions": [],
+     "petPhotos": {},
+     "notifications": true,
+     "hideValues": false,
+     "annualExpenses": [],
+     "salaries": {},
+     "profile": "(perfil por omissão da 1.9.x — não guardado)",
+     "categories": [
+      "Habitação",
+      "Alimentação",
+      "Transportes",
+      "Animais",
+      "Lazer",
+      "Saúde",
+      "Educação",
+      "Seguros"
+     ],
+     "incomeCategories": [
+      "Salário",
+      "Investimentos",
+      "Reembolsos",
+      "Outras receitas"
+     ],
+     "categoryIcons": {},
+     "accounts": [
+      {
+       "id": "principal",
+       "name": "Principal",
+       "balance": 0
+      },
+      {
+       "id": "revolut",
+       "name": "Revolut Conjunta",
+       "balance": 0
+      }
+     ],
+     "appearance": {
+      "accent": "violet",
+      "backgroundIntensity": 75,
+      "fontScale": 100,
+      "haptics": true,
+      "autoHide": "now"
+     }
+    },
+    "jarvisThreads": [
+     {
+      "id": "932524b9-513f-4242-8b2a-d9534a5cb26d",
+      "title": "Nova conversa",
+      "updatedAt": "2026-09-28T11:00:01.085Z",
+      "messages": []
+     }
+    ],
+    "vetReminders": []
+   },
+   "saldos": "Saldos — Principal: 0,00 € · Revolut Conjunta: 0,00 €.",
+   "tendencias": [
+    "SALDO PRINCIPAL | — vs. agosto",
+    "SALDO REVOLUT CONJUNTA | — vs. agosto"
+   ],
+   "rendimento": [
+    "setembro de 2026 | Rendimento mensal 0,00 €",
+    "agosto de 2026 | Rendimento mensal 0,00 €",
+    "julho de 2026 | Rendimento mensal 0,00 €",
+    "junho de 2026 | Rendimento mensal 0,00 €",
+    "maio de 2026 | Rendimento mensal 0,00 €",
+    "abril de 2026 | Rendimento mensal 0,00 €",
+    "março de 2026 | Rendimento mensal 0,00 €",
+    "fevereiro de 2026 | Rendimento mensal 0,00 €",
+    "janeiro de 2026 | Rendimento mensal 0,00 €",
+    "dezembro de 2025 | Rendimento mensal 0,00 €"
+   ]
+  },
+  "versao_antiga": {
+   "entrada": {
+    "transactions": [
+     {
+      "id": 1700000000003,
+      "title": "Talho",
+      "amount": -18.4,
+      "date": "2026-09-12",
+      "detail": "12 setembro · Alimentação",
+      "kind": "food"
+     },
+     {
+      "id": 1700000000002,
+      "title": "Padaria",
+      "amount": -2.1,
+      "date": "2026-09-11",
+      "detail": "11 setembro · Alimentação",
+      "kind": "food",
+      "movementType": "expense"
+     },
+     {
+      "id": 1700000000001,
+      "title": "Venda de livros",
+      "amount": 15,
+      "date": "2026-09-02",
+      "detail": "2 setembro · Outras receitas",
+      "kind": "income",
+      "movementType": "income"
+     }
+    ],
+    "accounts": [
+     {
+      "id": "principal",
+      "name": "Principal",
+      "balance": 500
+     },
+     {
+      "id": "revolut",
+      "name": "Revolut Conjunta",
+      "balance": 50
+     }
+    ],
+    "salaries": {
+     "2026": {
+      "Hugo": [
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       1200,
+       0,
+       0,
+       0,
+       0
+      ],
+      "Marta": [
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       1000,
+       0,
+       0,
+       0,
+       0
+      ]
+     }
+    }
+   },
+   "gravado": {
+    "transactions": [
+     {
+      "id": 1700000000003,
+      "title": "Talho",
+      "amount": -18.4,
+      "date": "2026-09-12",
+      "detail": "12 setembro · Alimentação",
+      "kind": "food"
+     },
+     {
+      "id": 1700000000002,
+      "title": "Padaria",
+      "amount": -2.1,
+      "date": "2026-09-11",
+      "detail": "11 setembro · Alimentação",
+      "kind": "food",
+      "movementType": "expense"
+     },
+     {
+      "id": 1700000000001,
+      "title": "Venda de livros",
+      "amount": 15,
+      "date": "2026-09-02",
+      "detail": "2 setembro · Outras receitas",
+      "kind": "income",
+      "movementType": "income"
+     }
+    ],
+    "petPhotos": {},
+    "notifications": true,
+    "hideValues": false,
+    "annualExpenses": [],
+    "salaries": {
+     "2026": {
+      "Hugo": [
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       1200,
+       0,
+       0,
+       0,
+       0
+      ],
+      "Marta": [
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       1000,
+       0,
+       0,
+       0,
+       0
+      ]
+     }
+    },
+    "profile": "(perfil por omissão da 1.9.x — não guardado)",
+    "categories": [
+     "Habitação",
+     "Alimentação",
+     "Transportes",
+     "Animais",
+     "Lazer",
+     "Saúde",
+     "Educação",
+     "Seguros"
+    ],
+    "incomeCategories": [
+     "Salário",
+     "Investimentos",
+     "Reembolsos",
+     "Outras receitas"
+    ],
+    "categoryIcons": {},
+    "accounts": [
+     {
+      "id": "principal",
+      "name": "Principal",
+      "balance": 500
+     },
+     {
+      "id": "revolut",
+      "name": "Revolut Conjunta",
+      "balance": 50
+     }
+    ],
+    "appearance": {
+     "accent": "violet",
+     "backgroundIntensity": 75,
+     "fontScale": 100,
+     "haptics": true,
+     "autoHide": "now"
+    }
+   },
+   "backup": {
+    "app": "financas-familiar",
+    "version": 4,
+    "data": {
+     "transactions": [
+      {
+       "id": 1700000000003,
+       "title": "Talho",
+       "amount": -18.4,
+       "date": "2026-09-12",
+       "detail": "12 setembro · Alimentação",
+       "kind": "food"
+      },
+      {
+       "id": 1700000000002,
+       "title": "Padaria",
+       "amount": -2.1,
+       "date": "2026-09-11",
+       "detail": "11 setembro · Alimentação",
+       "kind": "food",
+       "movementType": "expense"
+      },
+      {
+       "id": 1700000000001,
+       "title": "Venda de livros",
+       "amount": 15,
+       "date": "2026-09-02",
+       "detail": "2 setembro · Outras receitas",
+       "kind": "income",
+       "movementType": "income"
+      }
+     ],
+     "petPhotos": {},
+     "notifications": true,
+     "hideValues": false,
+     "annualExpenses": [],
+     "salaries": {
+      "2026": {
+       "Hugo": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1200,
+        0,
+        0,
+        0,
+        0
+       ],
+       "Marta": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1000,
+        0,
+        0,
+        0,
+        0
+       ]
+      }
+     },
+     "profile": "(perfil por omissão da 1.9.x — não guardado)",
+     "categories": [
+      "Habitação",
+      "Alimentação",
+      "Transportes",
+      "Animais",
+      "Lazer",
+      "Saúde",
+      "Educação",
+      "Seguros"
+     ],
+     "incomeCategories": [
+      "Salário",
+      "Investimentos",
+      "Reembolsos",
+      "Outras receitas"
+     ],
+     "categoryIcons": {},
+     "accounts": [
+      {
+       "id": "principal",
+       "name": "Principal",
+       "balance": 500
+      },
+      {
+       "id": "revolut",
+       "name": "Revolut Conjunta",
+       "balance": 50
+      }
+     ],
+     "appearance": {
+      "accent": "violet",
+      "backgroundIntensity": 75,
+      "fontScale": 100,
+      "haptics": true,
+      "autoHide": "now"
+     }
+    },
+    "jarvisThreads": [
+     {
+      "id": "7fe1ae7d-be79-46b9-bb75-649620120664",
+      "title": "Nova conversa",
+      "updatedAt": "2026-09-28T11:00:01.019Z",
+      "messages": []
+     }
+    ],
+    "vetReminders": []
+   },
+   "saldos": "Saldos — Principal: 494,50 € · Revolut Conjunta: 50,00 €.",
+   "tendencias": [
+    "SALDO PRINCIPAL | ↓ 1,1% vs. agosto",
+    "SALDO REVOLUT CONJUNTA | ↑ 0% vs. agosto"
+   ],
+   "rendimento": [
+    "setembro de 2026 | Rendimento mensal 2200,00 €",
+    "agosto de 2026 | Rendimento mensal 0,00 €",
+    "julho de 2026 | Rendimento mensal 0,00 €",
+    "junho de 2026 | Rendimento mensal 0,00 €",
+    "maio de 2026 | Rendimento mensal 0,00 €",
+    "abril de 2026 | Rendimento mensal 0,00 €",
+    "março de 2026 | Rendimento mensal 0,00 €",
+    "fevereiro de 2026 | Rendimento mensal 0,00 €",
+    "janeiro de 2026 | Rendimento mensal 0,00 €",
+    "dezembro de 2025 | Rendimento mensal 0,00 €"
+   ]
+  },
+  "completo": {
+   "entrada": {
+    "profile": {
+     "profileName": "Família Teste",
+     "email": "",
+     "phone": "",
+     "members": [
+      "Pessoa A",
+      "Pessoa B"
+     ]
+    },
+    "accounts": [
+     {
+      "id": "principal",
+      "name": "Principal",
+      "balance": 800
+     },
+     {
+      "id": "revolut",
+      "name": "Revolut Conjunta",
+      "balance": 150,
+      "lowAt": 40
+     },
+     {
+      "id": "edenred",
+      "name": "Edenred",
+      "balance": 90,
+      "adj": {
+       "2026-09": 20
+      },
+      "tickets": [
+       "x-2026-09"
+      ]
+     },
+     {
+      "id": "poupanca",
+      "name": "Poupança",
+      "balance": 1000,
+      "createdAt": "2026-09"
+     }
+    ],
+    "salaries": {
+     "2025": {
+      "Hugo": [
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       1400
+      ],
+      "Marta": [
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       900
+      ]
+     },
+     "2026": {
+      "Hugo": [
+       1400,
+       1400,
+       1450,
+       1450,
+       1450,
+       1500,
+       1500,
+       1520,
+       1520,
+       0,
+       0,
+       0
+      ],
+      "Marta": [
+       900,
+       900,
+       900,
+       950,
+       950,
+       1100,
+       1100,
+       1100,
+       0,
+       0,
+       0,
+       0
+      ]
+     }
+    },
+    "categories": [
+     "Habitação",
+     "Alimentação",
+     "Transportes",
+     "Lazer"
+    ],
+    "incomeCategories": [
+     "Salário",
+     "Reembolsos",
+     7,
+     "Prémios"
+    ],
+    "categoryIcons": {
+     "Lazer": "bike"
+    },
+    "appearance": {
+     "accent": "cyan",
+     "fontScale": 110
+    },
+    "notifications": false,
+    "annualExpenses": [
+     {
+      "name": "Seguro",
+      "amount": 300
+     }
+    ],
+    "transactions": [
+     {
+      "id": 1,
+      "title": "Continente",
+      "amount": -95.4,
+      "date": "2026-09-04",
+      "detail": "4 setembro · Alimentação",
+      "movementType": "expense"
+     },
+     {
+      "id": 2,
+      "title": "Galp",
+      "amount": -55,
+      "date": "2026-08-09",
+      "detail": "9 agosto · Combustível",
+      "movementType": "expense"
+     },
+     {
+      "id": 3,
+      "title": "Cinema",
+      "amount": -14,
+      "date": "2026-09-12",
+      "detail": "12 setembro · Lazer",
+      "movementType": "expense",
+      "account": "revolut"
+     },
+     {
+      "id": 4,
+      "title": "Pastelaria",
+      "amount": -7.8,
+      "date": "2026-09-15",
+      "detail": "15 setembro · Restauração",
+      "movementType": "expense",
+      "account": "edenred"
+     },
+     {
+      "id": 5,
+      "title": "Almoço",
+      "amount": -9.5,
+      "date": "2026-08-20",
+      "detail": "20 agosto · Restauração",
+      "movementType": "expense",
+      "account": "edenred"
+     },
+     {
+      "id": 6,
+      "title": "Transferência",
+      "amount": 0,
+      "date": "2026-09-10",
+      "detail": "10 setembro · Transferência",
+      "movementType": "transfer",
+      "transferValue": 100
+     },
+     {
+      "id": 7,
+      "title": "Para a conjunta",
+      "amount": 0,
+      "date": "2026-09-01",
+      "detail": "1 setembro · Transferência",
+      "movementType": "transfer",
+      "transferValue": 200,
+      "revolut": {
+       "holder": "Conjunta"
+      }
+     },
+     {
+      "id": 8,
+      "title": "Para a conjunta",
+      "amount": 0,
+      "date": "2026-08-01",
+      "detail": "1 agosto · Transferência",
+      "movementType": "transfer",
+      "transferValue": 150,
+      "revolut": {
+       "holder": "Conjunta"
+      }
+     },
+     {
+      "id": 9,
+      "title": "Importado",
+      "amount": -40,
+      "date": "2026-09-08",
+      "detail": "8 setembro · Compras",
+      "movementType": "expense",
+      "affectsBalance": false,
+      "importKey": "k1",
+      "importBatch": "b1"
+     },
+     {
+      "id": 10,
+      "title": "Sem data",
+      "amount": -3,
+      "detail": "5 setembro · Outros",
+      "movementType": "expense"
+     },
+     {
+      "id": 11,
+      "title": "Reembolso",
+      "amount": 25,
+      "date": "2026-09-18",
+      "detail": "18 setembro · Reembolsos",
+      "movementType": "income"
+     },
+     {
+      "id": 12,
+      "title": "Vencimento extra",
+      "amount": 300,
+      "date": "2026-10-02",
+      "detail": "2 outubro · Salário",
+      "movementType": "income"
+     },
+     {
+      "id": 13,
+      "title": "Juros",
+      "amount": 4.2,
+      "date": "2026-09-30",
+      "detail": "30 setembro · Outras receitas",
+      "movementType": "income",
+      "account": "poupanca"
+     },
+     {
+      "id": 14,
+      "title": "Veterinário",
+      "amount": -45,
+      "date": "2026-07-12",
+      "detail": "12 julho · Veterinário",
+      "movementType": "expense",
+      "pet": "Sam",
+      "note": "vacina",
+      "recurring": true
+     }
+    ]
+   },
+   "gravado": {
+    "transactions": [
+     {
+      "id": 1,
+      "title": "Continente",
+      "amount": -95.4,
+      "date": "2026-09-04",
+      "detail": "4 setembro · Alimentação",
+      "movementType": "expense"
+     },
+     {
+      "id": 2,
+      "title": "Galp",
+      "amount": -55,
+      "date": "2026-08-09",
+      "detail": "9 agosto · Combustível",
+      "movementType": "expense"
+     },
+     {
+      "id": 3,
+      "title": "Cinema",
+      "amount": -14,
+      "date": "2026-09-12",
+      "detail": "12 setembro · Lazer",
+      "movementType": "expense",
+      "account": "revolut"
+     },
+     {
+      "id": 4,
+      "title": "Pastelaria",
+      "amount": -7.8,
+      "date": "2026-09-15",
+      "detail": "15 setembro · Restauração",
+      "movementType": "expense",
+      "account": "edenred"
+     },
+     {
+      "id": 5,
+      "title": "Almoço",
+      "amount": -9.5,
+      "date": "2026-08-20",
+      "detail": "20 agosto · Restauração",
+      "movementType": "expense",
+      "account": "edenred"
+     },
+     {
+      "id": 6,
+      "title": "Transferência",
+      "amount": 0,
+      "date": "2026-09-10",
+      "detail": "10 setembro · Transferência",
+      "movementType": "transfer",
+      "transferValue": 100
+     },
+     {
+      "id": 7,
+      "title": "Para a conjunta",
+      "amount": 0,
+      "date": "2026-09-01",
+      "detail": "1 setembro · Transferência",
+      "movementType": "transfer",
+      "transferValue": 200,
+      "revolut": {
+       "holder": "Conjunta"
+      }
+     },
+     {
+      "id": 8,
+      "title": "Para a conjunta",
+      "amount": 0,
+      "date": "2026-08-01",
+      "detail": "1 agosto · Transferência",
+      "movementType": "transfer",
+      "transferValue": 150,
+      "revolut": {
+       "holder": "Conjunta"
+      }
+     },
+     {
+      "id": 9,
+      "title": "Importado",
+      "amount": -40,
+      "date": "2026-09-08",
+      "detail": "8 setembro · Compras",
+      "movementType": "expense",
+      "affectsBalance": false,
+      "importKey": "k1",
+      "importBatch": "b1"
+     },
+     {
+      "id": 10,
+      "title": "Sem data",
+      "amount": -3,
+      "detail": "5 setembro · Outros",
+      "movementType": "expense",
+      "date": "2026-09-05"
+     },
+     {
+      "id": 11,
+      "title": "Reembolso",
+      "amount": 25,
+      "date": "2026-09-18",
+      "detail": "18 setembro · Reembolsos",
+      "movementType": "income"
+     },
+     {
+      "id": 12,
+      "title": "Vencimento extra",
+      "amount": 300,
+      "date": "2026-10-02",
+      "detail": "2 outubro · Salário",
+      "movementType": "income"
+     },
+     {
+      "id": 13,
+      "title": "Juros",
+      "amount": 4.2,
+      "date": "2026-09-30",
+      "detail": "30 setembro · Outras receitas",
+      "movementType": "income",
+      "account": "poupanca"
+     },
+     {
+      "id": 14,
+      "title": "Veterinário",
+      "amount": -45,
+      "date": "2026-07-12",
+      "detail": "12 julho · Veterinário",
+      "movementType": "expense",
+      "pet": "Sam",
+      "note": "vacina",
+      "recurring": true
+     }
+    ],
+    "petPhotos": {},
+    "notifications": false,
+    "hideValues": false,
+    "annualExpenses": [
+     {
+      "name": "Seguro",
+      "amount": 300
+     }
+    ],
+    "salaries": {
+     "2025": {
+      "Hugo": [
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       1400
+      ],
+      "Marta": [
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       900
+      ]
+     },
+     "2026": {
+      "Hugo": [
+       1400,
+       1400,
+       1450,
+       1450,
+       1450,
+       1500,
+       1500,
+       1520,
+       1520,
+       0,
+       0,
+       0
+      ],
+      "Marta": [
+       900,
+       900,
+       900,
+       950,
+       950,
+       1100,
+       1100,
+       1100,
+       0,
+       0,
+       0,
+       0
+      ]
+     }
+    },
+    "profile": {
+     "profileName": "Família Teste",
+     "email": "",
+     "phone": "",
+     "members": [
+      "Pessoa A",
+      "Pessoa B"
+     ]
+    },
+    "categories": [
+     "Habitação",
+     "Alimentação",
+     "Transportes",
+     "Lazer"
+    ],
+    "incomeCategories": [
+     "Salário",
+     "Reembolsos",
+     "Prémios"
+    ],
+    "categoryIcons": {
+     "Lazer": "bike"
+    },
+    "accounts": [
+     {
+      "id": "principal",
+      "name": "Principal",
+      "balance": 800
+     },
+     {
+      "id": "revolut",
+      "name": "Revolut Conjunta",
+      "balance": 150,
+      "lowAt": 40
+     },
+     {
+      "id": "edenred",
+      "name": "Edenred",
+      "balance": 90,
+      "adj": {
+       "2026-09": 20
+      },
+      "tickets": [
+       "x-2026-09"
+      ]
+     },
+     {
+      "id": "poupanca",
+      "name": "Poupança",
+      "balance": 1000,
+      "createdAt": "2026-09"
+     }
+    ],
+    "appearance": {
+     "accent": "cyan",
+     "backgroundIntensity": 75,
+     "fontScale": 110,
+     "haptics": true,
+     "autoHide": "now"
+    }
+   },
+   "backup": {
+    "app": "financas-familiar",
+    "version": 4,
+    "data": {
+     "transactions": [
+      {
+       "id": 1,
+       "title": "Continente",
+       "amount": -95.4,
+       "date": "2026-09-04",
+       "detail": "4 setembro · Alimentação",
+       "movementType": "expense"
+      },
+      {
+       "id": 2,
+       "title": "Galp",
+       "amount": -55,
+       "date": "2026-08-09",
+       "detail": "9 agosto · Combustível",
+       "movementType": "expense"
+      },
+      {
+       "id": 3,
+       "title": "Cinema",
+       "amount": -14,
+       "date": "2026-09-12",
+       "detail": "12 setembro · Lazer",
+       "movementType": "expense",
+       "account": "revolut"
+      },
+      {
+       "id": 4,
+       "title": "Pastelaria",
+       "amount": -7.8,
+       "date": "2026-09-15",
+       "detail": "15 setembro · Restauração",
+       "movementType": "expense",
+       "account": "edenred"
+      },
+      {
+       "id": 5,
+       "title": "Almoço",
+       "amount": -9.5,
+       "date": "2026-08-20",
+       "detail": "20 agosto · Restauração",
+       "movementType": "expense",
+       "account": "edenred"
+      },
+      {
+       "id": 6,
+       "title": "Transferência",
+       "amount": 0,
+       "date": "2026-09-10",
+       "detail": "10 setembro · Transferência",
+       "movementType": "transfer",
+       "transferValue": 100
+      },
+      {
+       "id": 7,
+       "title": "Para a conjunta",
+       "amount": 0,
+       "date": "2026-09-01",
+       "detail": "1 setembro · Transferência",
+       "movementType": "transfer",
+       "transferValue": 200,
+       "revolut": {
+        "holder": "Conjunta"
+       }
+      },
+      {
+       "id": 8,
+       "title": "Para a conjunta",
+       "amount": 0,
+       "date": "2026-08-01",
+       "detail": "1 agosto · Transferência",
+       "movementType": "transfer",
+       "transferValue": 150,
+       "revolut": {
+        "holder": "Conjunta"
+       }
+      },
+      {
+       "id": 9,
+       "title": "Importado",
+       "amount": -40,
+       "date": "2026-09-08",
+       "detail": "8 setembro · Compras",
+       "movementType": "expense",
+       "affectsBalance": false,
+       "importKey": "k1",
+       "importBatch": "b1"
+      },
+      {
+       "id": 10,
+       "title": "Sem data",
+       "amount": -3,
+       "detail": "5 setembro · Outros",
+       "movementType": "expense",
+       "date": "2026-09-05"
+      },
+      {
+       "id": 11,
+       "title": "Reembolso",
+       "amount": 25,
+       "date": "2026-09-18",
+       "detail": "18 setembro · Reembolsos",
+       "movementType": "income"
+      },
+      {
+       "id": 12,
+       "title": "Vencimento extra",
+       "amount": 300,
+       "date": "2026-10-02",
+       "detail": "2 outubro · Salário",
+       "movementType": "income"
+      },
+      {
+       "id": 13,
+       "title": "Juros",
+       "amount": 4.2,
+       "date": "2026-09-30",
+       "detail": "30 setembro · Outras receitas",
+       "movementType": "income",
+       "account": "poupanca"
+      },
+      {
+       "id": 14,
+       "title": "Veterinário",
+       "amount": -45,
+       "date": "2026-07-12",
+       "detail": "12 julho · Veterinário",
+       "movementType": "expense",
+       "pet": "Sam",
+       "note": "vacina",
+       "recurring": true
+      }
+     ],
+     "petPhotos": {},
+     "notifications": false,
+     "hideValues": false,
+     "annualExpenses": [
+      {
+       "name": "Seguro",
+       "amount": 300
+      }
+     ],
+     "salaries": {
+      "2025": {
+       "Hugo": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1400
+       ],
+       "Marta": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        900
+       ]
+      },
+      "2026": {
+       "Hugo": [
+        1400,
+        1400,
+        1450,
+        1450,
+        1450,
+        1500,
+        1500,
+        1520,
+        1520,
+        0,
+        0,
+        0
+       ],
+       "Marta": [
+        900,
+        900,
+        900,
+        950,
+        950,
+        1100,
+        1100,
+        1100,
+        0,
+        0,
+        0,
+        0
+       ]
+      }
+     },
+     "profile": {
+      "profileName": "Família Teste",
+      "email": "",
+      "phone": "",
+      "members": [
+       "Pessoa A",
+       "Pessoa B"
+      ]
+     },
+     "categories": [
+      "Habitação",
+      "Alimentação",
+      "Transportes",
+      "Lazer"
+     ],
+     "incomeCategories": [
+      "Salário",
+      "Reembolsos",
+      "Prémios"
+     ],
+     "categoryIcons": {
+      "Lazer": "bike"
+     },
+     "accounts": [
+      {
+       "id": "principal",
+       "name": "Principal",
+       "balance": 800
+      },
+      {
+       "id": "revolut",
+       "name": "Revolut Conjunta",
+       "balance": 150,
+       "lowAt": 40
+      },
+      {
+       "id": "edenred",
+       "name": "Edenred",
+       "balance": 90,
+       "adj": {
+        "2026-09": 20
+       },
+       "tickets": [
+        "x-2026-09"
+       ]
+      },
+      {
+       "id": "poupanca",
+       "name": "Poupança",
+       "balance": 1000,
+       "createdAt": "2026-09"
+      }
+     ],
+     "appearance": {
+      "accent": "cyan",
+      "backgroundIntensity": 75,
+      "fontScale": 110,
+      "haptics": true,
+      "autoHide": "now"
+     }
+    },
+    "jarvisThreads": [
+     {
+      "id": "71e4d403-899a-4344-936b-4d0169818110",
+      "title": "Nova conversa",
+      "updatedAt": "2026-09-28T11:00:01.040Z",
+      "messages": []
+     }
+    ],
+    "vetReminders": []
+   },
+   "saldos": "Saldos — Principal: 576,60 € · Revolut Conjunta: 486,00 € · Edenred: 72,70 € · Poupança: 1004,20 €.",
+   "tendencias": [
+    "SALDO PRINCIPAL | ↓ 32,2% vs. agosto",
+    "SALDO REVOLUT CONJUNTA | ↑ 62% vs. agosto",
+    "SALDO EDENRED | ↑ 20,2% vs. agosto",
+    "SALDO POUPANÇA | ↑ 0,4% vs. início do mês"
+   ],
+   "rendimento": [
+    "setembro de 2026 | Rendimento mensal 2620,00 € 0,8%",
+    "agosto de 2026 | Rendimento mensal 2600,00 € 0%",
+    "julho de 2026 | Rendimento mensal 2600,00 € 8,3%",
+    "junho de 2026 | Rendimento mensal 2400,00 € 0%",
+    "maio de 2026 | Rendimento mensal 2400,00 € 2,1%",
+    "abril de 2026 | Rendimento mensal 2350,00 € 2,2%",
+    "março de 2026 | Rendimento mensal 2300,00 € 0%",
+    "fevereiro de 2026 | Rendimento mensal 2300,00 € 0%",
+    "janeiro de 2026 | Rendimento mensal 2300,00 €",
+    "dezembro de 2025 | Rendimento mensal 0,00 €"
+   ]
+  },
+  "revolut_antigo_e_campos_extra": {
+   "entrada": {
+    "profile": {
+     "profileName": "Família Teste",
+     "email": "",
+     "phone": "",
+     "members": [
+      "Pessoa A",
+      "Pessoa B"
+     ]
+    },
+    "campoDesconhecido": {
+     "a": 1
+    },
+    "accounts": [
+     {
+      "id": "principal",
+      "name": "Principal",
+      "balance": 10
+     },
+     {
+      "id": "revolut",
+      "name": "Revolut",
+      "balance": 5
+     }
+    ],
+    "appearance": {
+     "haptics": false
+    },
+    "hideValues": false,
+    "transactions": [
+     {
+      "id": 1,
+      "title": "Pão",
+      "amount": -2,
+      "detail": "dia inválido",
+      "movementType": "expense"
+     }
+    ]
+   },
+   "gravado": {
+    "transactions": [
+     {
+      "id": 1,
+      "title": "Pão",
+      "amount": -2,
+      "detail": "dia inválido",
+      "movementType": "expense",
+      "date": "2026-09-01"
+     }
+    ],
+    "petPhotos": {},
+    "notifications": true,
+    "hideValues": false,
+    "annualExpenses": [],
+    "salaries": {},
+    "profile": {
+     "profileName": "Família Teste",
+     "email": "",
+     "phone": "",
+     "members": [
+      "Pessoa A",
+      "Pessoa B"
+     ]
+    },
+    "categories": [
+     "Habitação",
+     "Alimentação",
+     "Transportes",
+     "Animais",
+     "Lazer",
+     "Saúde",
+     "Educação",
+     "Seguros"
+    ],
+    "incomeCategories": [
+     "Salário",
+     "Investimentos",
+     "Reembolsos",
+     "Outras receitas"
+    ],
+    "categoryIcons": {},
+    "accounts": [
+     {
+      "id": "principal",
+      "name": "Principal",
+      "balance": 10
+     },
+     {
+      "id": "revolut",
+      "name": "Revolut Conjunta",
+      "balance": 5
+     }
+    ],
+    "appearance": {
+     "accent": "violet",
+     "backgroundIntensity": 75,
+     "fontScale": 100,
+     "haptics": false,
+     "autoHide": "now"
+    }
+   },
+   "backup": {
+    "app": "financas-familiar",
+    "version": 4,
+    "data": {
+     "transactions": [
+      {
+       "id": 1,
+       "title": "Pão",
+       "amount": -2,
+       "detail": "dia inválido",
+       "movementType": "expense",
+       "date": "2026-09-01"
+      }
+     ],
+     "petPhotos": {},
+     "notifications": true,
+     "hideValues": false,
+     "annualExpenses": [],
+     "salaries": {},
+     "profile": {
+      "profileName": "Família Teste",
+      "email": "",
+      "phone": "",
+      "members": [
+       "Pessoa A",
+       "Pessoa B"
+      ]
+     },
+     "categories": [
+      "Habitação",
+      "Alimentação",
+      "Transportes",
+      "Animais",
+      "Lazer",
+      "Saúde",
+      "Educação",
+      "Seguros"
+     ],
+     "incomeCategories": [
+      "Salário",
+      "Investimentos",
+      "Reembolsos",
+      "Outras receitas"
+     ],
+     "categoryIcons": {},
+     "accounts": [
+      {
+       "id": "principal",
+       "name": "Principal",
+       "balance": 10
+      },
+      {
+       "id": "revolut",
+       "name": "Revolut Conjunta",
+       "balance": 5
+      }
+     ],
+     "appearance": {
+      "accent": "violet",
+      "backgroundIntensity": 75,
+      "fontScale": 100,
+      "haptics": false,
+      "autoHide": "now"
+     }
+    },
+    "jarvisThreads": [
+     {
+      "id": "d57b4046-7891-477e-85ef-403e4f1a9337",
+      "title": "Nova conversa",
+      "updatedAt": "2026-09-28T11:00:00.976Z",
+      "messages": []
+     }
+    ],
+    "vetReminders": []
+   },
+   "saldos": "Saldos — Principal: 8,00 € · Revolut Conjunta: 5,00 €.",
+   "tendencias": [
+    "SALDO PRINCIPAL | ↓ 20% vs. agosto",
+    "SALDO REVOLUT CONJUNTA | ↑ 0% vs. agosto"
+   ],
+   "rendimento": [
+    "setembro de 2026 | Rendimento mensal 0,00 €",
+    "agosto de 2026 | Rendimento mensal 0,00 €",
+    "julho de 2026 | Rendimento mensal 0,00 €",
+    "junho de 2026 | Rendimento mensal 0,00 €",
+    "maio de 2026 | Rendimento mensal 0,00 €",
+    "abril de 2026 | Rendimento mensal 0,00 €",
+    "março de 2026 | Rendimento mensal 0,00 €",
+    "fevereiro de 2026 | Rendimento mensal 0,00 €",
+    "janeiro de 2026 | Rendimento mensal 0,00 €",
+    "dezembro de 2025 | Rendimento mensal 0,00 €"
+   ]
+  },
+  "uma_conta_e_listas_vazias": {
+   "entrada": {
+    "profile": {
+     "profileName": "Família Teste",
+     "email": "",
+     "phone": "",
+     "members": [
+      "Pessoa A",
+      "Pessoa B"
+     ]
+    },
+    "accounts": [
+     {
+      "id": "principal",
+      "name": "Principal",
+      "balance": 50
+     }
+    ],
+    "categories": [],
+    "incomeCategories": [],
+    "transactions": [],
+    "salaries": {
+     "2026": {
+      "Hugo": [
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0
+      ],
+      "Marta": [
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0
+      ]
+     }
+    }
+   },
+   "gravado": {
+    "transactions": [],
+    "petPhotos": {},
+    "notifications": true,
+    "hideValues": false,
+    "annualExpenses": [],
+    "salaries": {
+     "2026": {
+      "Hugo": [
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0
+      ],
+      "Marta": [
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0
+      ]
+     }
+    },
+    "profile": {
+     "profileName": "Família Teste",
+     "email": "",
+     "phone": "",
+     "members": [
+      "Pessoa A",
+      "Pessoa B"
+     ]
+    },
+    "categories": [
+     "Habitação",
+     "Alimentação",
+     "Transportes",
+     "Animais",
+     "Lazer",
+     "Saúde",
+     "Educação",
+     "Seguros"
+    ],
+    "incomeCategories": [
+     "Salário",
+     "Investimentos",
+     "Reembolsos",
+     "Outras receitas"
+    ],
+    "categoryIcons": {},
+    "accounts": [
+     {
+      "id": "principal",
+      "name": "Principal",
+      "balance": 0
+     },
+     {
+      "id": "revolut",
+      "name": "Revolut Conjunta",
+      "balance": 0
+     }
+    ],
+    "appearance": {
+     "accent": "violet",
+     "backgroundIntensity": 75,
+     "fontScale": 100,
+     "haptics": true,
+     "autoHide": "now"
+    }
+   },
+   "backup": {
+    "app": "financas-familiar",
+    "version": 4,
+    "data": {
+     "transactions": [],
+     "petPhotos": {},
+     "notifications": true,
+     "hideValues": false,
+     "annualExpenses": [],
+     "salaries": {
+      "2026": {
+       "Hugo": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+       ],
+       "Marta": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+       ]
+      }
+     },
+     "profile": {
+      "profileName": "Família Teste",
+      "email": "",
+      "phone": "",
+      "members": [
+       "Pessoa A",
+       "Pessoa B"
+      ]
+     },
+     "categories": [
+      "Habitação",
+      "Alimentação",
+      "Transportes",
+      "Animais",
+      "Lazer",
+      "Saúde",
+      "Educação",
+      "Seguros"
+     ],
+     "incomeCategories": [
+      "Salário",
+      "Investimentos",
+      "Reembolsos",
+      "Outras receitas"
+     ],
+     "categoryIcons": {},
+     "accounts": [
+      {
+       "id": "principal",
+       "name": "Principal",
+       "balance": 0
+      },
+      {
+       "id": "revolut",
+       "name": "Revolut Conjunta",
+       "balance": 0
+      }
+     ],
+     "appearance": {
+      "accent": "violet",
+      "backgroundIntensity": 75,
+      "fontScale": 100,
+      "haptics": true,
+      "autoHide": "now"
+     }
+    },
+    "jarvisThreads": [
+     {
+      "id": "d56154f3-aeb4-4dcf-91c8-22708f91cf47",
+      "title": "Nova conversa",
+      "updatedAt": "2026-09-28T11:00:00.986Z",
+      "messages": []
+     }
+    ],
+    "vetReminders": []
+   },
+   "saldos": "Saldos — Principal: 0,00 € · Revolut Conjunta: 0,00 €.",
+   "tendencias": [
+    "SALDO PRINCIPAL | — vs. agosto",
+    "SALDO REVOLUT CONJUNTA | — vs. agosto"
+   ],
+   "rendimento": [
+    "setembro de 2026 | Rendimento mensal 0,00 €",
+    "agosto de 2026 | Rendimento mensal 0,00 €",
+    "julho de 2026 | Rendimento mensal 0,00 €",
+    "junho de 2026 | Rendimento mensal 0,00 €",
+    "maio de 2026 | Rendimento mensal 0,00 €",
+    "abril de 2026 | Rendimento mensal 0,00 €",
+    "março de 2026 | Rendimento mensal 0,00 €",
+    "fevereiro de 2026 | Rendimento mensal 0,00 €",
+    "janeiro de 2026 | Rendimento mensal 0,00 €",
+    "dezembro de 2025 | Rendimento mensal 0,00 €"
+   ]
+  },
+  "salario_por_movimento": {
+   "entrada": {
+    "profile": {
+     "profileName": "Família Teste",
+     "email": "",
+     "phone": "",
+     "members": [
+      "Pessoa A",
+      "Pessoa B"
+     ]
+    },
+    "transactions": [
+     {
+      "id": 1,
+      "title": "Ordenado",
+      "amount": 1234.5,
+      "date": "2026-08-27",
+      "detail": "27 agosto · Salário",
+      "movementType": "income"
+     },
+     {
+      "id": 2,
+      "title": "Vencimento",
+      "amount": 800,
+      "date": "2026-07-28",
+      "detail": "28 julho · Outras receitas",
+      "movementType": "income"
+     },
+     {
+      "id": 3,
+      "title": "Prémio",
+      "amount": 50,
+      "date": "2026-08-02",
+      "detail": "2 agosto · Outras receitas",
+      "movementType": "income"
+     }
+    ]
+   },
+   "gravado": {
+    "transactions": [
+     {
+      "id": 1,
+      "title": "Ordenado",
+      "amount": 1234.5,
+      "date": "2026-08-27",
+      "detail": "27 agosto · Salário",
+      "movementType": "income"
+     },
+     {
+      "id": 2,
+      "title": "Vencimento",
+      "amount": 800,
+      "date": "2026-07-28",
+      "detail": "28 julho · Outras receitas",
+      "movementType": "income"
+     },
+     {
+      "id": 3,
+      "title": "Prémio",
+      "amount": 50,
+      "date": "2026-08-02",
+      "detail": "2 agosto · Outras receitas",
+      "movementType": "income"
+     }
+    ],
+    "petPhotos": {},
+    "notifications": true,
+    "hideValues": false,
+    "annualExpenses": [],
+    "salaries": {},
+    "profile": {
+     "profileName": "Família Teste",
+     "email": "",
+     "phone": "",
+     "members": [
+      "Pessoa A",
+      "Pessoa B"
+     ]
+    },
+    "categories": [
+     "Habitação",
+     "Alimentação",
+     "Transportes",
+     "Animais",
+     "Lazer",
+     "Saúde",
+     "Educação",
+     "Seguros"
+    ],
+    "incomeCategories": [
+     "Salário",
+     "Investimentos",
+     "Reembolsos",
+     "Outras receitas"
+    ],
+    "categoryIcons": {},
+    "accounts": [
+     {
+      "id": "principal",
+      "name": "Principal",
+      "balance": 0
+     },
+     {
+      "id": "revolut",
+      "name": "Revolut Conjunta",
+      "balance": 0
+     }
+    ],
+    "appearance": {
+     "accent": "violet",
+     "backgroundIntensity": 75,
+     "fontScale": 100,
+     "haptics": true,
+     "autoHide": "now"
+    }
+   },
+   "backup": {
+    "app": "financas-familiar",
+    "version": 4,
+    "data": {
+     "transactions": [
+      {
+       "id": 1,
+       "title": "Ordenado",
+       "amount": 1234.5,
+       "date": "2026-08-27",
+       "detail": "27 agosto · Salário",
+       "movementType": "income"
+      },
+      {
+       "id": 2,
+       "title": "Vencimento",
+       "amount": 800,
+       "date": "2026-07-28",
+       "detail": "28 julho · Outras receitas",
+       "movementType": "income"
+      },
+      {
+       "id": 3,
+       "title": "Prémio",
+       "amount": 50,
+       "date": "2026-08-02",
+       "detail": "2 agosto · Outras receitas",
+       "movementType": "income"
+      }
+     ],
+     "petPhotos": {},
+     "notifications": true,
+     "hideValues": false,
+     "annualExpenses": [],
+     "salaries": {},
+     "profile": {
+      "profileName": "Família Teste",
+      "email": "",
+      "phone": "",
+      "members": [
+       "Pessoa A",
+       "Pessoa B"
+      ]
+     },
+     "categories": [
+      "Habitação",
+      "Alimentação",
+      "Transportes",
+      "Animais",
+      "Lazer",
+      "Saúde",
+      "Educação",
+      "Seguros"
+     ],
+     "incomeCategories": [
+      "Salário",
+      "Investimentos",
+      "Reembolsos",
+      "Outras receitas"
+     ],
+     "categoryIcons": {},
+     "accounts": [
+      {
+       "id": "principal",
+       "name": "Principal",
+       "balance": 0
+      },
+      {
+       "id": "revolut",
+       "name": "Revolut Conjunta",
+       "balance": 0
+      }
+     ],
+     "appearance": {
+      "accent": "violet",
+      "backgroundIntensity": 75,
+      "fontScale": 100,
+      "haptics": true,
+      "autoHide": "now"
+     }
+    },
+    "jarvisThreads": [
+     {
+      "id": "ea635372-dd7f-44a4-a107-b0c0c7a459a8",
+      "title": "Nova conversa",
+      "updatedAt": "2026-09-28T11:00:00.970Z",
+      "messages": []
+     }
+    ],
+    "vetReminders": []
+   },
+   "saldos": "Saldos — Principal: 2084,50 € · Revolut Conjunta: 0,00 €.",
+   "tendencias": [
+    "SALDO PRINCIPAL | ↑ 0% vs. agosto",
+    "SALDO REVOLUT CONJUNTA | — vs. agosto"
+   ],
+   "rendimento": [
+    "setembro de 2026 | Rendimento mensal 1234,50 € 54,3%",
+    "agosto de 2026 | Rendimento mensal 800,00 €",
+    "julho de 2026 | Rendimento mensal 0,00 €",
+    "junho de 2026 | Rendimento mensal 0,00 €",
+    "maio de 2026 | Rendimento mensal 0,00 €",
+    "abril de 2026 | Rendimento mensal 0,00 €",
+    "março de 2026 | Rendimento mensal 0,00 €",
+    "fevereiro de 2026 | Rendimento mensal 0,00 €",
+    "janeiro de 2026 | Rendimento mensal 0,00 €",
+    "dezembro de 2025 | Rendimento mensal 0,00 €"
+   ]
+  },
+  "com_pin": {
+   "entrada": {
+    "profile": {
+     "profileName": "Família Teste",
+     "email": "",
+     "phone": "",
+     "members": [
+      "Pessoa A",
+      "Pessoa B"
+     ]
+    },
+    "pinHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "transactions": []
+   },
+   "gravado": {
+    "transactions": [],
+    "petPhotos": {},
+    "notifications": true,
+    "hideValues": false,
+    "annualExpenses": [],
+    "salaries": {},
+    "profile": {
+     "profileName": "Família Teste",
+     "email": "",
+     "phone": "",
+     "members": [
+      "Pessoa A",
+      "Pessoa B"
+     ]
+    },
+    "categories": [
+     "Habitação",
+     "Alimentação",
+     "Transportes",
+     "Animais",
+     "Lazer",
+     "Saúde",
+     "Educação",
+     "Seguros"
+    ],
+    "incomeCategories": [
+     "Salário",
+     "Investimentos",
+     "Reembolsos",
+     "Outras receitas"
+    ],
+    "categoryIcons": {},
+    "accounts": [
+     {
+      "id": "principal",
+      "name": "Principal",
+      "balance": 0
+     },
+     {
+      "id": "revolut",
+      "name": "Revolut Conjunta",
+      "balance": 0
+     }
+    ],
+    "appearance": {
+     "accent": "violet",
+     "backgroundIntensity": 75,
+     "fontScale": 100,
+     "haptics": true,
+     "autoHide": "now"
+    },
+    "pinHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   "backup": {
+    "app": "financas-familiar",
+    "version": 4,
+    "data": {
+     "transactions": [],
+     "petPhotos": {},
+     "notifications": true,
+     "hideValues": false,
+     "annualExpenses": [],
+     "salaries": {},
+     "profile": {
+      "profileName": "Família Teste",
+      "email": "",
+      "phone": "",
+      "members": [
+       "Pessoa A",
+       "Pessoa B"
+      ]
+     },
+     "categories": [
+      "Habitação",
+      "Alimentação",
+      "Transportes",
+      "Animais",
+      "Lazer",
+      "Saúde",
+      "Educação",
+      "Seguros"
+     ],
+     "incomeCategories": [
+      "Salário",
+      "Investimentos",
+      "Reembolsos",
+      "Outras receitas"
+     ],
+     "categoryIcons": {},
+     "accounts": [
+      {
+       "id": "principal",
+       "name": "Principal",
+       "balance": 0
+      },
+      {
+       "id": "revolut",
+       "name": "Revolut Conjunta",
+       "balance": 0
+      }
+     ],
+     "appearance": {
+      "accent": "violet",
+      "backgroundIntensity": 75,
+      "fontScale": 100,
+      "haptics": true,
+      "autoHide": "now"
+     },
+     "pinHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "jarvisThreads": [
+     {
+      "id": "d69304f3-ea00-4f83-a962-37021d444a17",
+      "title": "Nova conversa",
+      "updatedAt": "2026-09-28T11:00:00.990Z",
+      "messages": []
+     }
+    ],
+    "vetReminders": []
+   }
+  }
+ }
+}

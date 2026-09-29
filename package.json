@@ -1,11 +1,18 @@
 {
   "name": "financas",
   "private": true,
-  "description": "App Finanças (PWA). Atalhos: montar o site publicado e correr os testes.",
+  "description": "App Finanças (PWA). Núcleo de dados novo em app/src; atalhos para testes e montagem do site.",
   "type": "module",
   "scripts": {
+    "verificar": "tsc -p . && vitest run",
+    "testes:unitarios": "vitest run",
     "montar": "node scripts/montar-site.mjs",
     "testes": "python tests/correr.py",
     "testes:v2": "FF_URL=v2/ FF_PREFIX=financas-v2: python tests/correr.py"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.4",
+    "typescript": "5.9.3",
+    "vitest": "5.0.2"
   }
 }
