@@ -1,6 +1,6 @@
 # Plano — Fase 2 da app «Finanças»
 
-> Estado: **aprovado**. Etapa 0 **concluída** (v1.9.3). Etapa 1 **concluída** (`/v2/` 2.00.1, 44/44 na raiz e na `/v2/`). Etapa 2 **concluída** (núcleo de dados em `app/src/dados`, 53 testes unitários). Etapa 3 **concluída** (`/v2/` 2.00.2 = app nova: Principal, navegação e bloqueio). Etapa 4 **concluída** (`/v2/` 2.00.3: registar, editar e eliminar movimentos). Etapa 5 **concluída** (`/v2/` 2.00.4: bloqueio, impressão digital, bloqueio automático e privacidade reescritos em `app/src/bloqueio/`).
+> Estado: **aprovado**. Etapa 0 **concluída** (v1.9.3). Etapa 1 **concluída** (`/v2/` 2.00.1, 44/44 na raiz e na `/v2/`). Etapa 2 **concluída** (núcleo de dados em `app/src/dados`, 53 testes unitários). Etapa 3 **concluída** (`/v2/` 2.00.2 = app nova: Principal, navegação e bloqueio). Etapa 4 **concluída** (`/v2/` 2.00.3: registar, editar e eliminar movimentos). Etapa 5 **concluída** (`/v2/` 2.00.4: bloqueio, impressão digital, bloqueio automático e privacidade reescritos em `app/src/bloqueio/`; 2.00.5 mostra a versão no menu «V2 · teste»). Etapa 6 **concluída** (`/v2/` 2.00.6: Definições › Segurança, antecipada; as etapas seguintes passaram uma posição abaixo).
 > Base de referência: versão **1.9.2**, **36/36 testes a passar** (medido a 28-09-2026).
 
 ---
@@ -162,7 +162,7 @@ Meio-termo: mantém a edição direta, ganha alguma verificação de tipos. Tem 
 
 ## 4. Ordem de migração
 
-Princípio: **a produção (raiz) só muda nas etapas 0 e 12.** Todas as outras publicam apenas em `/v2/`, isolada dos dados reais.
+Princípio: **a produção (raiz) só muda nas etapas 0 e 13.** Todas as outras publicam apenas em `/v2/`, isolada dos dados reais.
 
 | # | Etapa | Onde publica | O que se testa no telemóvel | Testes atuais no ar |
 |---|---|---|---|---|
@@ -171,19 +171,21 @@ Princípio: **a produção (raiz) só muda nas etapas 0 e 12.** Todas as outras 
 | **2** | **Núcleo de dados** ✅ (`app/src/dados/`) em TypeScript + testes unitários com o ficheiro `dados_versao_antiga.json` e dados fictícios grandes; **arranque do projeto Vite + TypeScript + Vitest em `app/`** | `/v2/` (sem mudança visível) | — (só testes automáticos) | 36/36 raiz · 36/36 v2 |
 | **3** | **Esqueleto React** ✅ — layout, barra inferior, painel «Mais», swipe e ordem das páginas, página **Principal** (anel do rendimento, caixas das contas, lista) | `/v2/` passa a ser a app nova | Aspeto da Principal, navegação, swipe | 36/36 raiz · grupo `arranque` na v2 |
 | **4** | **Movimentos** ✅ — criar/editar/apagar, transferências, notas, filtro por conta, pesquisa, saldos | `/v2/` | Registar movimentos reais de teste | + `movimentos` |
-| **5** | **Bloqueio** ✅ — PIN (mesmo hash), impressão digital (mesmo registo e mesmos parâmetros WebAuthn), autobloqueio, privacidade; as opções das Definições (ligar/desligar digital, tempo do autobloqueio) ficam para a etapa 8 | `/v2/` | Deslizar, PIN, digital, voltar à app | + `bloqueio` + `biometria` (sensor simulado; registo da app atual abre a nova) |
-| **6** | **Análise, Calendário, Categorias, Resumo** | `/v2/` | Comparar lado a lado com a app atual | + `calendario` |
-| **7** | **Combustível e Veterinário** (+ lembretes) | `/v2/` | Lembretes, "feito" | + `veterinario` |
-| **8** | **Definições** — perfil, aparência, backup/restauro, espaço, lembrete de backup, recibos PDF | `/v2/` | Exportar backup e restaurar na V2 | + `compatibilidade` |
-| **9** | **Importação de extratos** + **regras pessoais no telemóvel** (secção 7) | `/v2/` | Importar um extrato real na V2 | + `extratos` |
-| **10** | **Jarvis** — motor por regras + interface + ações com confirmação | `/v2/` | Perguntas do dia a dia | + `jarvis` |
-| **11** | **Offline e atualizações** — SW gerado com lista de ficheiros automática, aviso "Nova versão" | `/v2/` | Modo avião; publicar 2 versões seguidas | 36/36 v2 |
-| **12** | **Troca** — build nova passa para a raiz com o prefixo real `financas-familiar:`; app 1.9.x fica em `/v1/` para recuo | **Raiz** (v2.x — ver secção 9) | Backup obrigatório antes; atualizar; confirmar dados, PIN e digital | 36/36 raiz |
-| **13** | **Limpeza** — remover `legado/`/`/v1/` após 2–4 semanas sem problemas; atualizar CLAUDE.md e README | Raiz | — | 36/36 |
+| **5** | **Bloqueio** ✅ — PIN (mesmo hash), impressão digital (mesmo registo e mesmos parâmetros WebAuthn), autobloqueio, privacidade; as opções das Definições (ligar/desligar digital, tempo do autobloqueio) passaram para a etapa 6 | `/v2/` | Deslizar, PIN, digital, voltar à app | + `bloqueio` + `biometria` (sensor simulado; registo da app atual abre a nova) |
+| **6** | **Definições › Segurança** ✅ *(antecipada a pedido do dono, para se poder definir o PIN na V2)* — menu rápido da roda dentada, lista das Definições (restantes secções "Em construção"), PIN (ativar, alterar, remover — mesmo hash), impressão digital (ligar/desligar), ocultar valores ao sair, bloqueio ao voltar | `/v2/` | Definir o PIN na V2; testar bloqueio, digital e bloqueio ao voltar | + `definicoes` (HTML igual ao da app atual) |
+| **7** | **Análise, Calendário, Categorias, Resumo** | `/v2/` | Comparar lado a lado com a app atual | + `calendario` |
+| **8** | **Combustível e Veterinário** (+ lembretes) | `/v2/` | Lembretes, "feito" | + `veterinario` |
+| **9** | **Restantes Definições** — perfil, aparência, backup/restauro, espaço, lembrete de backup, recibos PDF | `/v2/` | Exportar backup e restaurar na V2 | + `compatibilidade` |
+| **10** | **Importação de extratos** + **regras pessoais no telemóvel** (secção 7) | `/v2/` | Importar um extrato real na V2 | + `extratos` |
+| **11** | **Jarvis** — motor por regras + interface + ações com confirmação | `/v2/` | Perguntas do dia a dia | + `jarvis` |
+| **12** | **Offline e atualizações** — SW gerado com lista de ficheiros automática, aviso "Nova versão" | `/v2/` | Modo avião; publicar 2 versões seguidas | 36/36 v2 |
+| **13** | **Troca** — build nova passa para a raiz com o prefixo real `financas-familiar:`; app 1.9.x fica em `/v1/` para recuo | **Raiz** (v2.x — ver secção 9) | Backup obrigatório antes; atualizar; confirmar dados, PIN e digital | 36/36 raiz |
+| **14** | **Limpeza** — remover `legado/`/`/v1/` após 2–4 semanas sem problemas; atualizar CLAUDE.md e README | Raiz | — | 36/36 |
 
 Notas:
-- As etapas 3–10 podem ter subetapas (ex.: 6a Análise, 6b Calendário) se ficarem grandes. **Uma etapa por vez, com preview antes.**
+- As etapas 3–11 podem ter subetapas (ex.: 7a Análise, 7b Calendário) se ficarem grandes. **Uma etapa por vez, com preview antes.**
 - Enquanto uma página ainda não estiver migrada, a `/v2/` mostra "Em construção" nesse separador.
+- **Falta na `/v2/` (etapa 7):** na app atual, o botão "voltar" do telemóvel numa página que não seja a Principal volta à Principal (`history.pushState` com `financeTab`). A etapa 6 só trata o "voltar" nas Definições; o das páginas entra na etapa 7, com as páginas.
 
 ---
 
@@ -212,9 +214,9 @@ Todas invisíveis no uso normal e mais seguras para os dados; os testes de equiv
 
 ### 5.1 Os 36 testes atuais
 
-- **Na raiz (produção): 36/36 em todas as etapas**, sempre, porque a produção só muda nas etapas 0 e 12.
+- **Na raiz (produção): 36/36 em todas as etapas**, sempre, porque a produção só muda nas etapas 0 e 13.
 - **Na `/v2/`**: o `correr.py` passa a aceitar `FF_URL` e `FF_PREFIX`; o CI corre os 36 contra a raiz **e** contra a `/v2/`. A partir da etapa 3, cada grupo é ativado na `/v2/` quando a respetiva parte é migrada (tabela da secção 4). **Condição para a troca (etapa 12): 36/36 na `/v2/`.**
-- ⚠️ **Honestidade:** entre as etapas 3 e 10 a `/v2/` não passa os 36 (as páginas ainda não existem). A alternativa — manter a app antiga "dentro" da nova — obrigaria a continuar a remendar o bundle, que é precisamente o que queremos eliminar.
+- ⚠️ **Honestidade:** entre as etapas 3 e 11 a `/v2/` não passa os 36 (as páginas ainda não existem). A alternativa — manter a app antiga "dentro" da nova — obrigaria a continuar a remendar o bundle, que é precisamente o que queremos eliminar.
 - Dois testes dependem do ficheiro `js/app.js` (`versao_igual…`, `todos_os_ficheiros…`). Com a build, os nomes levam hash; adapto-os para ler a versão da build **mantendo a mesma intenção**. Mostro a diferença antes.
 
 ### 5.2 Testes novos
@@ -227,7 +229,7 @@ Todas invisíveis no uso normal e mais seguras para os dados; os testes de equiv
 | **Isolamento da `/v2/`** | Espiar o `localStorage`: a v2 **nunca escreve** em `financas-familiar:*` | Proteger os dados reais |
 | **PIN** | PIN fictício → hash conhecido (valor fixo no teste). O sal `financas-familiar:` **não depende do prefixo de armazenamento** (também na `/v2/`) | O formato não pode mudar |
 | **Impressão digital** | Autenticador WebAuthn **virtual** do Chromium: registar, desbloquear, invalidar ao mudar o PIN | Evitar ficar sem acesso |
-| **Atualização** | Servir 1.9.x, instalar SW, trocar para a v2, carregar "Atualizar" → dados, PIN e digital intactos | Etapa 12 |
+| **Atualização** | Servir 1.9.x, instalar SW, trocar para a v2, carregar "Atualizar" → dados, PIN e digital intactos | Etapa 13 |
 | **Offline** | Importar extrato e ler recibo em modo avião (bibliotecas locais) | Achado A4 |
 | **Acessibilidade de movimento** | Com `prefers-reduced-motion`, sem animações | Regra do CLAUDE.md |
 | **Unitários** (Vitest) | Saldos (Edenred transita), rendimento X−1, datas, leitura CSV/XLSX, classificador, deteção de duplicados, motor do Jarvis | Rápidos, correm em segundos |
@@ -271,7 +273,7 @@ Pré-requisito: a **etapa 0 tem de estar instalada no telemóvel** antes de abri
 2. No código ficam **só as regras genéricas** (lojas → categorias, portagens, combustível…).
 3. Ecrã **Definições › Importação › Regras pessoais**: listar, acrescentar, editar, apagar.
 4. A configuração entra no **backup** e no **restauro** (compatível: backups antigos sem ela continuam a restaurar).
-5. **Passagem para o telemóvel sem pôr os nomes no repositório**: a versão da etapa 9 lê as regras que já existem nas "regras memorizadas" (`:import-rules`) e, se a configuração estiver vazia, mostra um assistente curto para as criar (preenchido com sugestões a partir dos últimos movimentos importados, que já estão no telemóvel).
+5. **Passagem para o telemóvel sem pôr os nomes no repositório**: a versão da etapa 10 lê as regras que já existem nas "regras memorizadas" (`:import-rules`) e, se a configuração estiver vazia, mostra um assistente curto para as criar (preenchido com sugestões a partir dos últimos movimentos importados, que já estão no telemóvel).
 6. Nomes das pessoas e animais: passar a vir do `profile` (já existe nos dados) — mesmo tratamento, na etapa correspondente (4, 7 e 10).
 
 ⚠️ **Parceiro crítico:** retirar do código **não apaga o histórico do Git**. Os nomes continuam visíveis em commits antigos. Apagá-los exige reescrever o histórico (`git filter-repo` + *force-push*), o que é irreversível e parte cópias locais. Recomendo decidir isto à parte, depois da etapa 9; não faço nada disso sem ordem explícita. Os ficheiros de teste também têm nomes reais (`tests/dados/dados_versao_antiga.json`, `teste_veterinario.py`, `tests/referencias/jarvis.json`). Como o núcleo tem esses nomes fixos no código, só podem passar a fictícios quando os nomes migrarem para o `profile` (etapas 4, 7 e 10).
@@ -282,7 +284,7 @@ Pré-requisito: a **etapa 0 tem de estar instalada no telemóvel** antes de abri
 
 | Risco | Mitigação |
 |---|---|
-| **Perda de dados na troca** | Produção só muda na etapa 12; `/v2/` usa prefixo separado; teste de isolamento; **backup obrigatório** antes da troca; esquema Zod **tolerante** (nunca apaga campos desconhecidos); nenhuma migração que reescreva `financas-familiar:v3` sem necessidade; recuo possível para `/v1/` |
+| **Perda de dados na troca** | Produção só muda na etapa 13; `/v2/` usa prefixo separado; teste de isolamento; **backup obrigatório** antes da troca; esquema Zod **tolerante** (nunca apaga campos desconhecidos); nenhuma migração que reescreva `financas-familiar:v3` sem necessidade; recuo possível para `/v1/` |
 | **Dados antigos com formatos variados** | Testes com `dados_versao_antiga.json` e dados fictícios grandes; leitura defensiva igual à atual (`rc()` devolve `{}` se falhar) |
 | **Espaço de armazenamento** (~5 MB) | Não duplicar dados na mesma chave; a cópia para a V2 avisa se não houver espaço; indicador de espaço mantido |
 | **PIN** | Hash **exatamente igual**: `SHA-256("financas-familiar:" + PIN)` em hex; teste com valor fixo; sem "hash reforçado" (decisão já tomada) |

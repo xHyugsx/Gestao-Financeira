@@ -30,7 +30,8 @@ async def html(app, url, prefixo, dados, acoes):
     for a in acoes:
         await app.page.evaluate(a); await app.page.wait_for_timeout(250)
     await app.page.wait_for_timeout(500)
-    return await app.page.evaluate("document.querySelector('.cosmic-app').outerHTML")
+    h = await app.page.evaluate("document.querySelector('.cosmic-app').outerHTML")
+    return re.sub(r'(<p class="set-menu-version">v\. )[^<]*', r'\1…', h)  # cada app mostra a sua versão
 
 
 async def comparar_html(app, dados, estados):
@@ -209,3 +210,30 @@ async def t_impressao_digital_ativada_na_app_atual_funciona_na_nova(app):
     verificar(await p.query_selector('.ffl-key.bio'), 'a app nova não reconheceu o registo da app atual')
     await p.keyboard.press('Enter'); await p.wait_for_timeout(1500)
     verificar(not await p.query_selector('#ff-lock'), 'a impressão digital da app atual não abriu a app nova')
+
+
+RODA = "document.querySelector('button[aria-label=\"Definições\"]').click()"
+LISTA = [RODA, "document.querySelector('.set-menu-more').click()"]
+SEGURANCA = LISTA + ["[...document.querySelectorAll('.setting-row')].find(b=>b.textContent.includes('Segurança')).click()"]
+def _pin(a, b): return ("(()=>{const s=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set;"
+                        f"const c=document.querySelectorAll('.settings-panel input');[['{a}',c[0]],['{b}',c[1]]].forEach(([v,i])=>{{s.call(i,v);i.dispatchEvent(new Event('input',{{bubbles:true}}))}});"
+                        "document.querySelector('.settings-panel button[type=submit]').click()})()")
+DEFINICOES = {
+    'menu rápido': [RODA], 'lista': LISTA, 'segurança sem PIN': SEGURANCA,
+    'PIN que não coincide': SEGURANCA + [_pin('1234', '4321')], 'PIN definido': SEGURANCA + [_pin('1234', '1234')],
+    'PIN alterado': SEGURANCA + [_pin('1234', '1234'), _pin('0000', '0000')],
+    'ocultar após 1 min': SEGURANCA + ["[...document.querySelectorAll('.autohide-choice')].find(b=>b.textContent==='Após 1 min').click()"],
+    'segurança pelo menu rápido': [RODA, "[...document.querySelectorAll('.set-menu-item')].find(b=>b.textContent.includes('Segurança')).click()"],
+}
+
+
+async def t_definicoes_seguranca_iguais_a_app_atual(app):
+    await comparar_html(app, COMPLETO, DEFINICOES)
+
+
+async def t_definicoes_seguranca_com_impressao_digital_igual(app):
+    await com_sensor(app)
+    await comparar_html(app, COMPLETO, {
+        'PIN definido com sensor': SEGURANCA + [_pin('1234', '1234')],
+        'impressão digital ativada': SEGURANCA + [_pin('1234', '1234'), "document.querySelector('.ff-bio-slot [data-v=on]').click()"],
+    })
