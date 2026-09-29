@@ -51,6 +51,7 @@ Os módulos comunicam com o núcleo através de globais `window.ff*` (ex.: `ffIm
 - Plano e estado de cada etapa: `docs/PLANO-FASE-2.md`.
 - O site publicado é montado por `scripts/montar-site.mjs` em `_site/` e publicado pelo GitHub Actions: raiz = app atual (sem alterações); `/v2/` = versão de teste com dados isolados (prefixo `financas-v2:`), que **nunca** pode ler/escrever as chaves `financas-familiar:*` exceto pelo menu "Copiar dados" (só leitura).
 - Testes: `python tests/correr.py` (raiz) e `FF_URL=v2/ FF_PREFIX=financas-v2: python tests/correr.py` (`/v2/`).
+- Núcleo de dados novo em `app/src/dados/` (TypeScript): `npm ci && npm run verificar`. Tem de dar os mesmos resultados que a 1.9.x (`tests/referencias/dados.json`); diferenças intencionais listadas em `docs/PLANO-FASE-2.md` §4.1.
 
 ---
 

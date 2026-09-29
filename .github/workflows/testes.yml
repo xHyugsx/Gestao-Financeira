@@ -17,6 +17,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: npm
+      - name: Núcleo de dados (tipos + testes unitários)
+        run: |
+          npm ci
+          npm run verificar
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
