@@ -1,6 +1,8 @@
 import { type TouchEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { EcraBloqueio } from '../bloqueio/EcraBloqueio';
 import { ligacoes } from '../bloqueio/estado';
+import { VERSAO } from '../config';
+import { FolhaDefinicoes, MenuRapido, type PosicaoMenu, type Seccao } from '../definicoes/Definicoes';
 import { inicioDoMes, MESES, type Movimento } from '../dados';
 import { useDados } from '../estado/useDados';
 import { aspetosCategorias } from '../movimentos/categorias';
@@ -39,6 +41,12 @@ export function App() {
   const [novoAberto, setNovoAberto] = useState(false);
   const [escolhas, setEscolhas] = useState<EscolhasNovo>({ tipo: 'expense', categoria: 'Alimentação', recorrente: false, tipoValor: 'com', revolut: false });
   const [aEditar, setAEditar] = useState<Movimento | null>(null);
+  const [menu, setMenu] = useState<PosicaoMenu | null>(null);
+  const [folha, setFolha] = useState<'list' | 'direct' | null>(null);
+  const [seccao, setSeccao] = useState<Seccao | null>(null);
+  const [teclado, setTeclado] = useState(0);
+  const folhaAberta = useRef(folha);
+  folhaAberta.current = folha;
 
   const ocultos = estado.hideValues;
   const setOcultos = useCallback((v: boolean | ((a: boolean) => boolean)) =>
@@ -67,6 +75,46 @@ export function App() {
     if (!window.confirm(`Eliminar "${m.title}"?`)) return;
     mudarMovimentos((l) => l.filter((x) => x.id !== m.id)); vibrar([40, 60, 40]); setAEditar(null);
   };
+
+  // Definições: menu rápido da roda dentada e folha das Definições (o botão "voltar" do telemóvel fecha a folha)
+  const sairFolha = useCallback((depois: () => void) => {
+    const f = document.querySelector('.settings-sheet');
+    if (!f || reduzMovimento()) { depois(); return; }
+    if (f.classList.contains('is-out')) return;
+    f.classList.add('is-out');
+    setTimeout(() => { f.classList.remove('is-out'); depois(); }, 260);
+  }, []);
+  const abrirFolha = (modo: 'list' | 'direct', s?: Seccao) => {
+    setSeccao(s || null); setFolha(modo);
+    window.history.pushState({ ...window.history.state, ffSheet: true }, '');
+  };
+  const fecharFolha = useCallback(() => {
+    if (window.history.state?.ffSheet) window.history.back();
+    else sairFolha(() => { setFolha(null); setSeccao(null); });
+  }, [sairFolha]);
+  const fecharMenu = useCallback(() => {
+    setMenu((m) => m && { ...m, out: true });
+    setTimeout(() => setMenu(null), 220);
+  }, []);
+  useEffect(() => {
+    const f = () => { if (folhaAberta.current) sairFolha(() => { setFolha(null); setSeccao(null); }); };
+    window.addEventListener('popstate', f);
+    return () => window.removeEventListener('popstate', f);
+  }, [sairFolha]);
+  useEffect(() => {
+    if (!menu && !folha) return;
+    const k = (e: KeyboardEvent) => { if (e.key === 'Escape') { if (menu) fecharMenu(); else fecharFolha(); } };
+    document.addEventListener('keydown', k);
+    return () => document.removeEventListener('keydown', k);
+  }, [menu, folha, fecharMenu, fecharFolha]);
+  useEffect(() => {
+    if (!folha) { setTeclado(0); return; }
+    const v = window.visualViewport;
+    const f = () => { if (v) setTeclado(Math.max(0, Math.round(window.innerHeight - v.height - v.offsetTop))); };
+    f();
+    v?.addEventListener('resize', f); v?.addEventListener('scroll', f);
+    return () => { v?.removeEventListener('resize', f); v?.removeEventListener('scroll', f); };
+  }, [folha]);
 
   const irPara = useCallback((para: string, dx = 0) => {
     if (!para || para === pagina || transicao || !ids.includes(para)) return;
@@ -163,7 +211,10 @@ export function App() {
         type="button" className={ocultos ? 'head-tool head-tool-on' : 'head-tool'} aria-label={ocultos ? 'Mostrar valores' : 'Ocultar valores'}
         aria-pressed={ocultos} onClick={() => setOcultos((v) => !v)}
       ><Icone nome={ocultos ? 'eye-off' : 'eye'} /></button>
-      <button type="button" className="head-tool" aria-label="Definições" aria-expanded={false} onClick={() => emConstrucao('As Definições')}>
+      <button
+        type="button" className={menu ? 'head-tool head-tool-on' : 'head-tool'} aria-label="Definições" aria-expanded={!!menu}
+        onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); setMenu({ t: Math.round(r.bottom + 8), r: Math.max(8, Math.round(window.innerWidth - r.right)) }); }}
+      >
         <Icone nome="settings" />
       </button>
     </div>
@@ -255,6 +306,19 @@ export function App() {
           <ellipse cx="16" cy="16" rx="14.5" ry="5.2" fill="none" stroke="#9ff6ff" strokeOpacity=".45" strokeWidth=".7" transform="rotate(-30 16 16)" />
         </svg>
       </button>
+      {folha ? (
+        <FolhaDefinicoes
+          modo={folha} seccao={seccao} mudarSeccao={setSeccao} fechar={fecharFolha} teclado={teclado} estado={estado}
+          mudarPin={(pinHash) => setEstado((s) => ({ ...s, pinHash }))}
+          mudarAparencia={(appearance) => setEstado((s) => ({ ...s, appearance }))}
+        />
+      ) : null}
+      {menu ? (
+        <MenuRapido
+          posicao={menu} estado={estado} versao={VERSAO} fechar={fecharMenu}
+          abrir={(s) => { setMenu(null); abrirFolha(s ? 'direct' : 'list', s); }}
+        />
+      ) : null}
       <nav className="bottom-nav" aria-label="Navegação principal">
         <div className="bottom-nav-inner ffnav">
           {itemNav('principal')}

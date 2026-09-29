@@ -13,3 +13,6 @@ teste_compatibilidade:t_aviso_quando_a_gravacao_falha
 
 # Etapa 5 — ecrã de bloqueio, impressão digital, bloqueio automático e privacidade reescritos
 teste_biometria
+
+# Etapa 6 — Definições › Segurança (PIN, impressão digital, ocultar valores, bloqueio ao voltar)
+teste_definicoes
