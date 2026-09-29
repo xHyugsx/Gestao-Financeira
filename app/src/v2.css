@@ -1,0 +1,11 @@
+/* ===== só da versão de teste (/v2/) ===== */
+.ffv2-construcao h2 { margin: 0 0 .5rem; font-size: 1.05rem; }
+.ffv2-construcao p { margin: 0; line-height: 1.5; opacity: .8; }
+.ffv2-aviso {
+  position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 96px); z-index: 99970;
+  transform: translateX(-50%); width: max-content; max-width: calc(100% - 32px);
+  padding: 10px 16px; border-radius: 14px; background: rgba(13, 19, 48, .96); color: #fff;
+  border: 1px solid rgba(167, 139, 250, .3); font-size: 13px; text-align: center; animation: ffv2-aviso .25s ease-out;
+}
+@keyframes ffv2-aviso { from { opacity: 0; transform: translate(-50%, 8px); } }
+@media (prefers-reduced-motion: reduce) { .ffv2-aviso { animation: none; } }
