@@ -1,4 +1,6 @@
 import { type TouchEvent, useCallback, useEffect, useRef, useState } from 'react';
+import { EcraBloqueio } from '../bloqueio/EcraBloqueio';
+import { ligacoes } from '../bloqueio/estado';
 import { inicioDoMes, MESES, type Movimento } from '../dados';
 import { useDados } from '../estado/useDados';
 import { aspetosCategorias } from '../movimentos/categorias';
@@ -82,9 +84,9 @@ export function App() {
     setTimeout(() => setMais((m) => (m === 'out' ? false : m)), 200);
   }, []);
 
-  // Ligações usadas pelos módulos reaproveitados (bloqueio automático, etc.)
+  // Ligações usadas pelo bloqueio automático e pelos módulos ainda reaproveitados
   useEffect(() => {
-    window.ffRelock = () => (estado.pinHash ? (setBloqueada(true), true) : false);
+    ligacoes.bloquear = () => (estado.pinHash ? (setBloqueada(true), true) : false);
     window.ffMoreClose = fecharMais;
     window.ffGoPg = irPara;
   }, [estado.pinHash, fecharMais, irPara]);
@@ -112,19 +114,7 @@ export function App() {
 
   useAnimacaoNumeros(`${transicao ? transicao.para : pagina}|${desvioMes}|1`, transicao ? '.page-incoming' : '.page-current', ocultos || bloqueada);
 
-  if (bloqueada) {
-    return (
-      <div
-        id="ff-lock-host" key="ff-lock"
-        ref={(el) => {
-          if (el && !(el as HTMLElement & { __ffm?: number }).__ffm) {
-            (el as HTMLElement & { __ffm?: number }).__ffm = 1;
-            window.ffLockMount?.(el, { hash: estado.pinHash, onUnlock: () => setBloqueada(false) });
-          }
-        }}
-      />
-    );
-  }
+  if (bloqueada) return <EcraBloqueio key="ff-lock" hash={estado.pinHash} aoDesbloquear={() => setBloqueada(false)} />;
 
   const inicioToque = (e: TouchEvent) => {
     const alvo = e.target as HTMLElement;

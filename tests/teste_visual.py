@@ -1,5 +1,5 @@
 """A app nova (/v2/) tem de desenhar exatamente o mesmo que a app atual (raiz) nas partes já migradas."""
-import asyncio, base64, pathlib, sys
+import asyncio, base64, json, pathlib, sys
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 from correr import verificar
 from capturar_referencias_dados import COMPLETO, CASOS, PERFIL
@@ -146,3 +146,66 @@ async def t_registar_editar_eliminar_grava_o_mesmo_que_a_app_atual(app):
     nova = await _registar_editar_eliminar(app, app.raiz + 'v2/', 'financas-v2:')
     for i, nome in enumerate(['despesa nova', 'transferência Revolut', 'edição', 'eliminação', 'mensagem de valor em falta']):
         verificar(atual[i] == nova[i], f'{nome}: atual {str(atual[i])[:200]} · nova {str(nova[i])[:200]}')
+
+
+# ---- Ecrã de bloqueio (etapa 5) ----
+import hashlib
+from teste_biometria import com_sensor
+
+PIN = hashlib.sha256(b'financas-familiar:1234').hexdigest()
+TECLAS = lambda t: [f"window.dispatchEvent(new KeyboardEvent('keydown',{{key:'{k}'}}))" for k in t]
+BLOQUEIO = {
+    'fechado': [], 'teclado aberto': TECLAS(['Enter']), 'dois algarismos': TECLAS(['Enter', '1', '2']),
+    'PIN errado': TECLAS(['Enter', '9', '9', '9', '9']),
+}
+
+
+async def _bloqueio(app, url, prefixo, extra, acoes, espera=0):
+    p = app.page
+    await p.goto(url); await app.esperar_sw()
+    await p.evaluate("([P,x])=>{localStorage.clear();localStorage.setItem(P+'v3',JSON.stringify({pinHash:x.pin}));for(const k in x.extra)localStorage.setItem(P+k,x.extra[k])}",
+                     [prefixo, {'pin': PIN, 'extra': extra}])
+    await p.goto(url); await p.wait_for_timeout(1200)
+    for a in acoes:
+        await p.evaluate(a); await p.wait_for_timeout(60)
+    await p.wait_for_timeout(espera or 200)
+    return await p.evaluate("document.getElementById('ff-lock')?.outerHTML||''")
+
+
+async def _comparar_bloqueio(app, estados, extra=None, espera=0):
+    await app.page.emulate_media(reduced_motion='reduce')
+    for nome, acoes in estados.items():
+        atual = await _bloqueio(app, app.raiz, 'financas-familiar:', extra or {}, acoes, espera)
+        nova = await _bloqueio(app, app.raiz + 'v2/', 'financas-v2:', extra or {}, acoes, espera)
+        verificar('ff-lock' in atual, f'«{nome}»: o ecrã de bloqueio não apareceu na app atual')
+        if atual != nova:
+            i = next((k for k in range(min(len(atual), len(nova))) if atual[k] != nova[k]), min(len(atual), len(nova)))
+            verificar(False, f'«{nome}» diferente: atual «…{atual[max(0, i - 60):i + 60]}…» · nova «…{nova[max(0, i - 60):i + 60]}…»')
+
+
+async def t_ecra_de_bloqueio_igual_a_app_atual(app):
+    await _comparar_bloqueio(app, BLOQUEIO)
+
+
+async def t_ecra_de_bloqueio_com_impressao_digital_igual(app):
+    await com_sensor(app)
+    registo = json.dumps({'id': 'AAAA', 'pin': PIN})
+    # com impressão digital ativa: tecla do sensor; «a aguardar» quando se desliza (o pedido ao sensor fica pendente)
+    await app.page.add_init_script("navigator.credentials.get=()=>new Promise(()=>{})")
+    await _comparar_bloqueio(app, {'fechado': [], 'a aguardar o sensor': TECLAS(['Enter'])}, {'bio': registo})
+    # oferta para ativar depois do PIN certo
+    await _comparar_bloqueio(app, {'pergunta de ativar': TECLAS(['Enter', '1', '2', '3', '4'])}, espera=1200)
+
+
+async def t_impressao_digital_ativada_na_app_atual_funciona_na_nova(app):
+    """No dia da troca, a impressão digital registada na app atual tem de continuar a abrir a app nova."""
+    await com_sensor(app)
+    p = app.page
+    await _bloqueio(app, app.raiz, 'financas-familiar:', {}, TECLAS(['Enter', '1', '2', '3', '4']), 1200)
+    await p.click('.ffl-yes'); await p.wait_for_timeout(1500)
+    registo = await p.evaluate("localStorage.getItem('financas-familiar:bio')")
+    verificar(registo, 'a app atual não registou a impressão digital')
+    await _bloqueio(app, app.raiz + 'v2/', 'financas-v2:', {'bio': registo}, [])
+    verificar(await p.query_selector('.ffl-key.bio'), 'a app nova não reconheceu o registo da app atual')
+    await p.keyboard.press('Enter'); await p.wait_for_timeout(1500)
+    verificar(not await p.query_selector('#ff-lock'), 'a impressão digital da app atual não abriu a app nova')

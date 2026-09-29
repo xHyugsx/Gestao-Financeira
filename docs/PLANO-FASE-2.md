@@ -1,6 +1,6 @@
 # Plano — Fase 2 da app «Finanças»
 
-> Estado: **aprovado**. Etapa 0 **concluída** (v1.9.3). Etapa 1 **concluída** (`/v2/` 2.00.1, 44/44 na raiz e na `/v2/`). Etapa 2 **concluída** (núcleo de dados em `app/src/dados`, 53 testes unitários). Etapa 3 **concluída** (`/v2/` 2.00.2 = app nova: Principal, navegação e bloqueio). Etapa 4 **concluída** (`/v2/` 2.00.3: registar, editar e eliminar movimentos).
+> Estado: **aprovado**. Etapa 0 **concluída** (v1.9.3). Etapa 1 **concluída** (`/v2/` 2.00.1, 44/44 na raiz e na `/v2/`). Etapa 2 **concluída** (núcleo de dados em `app/src/dados`, 53 testes unitários). Etapa 3 **concluída** (`/v2/` 2.00.2 = app nova: Principal, navegação e bloqueio). Etapa 4 **concluída** (`/v2/` 2.00.3: registar, editar e eliminar movimentos). Etapa 5 **concluída** (`/v2/` 2.00.4: bloqueio, impressão digital, bloqueio automático e privacidade reescritos em `app/src/bloqueio/`).
 > Base de referência: versão **1.9.2**, **36/36 testes a passar** (medido a 28-09-2026).
 
 ---
@@ -171,7 +171,7 @@ Princípio: **a produção (raiz) só muda nas etapas 0 e 12.** Todas as outras 
 | **2** | **Núcleo de dados** ✅ (`app/src/dados/`) em TypeScript + testes unitários com o ficheiro `dados_versao_antiga.json` e dados fictícios grandes; **arranque do projeto Vite + TypeScript + Vitest em `app/`** | `/v2/` (sem mudança visível) | — (só testes automáticos) | 36/36 raiz · 36/36 v2 |
 | **3** | **Esqueleto React** ✅ — layout, barra inferior, painel «Mais», swipe e ordem das páginas, página **Principal** (anel do rendimento, caixas das contas, lista) | `/v2/` passa a ser a app nova | Aspeto da Principal, navegação, swipe | 36/36 raiz · grupo `arranque` na v2 |
 | **4** | **Movimentos** ✅ — criar/editar/apagar, transferências, notas, filtro por conta, pesquisa, saldos | `/v2/` | Registar movimentos reais de teste | + `movimentos` |
-| **5** | **Bloqueio** — PIN (mesmo hash), impressão digital, autobloqueio, privacidade | `/v2/` | Deslizar, PIN, digital, voltar à app | + `bloqueio` |
+| **5** | **Bloqueio** ✅ — PIN (mesmo hash), impressão digital (mesmo registo e mesmos parâmetros WebAuthn), autobloqueio, privacidade; as opções das Definições (ligar/desligar digital, tempo do autobloqueio) ficam para a etapa 8 | `/v2/` | Deslizar, PIN, digital, voltar à app | + `bloqueio` + `biometria` (sensor simulado; registo da app atual abre a nova) |
 | **6** | **Análise, Calendário, Categorias, Resumo** | `/v2/` | Comparar lado a lado com a app atual | + `calendario` |
 | **7** | **Combustível e Veterinário** (+ lembretes) | `/v2/` | Lembretes, "feito" | + `veterinario` |
 | **8** | **Definições** — perfil, aparência, backup/restauro, espaço, lembrete de backup, recibos PDF | `/v2/` | Exportar backup e restaurar na V2 | + `compatibilidade` |
@@ -191,7 +191,7 @@ Notas:
 
 - `/v2/` passou a ser **a app nova** (opção A): React 19 + Vite, compilada de `app/` por `scripts/montar-site.mjs`.
 - Já feito na app nova: Principal (anel do rendimento, contas, tendências, transações recentes, "Ver todas" com pesquisa e filtro por conta), cabeçalho com céu/saudação, seletor do mês, animação dos números, deslizar entre páginas, barra inferior e painel «Mais», ocultar valores (incluindo ao sair da app).
-- **Bloqueio mantido** reaproveitando `js/modulos/bloqueio.js`, `autobloqueio.js` e `privacidade.js` (a V2 tem uma cópia do `pinHash`; sem isto abriria sem PIN). Reescrita na etapa 5.
+- **Bloqueio mantido** reaproveitando `js/modulos/bloqueio.js`, `autobloqueio.js` e `privacidade.js` (a V2 tem uma cópia do `pinHash`; sem isto abriria sem PIN). Reescritos na etapa 5 (`app/src/bloqueio/`).
 - Ícones extraídos do núcleo atual (`scripts/extrair-icones.mjs` → `app/src/ui/icones.ts`) para ficarem iguais ao pixel.
 - Testes da `/v2/`: só correm os listados em `tests/v2_ativos.txt`; os restantes aparecem como **pendente** (nunca como aprovados). `tests/teste_visual.py` compara o HTML e a imagem da Principal entre a raiz e a `/v2/` em vários estados.
 - Por fazer na app nova (avisos "em construção"): restantes páginas, "+", editar movimentos, Jarvis, Definições.

@@ -10,3 +10,6 @@ teste_compatibilidade:t_dados_antigos_abrem
 # Etapa 4 — movimentos (registar, editar, eliminar) e aviso de gravação falhada
 teste_movimentos
 teste_compatibilidade:t_aviso_quando_a_gravacao_falha
+
+# Etapa 5 — ecrã de bloqueio, impressão digital, bloqueio automático e privacidade reescritos
+teste_biometria
