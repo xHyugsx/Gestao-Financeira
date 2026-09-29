@@ -74,6 +74,14 @@ async def t_faixa_e_instalacao_so_na_v2(app):
     verificar(m['name'] == 'Finanças V2' and m['id'] == './', f'manifesto da V2: {m}')
 
 
+async def t_menu_mostra_a_versao_instalada(app):
+    await abrir_v2(app)
+    await menu(app)
+    esperada = json.loads(pathlib.Path('app/versao.json').read_text(encoding='utf-8'))['versao']
+    texto = await app.page.inner_text('#ffv2-menu .v')
+    verificar(texto == f'Versão {esperada}', f'versão no menu: {texto!r}')
+
+
 def pdf_de_texto(linhas):
     """PDF mínimo (Helvetica, WinAnsi) com uma linha de texto por item."""
     esc = lambda t: t.replace('\\', '\\\\').replace('(', '\\(').replace(')', '\\)')
