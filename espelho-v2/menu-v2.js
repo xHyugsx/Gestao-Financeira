@@ -13,7 +13,7 @@
     '#ffv2-menu h3{margin:0 0 6px;font-size:17px}#ffv2-menu p{margin:0 0 14px;font-size:13px;line-height:1.45;color:#c7cbe0}' +
     '#ffv2-menu button{display:block;width:100%;margin-top:8px;padding:12px;border:0;border-radius:12px;font-family:inherit;font-size:14px;font-weight:600;' +
     'background:rgba(255,255,255,.08);color:#fff}#ffv2-menu button.ok{background:linear-gradient(90deg,#22d3ee,#a855f7,#ec4899)}' +
-    '#ffv2-menu button.perigo{color:#fca5a5}';
+    '#ffv2-menu button.perigo{color:#fca5a5}#ffv2-menu .v{display:block;margin-top:8px;font-size:12px;color:#8b90ad}';
 
   function chavesV2() { return api.chaves().filter(function (k) { return k.indexOf(api.V2) === 0; }); }
   function chavesACopiar() {
@@ -62,7 +62,8 @@
     }
     function inicio() {
       ecra('Finanças V2 · versão de teste',
-        'Esta versão tem dados próprios e nunca altera os da app «Finanças».',
+        'Esta versão tem dados próprios e nunca altera os da app «Finanças».' +
+        '<span class="v">Versão ' + (window.ffVer || '?') + '</span>',
         [['Copiar dados da versão atual', confirmarCopia, 'ok'],
          ['Apagar dados da V2', confirmarApagar, 'perigo'],
          ['Fechar', function () { o.remove(); }]]);
