@@ -1,6 +1,6 @@
 # Plano — Fase 2 da app «Finanças»
 
-> Estado: **aprovado**. Etapa 0 **concluída** (v1.9.3). Etapa 1 **concluída** (`/v2/` 2.00.1, 44/44 na raiz e na `/v2/`). Etapa 2 **concluída** (núcleo de dados em `app/src/dados`, 53 testes unitários). Etapa 3 **concluída** (`/v2/` 2.00.2 = app nova: Principal, navegação e bloqueio).
+> Estado: **aprovado**. Etapa 0 **concluída** (v1.9.3). Etapa 1 **concluída** (`/v2/` 2.00.1, 44/44 na raiz e na `/v2/`). Etapa 2 **concluída** (núcleo de dados em `app/src/dados`, 53 testes unitários). Etapa 3 **concluída** (`/v2/` 2.00.2 = app nova: Principal, navegação e bloqueio). Etapa 4 **concluída** (`/v2/` 2.00.3: registar, editar e eliminar movimentos).
 > Base de referência: versão **1.9.2**, **36/36 testes a passar** (medido a 28-09-2026).
 
 ---
@@ -65,6 +65,8 @@ Carregados por `<script>` **antes** do núcleo (exceto `atualizacoes.js`, no fim
 | A9 | O Jarvis **grava logo** «Adiciona despesa/receita de …» (oferece «desfazer»), sem os botões Confirmar/Cancelar | Contradiz a decisão do CLAUDE.md («registar pede sempre confirmação»). A v2 reproduz o comportamento atual até o dono decidir |
 | A10 | Várias perguntas do Jarvis caem numa resposta genérica (ex.: «este ano», «esta semana», «entre 1 e 15 de agosto», «acima de 100 €» respondem com o mês atual) | Ficam gravadas tal como estão na referência; melhorias só depois da troca, uma a uma |
 | A11 | Ao gravar, a 1.9.x guarda só os campos que conhece: qualquer campo extra em `financas-familiar:v3` desaparece. Também o rendimento lê só dois nomes fixos da tabela de salários (e falharia com outro) | O núcleo novo **preserva** campos desconhecidos (topo, movimentos, contas) e soma todas as pessoas da tabela; ver as diferenças intencionais abaixo (secção 4.1) |
+| A12 | «Novo movimento › Transferência»: os campos **Conta de origem** e **Conta de destino** aparecem mas **não são gravados** (a transferência não mexe em nenhum saldo, salvo com «Transferência para Revolut») | Copiado tal como está na V2; decidir depois da troca |
+| A13 | «Transferência para Revolut» pode ser marcada com qualquer tipo (até numa despesa) e transforma o movimento em transferência | Copiado tal como está; decidir depois da troca |
 
 ---
 
@@ -168,7 +170,7 @@ Princípio: **a produção (raiz) só muda nas etapas 0 e 12.** Todas as outras 
 | **1** | **Publicação pelo Actions + `/v2/` espelho** ✅ — `scripts/montar-site.mjs` monta `_site/` (raiz = ficheiros atuais sem alterações; `/v2/` = cópia adaptada); Actions: testes (raiz e `/v2/`) → publica. A `/v2/` arranca **a app atual** com os dados isolados (`espelho-v2/prefixo.js` traduz `financas-familiar:*` → `financas-v2:*` em tempo de execução, sem mexer no código minificado), manifesto próprio («Finanças V2»), SW e cache próprios, SheetJS e pdf.js locais (`vendor/`), faixa "V2 · teste" com **"Copiar dados da versão atual"** e **"Apagar dados da V2"**. O projeto Vite passa para a etapa 2 (só é preciso quando houver código novo para compilar) | `/v2/` | Instalar «Finanças V2» ao lado da atual; copiar dados; confirmar que a app real não mudou | 44/44 raiz · 44/44 v2 |
 | **2** | **Núcleo de dados** ✅ (`app/src/dados/`) em TypeScript + testes unitários com o ficheiro `dados_versao_antiga.json` e dados fictícios grandes; **arranque do projeto Vite + TypeScript + Vitest em `app/`** | `/v2/` (sem mudança visível) | — (só testes automáticos) | 36/36 raiz · 36/36 v2 |
 | **3** | **Esqueleto React** ✅ — layout, barra inferior, painel «Mais», swipe e ordem das páginas, página **Principal** (anel do rendimento, caixas das contas, lista) | `/v2/` passa a ser a app nova | Aspeto da Principal, navegação, swipe | 36/36 raiz · grupo `arranque` na v2 |
-| **4** | **Movimentos** — criar/editar/apagar, transferências, notas, filtro por conta, pesquisa, saldos | `/v2/` | Registar movimentos reais de teste | + `movimentos` |
+| **4** | **Movimentos** ✅ — criar/editar/apagar, transferências, notas, filtro por conta, pesquisa, saldos | `/v2/` | Registar movimentos reais de teste | + `movimentos` |
 | **5** | **Bloqueio** — PIN (mesmo hash), impressão digital, autobloqueio, privacidade | `/v2/` | Deslizar, PIN, digital, voltar à app | + `bloqueio` |
 | **6** | **Análise, Calendário, Categorias, Resumo** | `/v2/` | Comparar lado a lado com a app atual | + `calendario` |
 | **7** | **Combustível e Veterinário** (+ lembretes) | `/v2/` | Lembretes, "feito" | + `veterinario` |
@@ -204,6 +206,7 @@ Todas invisíveis no uso normal e mais seguras para os dados; os testes de equiv
 | Perfil de uma instalação nova vem vazio (a 1.9.x traz nomes da família fixos) | Privacidade (repositório público); só afeta telemóveis sem dados |
 | Rendimento soma todas as pessoas da tabela de salários | A 1.9.x lê dois nomes fixos e falharia com outros; resultado igual com os dados atuais |
 | Restauro de backup dá data aos movimentos que não a têm | A 1.9.x só o fazia ao reabrir a app; evita erros até lá |
+| Titulares da Revolut no «Novo movimento» vêm do perfil («Conjunta» + membros) | A 1.9.x tem nomes da família fixos no código (privacidade); com o perfil atual a lista é a mesma |
 
 ## 5. Estratégia de testes
 

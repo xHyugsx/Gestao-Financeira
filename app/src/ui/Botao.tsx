@@ -5,6 +5,7 @@ const BASE = 'inline-flex items-center justify-center gap-2 whitespace-nowrap ro
 const VARIANTES = {
   normal: 'bg-primary text-primary-foreground shadow hover:bg-primary/90',
   ghost: 'hover:bg-accent hover:text-accent-foreground',
+  destrutivo: 'bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90',
 } as const;
 const TAMANHOS = { normal: 'h-9 px-4 py-2', icone: 'h-9 w-9', pequeno: 'h-8 rounded-md px-3 text-xs' } as const;
 

@@ -6,6 +6,7 @@ teste_arranque
 teste_bloqueio
 teste_offline
 teste_compatibilidade:t_dados_antigos_abrem
-teste_movimentos:t_pesquisa_encontra_pela_nota
-teste_movimentos:t_filtro_por_conta
-teste_movimentos:t_saldo_da_conta_transita_entre_meses
+
+# Etapa 4 — movimentos (registar, editar, eliminar) e aviso de gravação falhada
+teste_movimentos
+teste_compatibilidade:t_aviso_quando_a_gravacao_falha

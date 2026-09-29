@@ -21,11 +21,12 @@ interface Props {
   irPara: (pagina: string) => void;
   vibrar: (padrao: number | number[]) => void;
   emConstrucao: (oque: string) => void;
+  abrirMovimento: (m: Movimento) => void;
 }
 
 const CONTAS_POR_OMISSAO: [Conta, Conta] = [{ id: 'principal', name: 'Principal', balance: 0 }, { id: 'revolut', name: 'Revolut Conjunta', balance: 0 }];
 
-export function Principal({ estado, mes, ocultos, lista, mudarLista, irPara, vibrar, emConstrucao }: Props) {
+export function Principal({ estado, mes, ocultos, lista, mudarLista, irPara, vibrar, emConstrucao, abrirMovimento }: Props) {
   const { accounts: contas, transactions: movimentos } = estado;
   const hoje = new Date();
   const eur = (v: number) => formatarEuros(v, ocultos);
@@ -135,7 +136,7 @@ export function Principal({ estado, mes, ocultos, lista, mudarLista, irPara, vib
             {visiveis.map((m) => (
               <LinhaMovimento
                 key={m.id} movimento={m} contas={contas} aspetos={aspetos} ocultos={ocultos}
-                aoAbrir={() => emConstrucao('Editar movimentos')}
+                aoAbrir={abrirMovimento}
               />
             ))}
           </div>
