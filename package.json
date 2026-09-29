@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "verificar": "tsc -p . && vitest run",
+    "compilar": "vite build --config app/vite.config.ts",
     "testes:unitarios": "vitest run",
     "montar": "node scripts/montar-site.mjs",
     "testes": "python tests/correr.py",
@@ -12,7 +13,15 @@
   },
   "devDependencies": {
     "@types/node": "22.20.4",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.1",
     "typescript": "5.9.3",
+    "vite": "8.3.1",
     "vitest": "5.0.2"
+  },
+  "dependencies": {
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
   }
 }

@@ -1,0 +1,275 @@
+import { type TouchEvent, useCallback, useEffect, useRef, useState } from 'react';
+import { inicioDoMes, MESES } from '../dados';
+import { useDados } from '../estado/useDados';
+import { EmConstrucao } from '../paginas/EmConstrucao';
+import { type ListaMovimentos, Principal } from '../paginas/Principal';
+import { Botao } from '../ui/Botao';
+import { Icone } from '../ui/Icone';
+import { useAnimacaoNumeros } from './animacaoNumeros';
+import { saudacao, svgDoCeu } from './ceu';
+import { PAGINAS, PAGINAS_MAIS } from './paginas';
+
+type Direcao = 'left' | 'right';
+interface Transicao { para: string; dir: Direcao; dx: number; volta?: boolean }
+interface Toque { x: number; y: number; t: number; eixo: 'x' | 'y' | null; dx?: number }
+
+const NAO_DESLIZA = "input, textarea, select, [role='slider'], .segmented, .calendar-grid, table, .bottom-nav, [role='dialog']";
+const ids = PAGINAS.map((p) => p.id);
+const reduzMovimento = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+export function App() {
+  const [estado, setEstado] = useDados();
+  const [pagina, setPagina] = useState('principal');
+  const [direcao, setDirecao] = useState<Direcao | ''>('');
+  const [transicao, setTransicao] = useState<Transicao | null>(null);
+  const [arrasto, setArrasto] = useState(0);
+  const [aArrastar, setAArrastar] = useState(false);
+  const toque = useRef<Toque | null>(null);
+  const [desvioMes, setDesvioMes] = useState(0);
+  const [agora, setAgora] = useState(() => new Date());
+  const [mais, setMais] = useState<boolean | 'out'>(false);
+  const [bloqueada, setBloqueada] = useState(() => !!estado.pinHash);
+  const [lista, setLista] = useState<ListaMovimentos>({ expandida: false, pesquisa: '', conta: 'all' });
+  const [aviso, setAviso] = useState('');
+
+  const ocultos = estado.hideValues;
+  const setOcultos = useCallback((v: boolean | ((a: boolean) => boolean)) =>
+    setEstado((s) => ({ ...s, hideValues: typeof v === 'function' ? v(s.hideValues) : v })), [setEstado]);
+  const mes = inicioDoMes(agora, desvioMes);
+  const aparencia = estado.appearance;
+
+  const vibrar = useCallback((padrao: number | number[]) => {
+    try { if (aparencia.haptics !== false) navigator.vibrate?.(padrao); } catch { /* sem vibração */ }
+  }, [aparencia.haptics]);
+
+  const emConstrucao = useCallback((oque: string) => {
+    setAviso(`${oque} ainda está em construção nesta versão de teste.`);
+  }, []);
+  useEffect(() => {
+    if (!aviso) return;
+    const t = setTimeout(() => setAviso(''), 2600);
+    return () => clearTimeout(t);
+  }, [aviso]);
+
+  const irPara = useCallback((para: string, dx = 0) => {
+    if (!para || para === pagina || transicao || !ids.includes(para)) return;
+    const dir: Direcao = ids.indexOf(para) > ids.indexOf(pagina) ? 'left' : 'right';
+    const moldura = document.querySelector('.app-shell');
+    setDirecao(dir);
+    if (reduzMovimento()) { setPagina(para); setArrasto(0); moldura?.scrollTo({ top: 0 }); return; }
+    if (!dx) moldura?.scrollTo({ top: 0 });
+    setTransicao({ para, dir, dx });
+    setTimeout(() => { setPagina(para); setTransicao(null); setArrasto(0); moldura?.scrollTo({ top: 0 }); }, 340);
+  }, [pagina, transicao]);
+
+  const fecharMais = useCallback(() => {
+    setMais((m) => (m ? 'out' : m));
+    setTimeout(() => setMais((m) => (m === 'out' ? false : m)), 200);
+  }, []);
+
+  // Ligações usadas pelos módulos reaproveitados (bloqueio automático, etc.)
+  useEffect(() => {
+    window.ffRelock = () => (estado.pinHash ? (setBloqueada(true), true) : false);
+    window.ffMoreClose = fecharMais;
+    window.ffGoPg = irPara;
+  }, [estado.pinHash, fecharMais, irPara]);
+
+  // Relógio (saudação e céu): atualiza a cada minuto e ao voltar à app
+  useEffect(() => {
+    const f = () => setAgora(new Date());
+    const i = setInterval(() => { if (document.visibilityState === 'visible') f(); }, 6e4);
+    document.addEventListener('visibilitychange', f);
+    return () => { clearInterval(i); document.removeEventListener('visibilitychange', f); };
+  }, []);
+
+  // Ocultar valores ao sair da app (Aparência › "autoHide")
+  useEffect(() => {
+    const modo = aparencia.autoHide ?? 'now';
+    if (modo === 'off') return;
+    let t0 = 0;
+    const f = () => {
+      if (document.visibilityState === 'hidden') { t0 = Date.now(); if (modo === 'now') setOcultos(true); }
+      else if (modo === '60' && t0 && Date.now() - t0 >= 6e4) setOcultos(true);
+    };
+    document.addEventListener('visibilitychange', f);
+    return () => document.removeEventListener('visibilitychange', f);
+  }, [aparencia.autoHide, setOcultos]);
+
+  useAnimacaoNumeros(`${transicao ? transicao.para : pagina}|${desvioMes}|1`, transicao ? '.page-incoming' : '.page-current', ocultos || bloqueada);
+
+  if (bloqueada) {
+    return (
+      <div
+        id="ff-lock-host" key="ff-lock"
+        ref={(el) => {
+          if (el && !(el as HTMLElement & { __ffm?: number }).__ffm) {
+            (el as HTMLElement & { __ffm?: number }).__ffm = 1;
+            window.ffLockMount?.(el, { hash: estado.pinHash, onUnlock: () => setBloqueada(false) });
+          }
+        }}
+      />
+    );
+  }
+
+  const inicioToque = (e: TouchEvent) => {
+    const alvo = e.target as HTMLElement;
+    if (transicao || alvo.closest(NAO_DESLIZA)) { toque.current = null; return; }
+    const p = e.touches[0];
+    if (p) toque.current = { x: p.clientX, y: p.clientY, t: Date.now(), eixo: null };
+  };
+  const moverToque = (e: TouchEvent) => {
+    const s = toque.current, p = e.touches[0];
+    if (!s || !p) return;
+    const dx = p.clientX - s.x, dy = p.clientY - s.y;
+    if (!s.eixo) {
+      if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+      s.eixo = Math.abs(dx) > Math.abs(dy) * 1.2 ? 'x' : 'y';
+      if (s.eixo === 'y') { toque.current = null; return; }
+      setAArrastar(true);
+    }
+    const k = ids.indexOf(pagina), naBorda = dx < 0 ? !ids[k + 1] : !ids[k - 1];
+    s.dx = naBorda ? dx * 0.3 : dx;
+    setArrasto(s.dx);
+  };
+  const fimToque = () => {
+    const s = toque.current;
+    toque.current = null;
+    if (!s || s.eixo !== 'x') return;
+    const dx = s.dx || 0, largura = document.querySelector('.page-viewport')?.clientWidth || window.innerWidth || 400;
+    const para = ids[ids.indexOf(pagina) + (dx < 0 ? 1 : -1)], rapido = Math.abs(dx) > 50 && Date.now() - s.t < 350;
+    setAArrastar(false);
+    if (para && (Math.abs(dx) > largura * 0.28 || rapido)) irPara(para, dx);
+    else if (para && dx) {
+      setTransicao({ para, dir: dx < 0 ? 'left' : 'right', dx, volta: true });
+      setTimeout(() => { setTransicao(null); setArrasto(0); }, 300);
+    } else setArrasto(0);
+  };
+  const cancelarToque = () => { toque.current = null; setAArrastar(false); setArrasto(0); };
+
+  const conteudo = (id: string) => id === 'principal'
+    ? <Principal estado={estado} mes={mes} ocultos={ocultos} lista={lista} mudarLista={setLista} irPara={irPara} vibrar={vibrar} emConstrucao={emConstrucao} />
+    : <EmConstrucao titulo={PAGINAS.find((p) => p.id === id)?.label ?? id} />;
+
+  const cabecalhoDe = transicao && !transicao.volta ? transicao.para : pagina;
+  const nome = (estado.profile?.profileName || '').trim().split(/\s+/)[0];
+  const ferramentas = (
+    <div className="head-tools">
+      <button
+        type="button" className={ocultos ? 'head-tool head-tool-on' : 'head-tool'} aria-label={ocultos ? 'Mostrar valores' : 'Ocultar valores'}
+        aria-pressed={ocultos} onClick={() => setOcultos((v) => !v)}
+      ><Icone nome={ocultos ? 'eye-off' : 'eye'} /></button>
+      <button type="button" className="head-tool" aria-label="Definições" aria-expanded={false} onClick={() => emConstrucao('As Definições')}>
+        <Icone nome="settings" />
+      </button>
+    </div>
+  );
+
+  const k = ids.indexOf(pagina);
+  const seguinte = transicao ? transicao.para : aArrastar && arrasto ? (arrasto < 0 ? ids[k + 1] : ids[k - 1]) : null;
+  const sinal = (transicao ? transicao.dir : arrasto < 0 ? 'left' : 'right') === 'left' ? 1 : -1;
+  const larguraVista = document.querySelector('.page-viewport')?.clientWidth || window.innerWidth || 400;
+  const progresso = (v: number) => Math.min(1, Math.abs(v) / (larguraVista * 0.6));
+  const curva = 'cubic-bezier(.22,1,.36,1)';
+  const estiloAtual = transicao
+    ? {
+      '--pg-x': `${transicao.dx}px`, '--pg-sc': 1 - 0.04 * progresso(transicao.dx), '--pg-b0': `${6 * progresso(transicao.dx)}px`,
+      '--pg-to': `${-sinal * 100}%`, animation: transicao.volta ? `pg-back-cur .3s ${curva} both` : `pg-out .34s ${curva} both`,
+    }
+    : aArrastar
+      ? { transform: `translateX(${arrasto}px) scale(${1 - 0.04 * progresso(arrasto)})`, filter: `blur(${6 * progresso(arrasto)}px)`, transition: 'none' }
+      : { transition: `transform .3s ${curva}, filter .3s` };
+  const estiloSeguinte = transicao
+    ? {
+      '--pg-from': `calc(${sinal * 100}% + ${transicao.dx}px)`, '--pg-blur': `${6 * (1 - progresso(transicao.dx))}px`,
+      '--pg-op': 0.35 + 0.65 * progresso(transicao.dx), '--pg-home': `${sinal * 100}%`,
+      animation: transicao.volta ? `pg-back-in .3s ${curva} both` : `pg-in .34s ${curva} both`,
+    }
+    : { transform: `translateX(calc(${sinal * 100}% + ${arrasto}px))`, filter: `blur(${6 * (1 - progresso(arrasto))}px)`, opacity: 0.35 + 0.65 * progresso(arrasto) };
+
+  const itemNav = (id: string) => {
+    const p = PAGINAS.find((x) => x.id === id)!;
+    return (
+      <Botao key={id} variante="ghost" className={pagina === id ? 'nav-item nav-item-active' : 'nav-item'} onClick={() => irPara(id)}>
+        <Icone nome={p.icone} /><span>{p.label}</span>
+      </Botao>
+    );
+  };
+  const maisAberto = !!mais && mais !== 'out';
+
+  return (
+    <div className={`cosmic-app accent-${aparencia.accent} background-${aparencia.backgroundIntensity} text-size-${aparencia.fontScale}`}>
+      <div className="cosmic-field" aria-hidden="true" />
+      <div
+        className="app-shell" data-swipe={direcao}
+        onTouchStart={inicioToque} onTouchMove={moverToque} onTouchEnd={fimToque} onTouchCancel={cancelarToque}
+      >
+        {cabecalhoDe === 'principal' ? (
+          <header className="app-heading app-heading-welcome">
+            <div className="welcome-sky" aria-hidden="true" dangerouslySetInnerHTML={{ __html: svgDoCeu(agora) }} />
+            {ferramentas}
+            <div className="min-w-0">
+              <p className="eyebrow">{agora.toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+              <h1>{nome ? `${saudacao(agora)}, ${nome}` : saudacao(agora)}</h1>
+            </div>
+          </header>
+        ) : (
+          <header className="app-heading app-heading-page">
+            <h1 key={cabecalhoDe}>{PAGINAS.find((p) => p.id === cabecalhoDe)?.label}</h1>
+            {ferramentas}
+          </header>
+        )}
+        <div className="month-switcher" aria-label="Selecionar mês">
+          <Botao variante="ghost" tamanho="icone" onClick={() => setDesvioMes((d) => d - 1)} aria-label="Mês anterior"><Icone nome="chevron-left" /></Botao>
+          <span>{`${MESES[mes.getMonth()]} de ${mes.getFullYear()}`}</span>
+          <Botao variante="ghost" tamanho="icone" onClick={() => setDesvioMes((d) => d + 1)} aria-label="Mês seguinte"><Icone nome="chevron-right" /></Botao>
+        </div>
+        <div className="page-viewport">
+          <div key={`pg-${pagina}`} className="page-current" style={estiloAtual as React.CSSProperties}>{conteudo(pagina)}</div>
+          {seguinte ? (
+            <div key={`pg-${seguinte}`} className="page-incoming" style={estiloSeguinte as React.CSSProperties}>{conteudo(seguinte)}</div>
+          ) : null}
+        </div>
+      </div>
+      <Botao tamanho="icone" className="add-button ffplus" onClick={() => emConstrucao('Registar movimentos')} aria-label="Adicionar movimento">
+        <Icone nome="plus" />
+      </Botao>
+      <button type="button" className="jarvis-fab ffjv-fab" aria-label="Abrir Jarvis" onClick={() => emConstrucao('O Jarvis')}>
+        <svg className="ffjv-orb o1" viewBox="0 0 32 32" aria-hidden="true">
+          <ellipse cx="16" cy="16" rx="14.5" ry="5.2" fill="none" stroke="#9ff6ff" strokeOpacity=".75" strokeWidth=".7" transform="rotate(25 16 16)" />
+          <circle cx="29.6" cy="12.6" r=".9" fill="#00F0FF" />
+        </svg>
+        <svg className="ffjv-orb o2" viewBox="0 0 32 32" aria-hidden="true">
+          <ellipse cx="16" cy="16" rx="14.5" ry="5.2" fill="none" stroke="#9ff6ff" strokeOpacity=".45" strokeWidth=".7" transform="rotate(-30 16 16)" />
+        </svg>
+      </button>
+      <nav className="bottom-nav" aria-label="Navegação principal">
+        <div className="bottom-nav-inner ffnav">
+          {itemNav('principal')}
+          {itemNav('analise')}
+          <span className="ffnav-gap" aria-hidden="true" />
+          {itemNav('calendario')}
+          <Botao
+            variante="ghost" aria-haspopup="menu" aria-expanded={maisAberto}
+            className={`nav-item ffnav-more${PAGINAS_MAIS.includes(pagina) || maisAberto ? ' nav-item-active' : ''}`}
+            onClick={() => (maisAberto ? fecharMais() : setMais(true))}
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx={5} cy={12} r={2} /><circle cx={12} cy={12} r={2} /><circle cx={19} cy={12} r={2} /></svg>
+            <span>Mais</span>
+          </Botao>
+        </div>
+      </nav>
+      {mais ? (
+        <div className={`ffmore-ov${mais === 'out' ? ' is-out' : ''}`} onClick={(e) => { if (e.target === e.currentTarget) fecharMais(); }}>
+          <div className="ffmore" role="menu" aria-label="Mais páginas">
+            {PAGINAS.filter((p) => PAGINAS_MAIS.includes(p.id)).map((p) => (
+              <button key={p.id} type="button" role="menuitem" className={`ffmore-it${pagina === p.id ? ' on' : ''}`} onClick={() => { fecharMais(); irPara(p.id); }}>
+                <Icone nome={p.icone} /><span>{p.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
+      {aviso ? <div className="ffv2-aviso" role="status">{aviso}</div> : null}
+    </div>
+  );
+}

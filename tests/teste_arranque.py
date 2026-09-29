@@ -9,7 +9,8 @@ async def t_app_abre_sem_erros(app):
 
 async def t_versao_igual_em_app_js_e_version_json(app):
     await app.abrir()
-    v_js = await app.page.evaluate("fetch('js/app.js').then(r=>r.text()).then(t=>t.match(/ffVer=`([^`]+)`/)[1])")
+    # app nova: window.ffVer; app atual: constante ffVer no js/app.js
+    v_js = await app.page.evaluate("window.ffVer || fetch('js/app.js').then(r=>r.text()).then(t=>t.match(/ffVer=`([^`]+)`/)[1])")
     v_json = await app.page.evaluate("fetch('version.json').then(r=>r.json()).then(j=>j.version)")
     verificar(v_js == v_json, f'versões diferentes: app.js {v_js} · version.json {v_json}')
 

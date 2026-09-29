@@ -29,9 +29,10 @@ App web instalável (PWA) para gerir as finanças da família, com assistente **
 | `fonts/` | Tipos de letra |
 | `icons/` | Ícones da app instalada |
 | `vendor/` | Bibliotecas de terceiros guardadas localmente (SheetJS, pdf.js) |
-| `espelho-v2/` | Peças só da versão de teste `/v2/` (dados isolados e menu "V2 · teste") |
+| `espelho-v2/` | Peças só da versão de teste `/v2/`: isolamento dos dados e menu "V2 · teste" |
 | `scripts/montar-site.mjs` | Monta o site publicado em `_site/` (raiz + `/v2/`) |
 | `docs/PLANO-FASE-2.md` | Plano da reconstrução da app |
+| `app/` | **App nova** (React + Vite, em construção), publicada em `/v2/` |
 | `app/src/dados/` | Núcleo de dados novo (TypeScript): leitura/gravação, saldos, rendimento, backup, PIN |
 
 ## Como publicar uma atualização
@@ -58,3 +59,4 @@ Os dados ficam guardados no navegador do telemóvel; fazer backup em Definiçõe
 - **Núcleo de dados** (`app/src/dados`): `npm ci` e depois `npm run verificar` (tipos + testes unitários, segundos). Compara o código novo com os valores gravados da versão atual em `tests/referencias/dados.json` (`python tests/capturar_referencias_dados.py` para os regravar).
 - **Respostas de referência do Jarvis**: `tests/referencias/jarvis.json` guarda as respostas da versão atual a ~120 perguntas; o teste `referencias` avisa se alguma mudar. Para fixar um novo comportamento de propósito: `python tests/capturar_referencias.py`.
 - Versão de teste: `FF_URL=v2/ FF_PREFIX=financas-v2: python tests/correr.py` corre os mesmos testes contra a `/v2/` (o GitHub corre os dois).
+  Na `/v2/` só correm os testes das partes já migradas (`tests/v2_ativos.txt`); os outros aparecem como **pendente**. `tests/teste_visual.py` confirma que a app nova desenha exatamente o mesmo que a atual.

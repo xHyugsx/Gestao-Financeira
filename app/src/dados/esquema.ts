@@ -14,7 +14,8 @@ export interface Movimento {
   date: string;
   movementType?: TipoMovimento;
   account?: string;
-  recurring?: boolean;
+  /** `true`, ou "sem" para recorrentes ainda sem valor definido. */
+  recurring?: boolean | string;
   note?: string;
   pet?: string;
   /** `false` nos movimentos importados de extratos: não mexem no saldo. */
