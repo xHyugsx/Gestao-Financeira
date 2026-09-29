@@ -4,6 +4,7 @@ import '../../espelho-v2/prefixo.js';
 import '../../js/modulos/bloqueio.js';
 import '../../js/modulos/autobloqueio.js';
 import '../../js/modulos/privacidade.js';
+import '../../js/modulos/armazenamento.js';
 import '../../espelho-v2/menu-v2.js';
 import '../../css/app.css';
 import './v2.css';

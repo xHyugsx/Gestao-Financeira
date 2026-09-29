@@ -1,6 +1,9 @@
 import { type TouchEvent, useCallback, useEffect, useRef, useState } from 'react';
-import { inicioDoMes, MESES } from '../dados';
+import { inicioDoMes, MESES, type Movimento } from '../dados';
 import { useDados } from '../estado/useDados';
+import { aspetosCategorias } from '../movimentos/categorias';
+import { EditarMovimento } from '../movimentos/EditarMovimento';
+import { type EscolhasNovo, NovoMovimento } from '../movimentos/NovoMovimento';
 import { EmConstrucao } from '../paginas/EmConstrucao';
 import { type ListaMovimentos, Principal } from '../paginas/Principal';
 import { Botao } from '../ui/Botao';
@@ -31,6 +34,9 @@ export function App() {
   const [bloqueada, setBloqueada] = useState(() => !!estado.pinHash);
   const [lista, setLista] = useState<ListaMovimentos>({ expandida: false, pesquisa: '', conta: 'all' });
   const [aviso, setAviso] = useState('');
+  const [novoAberto, setNovoAberto] = useState(false);
+  const [escolhas, setEscolhas] = useState<EscolhasNovo>({ tipo: 'expense', categoria: 'Alimentação', recorrente: false, tipoValor: 'com', revolut: false });
+  const [aEditar, setAEditar] = useState<Movimento | null>(null);
 
   const ocultos = estado.hideValues;
   const setOcultos = useCallback((v: boolean | ((a: boolean) => boolean)) =>
@@ -50,6 +56,15 @@ export function App() {
     const t = setTimeout(() => setAviso(''), 2600);
     return () => clearTimeout(t);
   }, [aviso]);
+
+  const tirarFoco = () => { if (document.activeElement instanceof HTMLElement) document.activeElement.blur(); };
+  const mudarMovimentos = (f: (l: Movimento[]) => Movimento[]) => setEstado((s) => ({ ...s, transactions: f(s.transactions) }));
+  const guardarNovo = (m: Movimento) => { mudarMovimentos((l) => [m, ...l]); vibrar(30); tirarFoco(); setNovoAberto(false); };
+  const guardarEdicao = (m: Movimento) => { mudarMovimentos((l) => l.map((x) => (x.id === m.id ? m : x))); vibrar(30); tirarFoco(); setAEditar(null); };
+  const eliminar = (m: Movimento) => {
+    if (!window.confirm(`Eliminar "${m.title}"?`)) return;
+    mudarMovimentos((l) => l.filter((x) => x.id !== m.id)); vibrar([40, 60, 40]); setAEditar(null);
+  };
 
   const irPara = useCallback((para: string, dx = 0) => {
     if (!para || para === pagina || transicao || !ids.includes(para)) return;
@@ -113,7 +128,7 @@ export function App() {
 
   const inicioToque = (e: TouchEvent) => {
     const alvo = e.target as HTMLElement;
-    if (transicao || alvo.closest(NAO_DESLIZA)) { toque.current = null; return; }
+    if (transicao || novoAberto || aEditar || alvo.closest(NAO_DESLIZA)) { toque.current = null; return; }
     const p = e.touches[0];
     if (p) toque.current = { x: p.clientX, y: p.clientY, t: Date.now(), eixo: null };
   };
@@ -147,7 +162,7 @@ export function App() {
   const cancelarToque = () => { toque.current = null; setAArrastar(false); setArrasto(0); };
 
   const conteudo = (id: string) => id === 'principal'
-    ? <Principal estado={estado} mes={mes} ocultos={ocultos} lista={lista} mudarLista={setLista} irPara={irPara} vibrar={vibrar} emConstrucao={emConstrucao} />
+    ? <Principal estado={estado} mes={mes} ocultos={ocultos} lista={lista} mudarLista={setLista} irPara={irPara} vibrar={vibrar} emConstrucao={emConstrucao} abrirMovimento={setAEditar} />
     : <EmConstrucao titulo={PAGINAS.find((p) => p.id === id)?.label ?? id} />;
 
   const cabecalhoDe = transicao && !transicao.volta ? transicao.para : pagina;
@@ -230,7 +245,15 @@ export function App() {
           ) : null}
         </div>
       </div>
-      <Botao tamanho="icone" className="add-button ffplus" onClick={() => emConstrucao('Registar movimentos')} aria-label="Adicionar movimento">
+      <Botao
+        tamanho="icone" className="add-button ffplus"
+        aria-label={pagina === 'veterinario' ? 'Adicionar despesa veterinária' : pagina === 'combustivel' ? 'Adicionar abastecimento' : 'Adicionar movimento'}
+        onClick={() => {
+          if (pagina === 'veterinario' || pagina === 'combustivel') { emConstrucao(pagina === 'veterinario' ? 'Registar despesas veterinárias' : 'Registar abastecimentos'); return; }
+          setEscolhas((e) => ({ ...e, recorrente: false, tipoValor: 'com', revolut: false }));
+          setNovoAberto(true);
+        }}
+      >
         <Icone nome="plus" />
       </Botao>
       <button type="button" className="jarvis-fab ffjv-fab" aria-label="Abrir Jarvis" onClick={() => emConstrucao('O Jarvis')}>
@@ -269,6 +292,11 @@ export function App() {
           </div>
         </div>
       ) : null}
+      <NovoMovimento
+        aberto={novoAberto} aoMudar={setNovoAberto} estado={estado} escolhas={escolhas} mudarEscolhas={setEscolhas}
+        aspetos={aspetosCategorias(estado, mes)} aoGuardar={guardarNovo}
+      />
+      <EditarMovimento movimento={aEditar} fechar={() => setAEditar(null)} estado={estado} aoGuardar={guardarEdicao} aoEliminar={eliminar} />
       {aviso ? <div className="ffv2-aviso" role="status">{aviso}</div> : null}
     </div>
   );
