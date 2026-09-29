@@ -4,10 +4,6 @@ export {};
 declare global {
   interface Window {
     ffVer?: string;
-    ffLockMount?: (host: HTMLElement, opcoes: { hash: string; onUnlock: () => void }) => void;
-    ffRelock?: () => boolean;
-    ffRelockPending?: boolean;
-    ffPrivacyOff?: () => void;
     ffMoreClose?: () => void;
     ffGoPg?: (pagina: string) => void;
     ffSaveOk?: () => void;
