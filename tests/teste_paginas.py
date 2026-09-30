@@ -1,8 +1,8 @@
 """Análise, Calendário, Categorias e Resumo: o que se grava e a navegação."""
 import asyncio, datetime, json
-from correr import verificar, PREFIXO
+from correr import verificar, PREFIXO, DATA_FIXA
 
-HOJE = datetime.date.today()
+HOJE = datetime.date.fromisoformat(DATA_FIXA[:10])  # o navegador dos testes está sempre nesta data
 DATA = HOJE.replace(day=5).isoformat()
 MES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'][HOJE.month - 1]
 DADOS = {'transactions': [
