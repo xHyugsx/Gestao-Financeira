@@ -7,6 +7,9 @@ import { lerValor } from '../movimentos/regras';
 import { Botao } from '../ui/Botao';
 import { Icone } from '../ui/Icone';
 import { montarEspaco } from './espaco';
+import type { RegraPessoal } from '../importacao/classificacao';
+import { ACOES, comRegras, regrasPessoais } from '../importacao/config';
+import { pessoasDosSalarios } from '../paginas/Resumo';
 
 type Mudar = (f: (e: Estado) => Estado) => void;
 
@@ -272,3 +275,58 @@ export function Backup({ ultimo, mensagem, acoes }: { ultimo: string; mensagem: 
   );
 }
 
+
+export interface AcoesImportacao {
+  importar: (f: File, avisar: (m: string) => void) => Promise<void>;
+  desfazer: (avisar: (m: string) => void) => void;
+  haParaDesfazer: boolean;
+}
+
+/** Importação de extratos e regras pessoais (só na app nova; na app atual faz-se pelo Jarvis). */
+export function Importacao({ estado, mudarEstado, avisar, acoes }: { estado: Estado; mudarEstado: Mudar; avisar: (m: string) => void; acoes: AcoesImportacao }) {
+  const ficheiro = useRef<HTMLInputElement>(null);
+  const [regras, setRegras] = useState<RegraPessoal[]>(() => regrasPessoais(estado));
+  const mudar = (i: number, r: Partial<RegraPessoal>) => setRegras((l) => l.map((x, k) => (k === i ? { ...x, ...r } : x)));
+  const guardar = (ev: FormEvent) => {
+    ev.preventDefault();
+    if (regras.some((r) => r.acao === 'salario' && !r.pessoa?.trim())) { avisar('Indica a pessoa de cada regra de salário.'); return; }
+    mudarEstado((e) => comRegras(e, regras));
+    setRegras((l) => l.filter((r) => r.contem.trim()));
+    avisar('Regras guardadas.');
+  };
+  return (
+    <>
+      <section className="settings-list">
+        <Botao variante="ghost" className="setting-row" onClick={() => ficheiro.current?.click()}>
+          <Icone nome="upload" /><span><strong>Importar extrato</strong><small>Ficheiro XLSX, XLS ou CSV do banco · revês tudo antes de gravar</small></span>
+        </Botao>
+        <Botao variante="ghost" className="setting-row" disabled={!acoes.haParaDesfazer} onClick={() => acoes.desfazer(avisar)}>
+          <Icone nome="arrow-left" /><span><strong>Desfazer a última importação</strong><small>Remove os movimentos, repõe os salários e o saldo</small></span>
+        </Botao>
+      </section>
+      <input
+        ref={ficheiro} type="file" accept=".xlsx,.xls,.csv,.txt" className="hidden" aria-label="Ficheiro do extrato"
+        onChange={(ev) => { const f = ev.target.files?.[0]; const alvo = ev.target; if (f) void acoes.importar(f, avisar).finally(() => { alvo.value = ''; }); }}
+      />
+      <form className="settings-panel movement-form ffv2-regras" onSubmit={guardar}>
+        <h3>Regras pessoais</h3>
+        <p className="settings-copy">Texto a procurar na descrição do banco (ex.: nome da entidade patronal). Ficam só neste telemóvel.</p>
+        {regras.map((r, i) => (
+          <div key={i} className="ffv2-regra">
+            <input aria-label={`Texto da regra ${i + 1}`} value={r.contem} maxLength={60} placeholder="Texto a procurar" onChange={(e) => mudar(i, { contem: e.target.value })} />
+            <select aria-label={`Ação da regra ${i + 1}`} value={r.acao} onChange={(e) => mudar(i, { acao: e.target.value as RegraPessoal['acao'] })}>
+              {ACOES.map(([a, nome]) => <option key={a} value={a}>{nome}</option>)}
+            </select>
+            {r.acao === 'salario' ? (
+              <input aria-label={`Pessoa da regra ${i + 1}`} value={r.pessoa ?? ''} maxLength={40} placeholder="Pessoa" list="ffv2-pessoas" onChange={(e) => mudar(i, { pessoa: e.target.value })} />
+            ) : null}
+            <Botao type="button" variante="ghost" tamanho="icone" aria-label={`Apagar a regra ${i + 1}`} onClick={() => setRegras((l) => l.filter((_, k) => k !== i))}><Icone nome="trash-2" /></Botao>
+          </div>
+        ))}
+        <datalist id="ffv2-pessoas">{pessoasDosSalarios(estado.salaries, estado.profile.members).map((p) => <option key={p} value={p} />)}</datalist>
+        <Botao type="button" variante="contorno" onClick={() => setRegras((l) => [...l, { contem: '', acao: 'salario' }])}><Icone nome="plus" />Nova regra</Botao>
+        <Botao type="submit">Guardar regras</Botao>
+      </form>
+    </>
+  );
+}
