@@ -38,6 +38,7 @@ def intencionais(h):
     h = h.replace(' Recorrente mensal</label>', ' Recorrente</label>').replace('Mudar ícone de ', 'Editar categoria ')
     h = re.sub(r'<label class="ffv2-extra">.*?</label>', '', h, flags=re.S)
     h = re.sub(r'<div class="movement-checks ffv2-extra">.*?</div>', '', h, flags=re.S)
+    h = re.sub(r'<button[^>]*class="[^"]*ffv2-extra[^"]*"[^>]*>.*?</button>', '', h, flags=re.S)  # Definições › Importação
     # contas: o campo «Saldo» mostra o saldo de hoje (a app atual mostra o saldo inicial) — pedido do dono
     h = re.sub(r'(<input[^>]*name="[^"]*-balance"[^>]*?)value="[^"]*"', r'\1value="…"', h)
     h = re.sub(r'value="[^"]*"([^>]*name="[^"]*-balance")', r'value="…"\1', h)

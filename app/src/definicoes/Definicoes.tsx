@@ -4,10 +4,11 @@ import { PREFIXO } from '../config';
 import { Botao } from '../ui/Botao';
 import { Icone } from '../ui/Icone';
 import type { NomeIcone } from '../ui/icones';
+import { regrasPessoais } from '../importacao/config';
 import { montarAutobloqueio, montarBiometria } from './opcoesSeguranca';
-import { type AcoesBackup, Aparencia, Backup, CategoriasDefinicoes, Contas, Dados, Perfil, Subvista } from './Seccoes';
+import { type AcoesBackup, type AcoesImportacao, Aparencia, Backup, CategoriasDefinicoes, Contas, Dados, Importacao, Perfil, Subvista } from './Seccoes';
 
-export type Seccao = 'profile' | 'categories' | 'accounts' | 'appearance' | 'security' | 'backup' | 'data';
+export type Seccao = 'profile' | 'categories' | 'accounts' | 'appearance' | 'security' | 'backup' | 'data' | 'import';
 
 const TITULOS: Record<Seccao, [string, string]> = {
   profile: ['Perfil e família', 'Dados pessoais e membros'],
@@ -17,6 +18,7 @@ const TITULOS: Record<Seccao, [string, string]> = {
   security: ['Segurança', 'Bloqueio local da aplicação'],
   backup: ['Backup', 'Cópias de segurança'],
   data: ['Dados', 'Gestão e privacidade'],
+  import: ['Importação', 'Extratos bancários'],
 };
 
 const nomesContas = (c: Conta[]) => (c.length > 2 ? `${c.length} contas` : c.map((e) => e.name).join(' e '));
@@ -81,6 +83,7 @@ interface PropsFolha {
   mensagemBackup: string;
   acoesBackup: AcoesBackup;
   limparDados: () => void;
+  acoesImportacao: AcoesImportacao;
 }
 
 export function FolhaDefinicoes(props: PropsFolha) {
@@ -90,8 +93,8 @@ export function FolhaDefinicoes(props: PropsFolha) {
   const [mensagem, setMensagem] = useState('');
   const abrirSeccao = (s: Seccao | null) => { setMensagem(''); mudarSeccao(s); };
   const a = estado.appearance;
-  const linha = (s: Seccao, icone: NomeIcone, titulo: string, resumo: string) => (
-    <Botao variante="ghost" className="setting-row" onClick={() => abrirSeccao(s)}>
+  const linha = (s: Seccao, icone: NomeIcone, titulo: string, resumo: string, extra = false) => (
+    <Botao variante="ghost" className={extra ? 'setting-row ffv2-extra' : 'setting-row'} onClick={() => abrirSeccao(s)}>
       <Icone nome={icone} /><span><strong>{titulo}</strong><small>{resumo}</small></span><Icone nome="chevron-right" />
     </Botao>
   );
@@ -120,6 +123,7 @@ export function FolhaDefinicoes(props: PropsFolha) {
               : seccao === 'categories' ? <CategoriasDefinicoes estado={estado} mudarEstado={mudarEstado} avisar={setMensagem} categoriaRenomeada={props.categoriaRenomeada} />
                 : seccao === 'accounts' ? <Contas estado={estado} mudarEstado={mudarEstado} avisar={setMensagem} />
                   : seccao === 'appearance' ? <Aparencia estado={estado} mudarEstado={mudarEstado} />
+                    : seccao === 'import' ? <Importacao estado={estado} mudarEstado={mudarEstado} avisar={setMensagem} acoes={props.acoesImportacao} />
                     : <Dados espaco={espaco} limpar={props.limparDados} />}
           </Subvista>
         ) : (
@@ -131,6 +135,7 @@ export function FolhaDefinicoes(props: PropsFolha) {
             {linha('security', 'lock-keyhole', 'Segurança', resumoPin(estado))}
             {linha('backup', 'download', 'Backup', `Criar, restaurar ou exportar · ${lb ? `último: ${new Date(lb).toLocaleDateString('pt-PT')}` : 'sem backups'}`)}
             {linha('data', 'database', 'Dados', `${espaco} ocupados neste dispositivo`)}
+            {linha('import', 'receipt', 'Importação', `Extratos bancários · ${regrasPessoais(estado).length} regras pessoais`, true)}
           </section>
         )}
       </main>

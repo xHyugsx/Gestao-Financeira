@@ -29,3 +29,6 @@ teste_combustivel_vet
 
 # Correções pedidas pelo dono (V2 2.00.9) — só na app nova
 teste_correcoes
+
+# Etapa 10 — importação de extratos pelas Definições (só na app nova)
+teste_importacao

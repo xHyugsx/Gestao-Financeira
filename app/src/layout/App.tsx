@@ -4,14 +4,18 @@ import { ligacoes } from '../bloqueio/estado';
 import { PREFIXO, VERSAO } from '../config';
 import { iniciarEspaco } from '../definicoes/espaco';
 import { iniciarAvisos } from '../definicoes/lembreteBackup';
-import type { AcoesBackup } from '../definicoes/Seccoes';
+import type { AcoesBackup, AcoesImportacao } from '../definicoes/Seccoes';
 import { FolhaDefinicoes, MenuRapido, type PosicaoMenu, type Seccao } from '../definicoes/Definicoes';
-import { aplicarBackup, chave, criarBackup, dia, type Estado, inicioDoMes, lerBackup, MESES, type Movimento, nomeFicheiroBackup, PREFIXO_REAL } from '../dados';
+import { acertarSaldo, aplicarBackup, chave, criarBackup, dia, saldoDaConta, type Estado, inicioDoMes, lerBackup, MESES, type Movimento, nomeFicheiroBackup, PREFIXO_REAL } from '../dados';
 import { aviso as avisoVeterinario, definir as definirLembretes, todos as todosLembretes } from '../veterinario/lembretes';
 import { useDados } from '../estado/useDados';
 import { aspetosCategorias } from '../movimentos/categorias';
 import { EditarMovimento } from '../movimentos/EditarMovimento';
 import { gerarRecorrentes } from '../movimentos/recorrentes';
+import { tipoVisual } from '../movimentos/regras';
+import { regrasPessoais } from '../importacao/config';
+import { lerFicheiro } from '../importacao/leitura';
+import { abrirRevisao, type ApiImportacao, desfazerImportacao, haImportacaoParaDesfazer } from '../importacao/revisao';
 import { type EscolhasNovo, NovoMovimento } from '../movimentos/NovoMovimento';
 import { Analise, type TipoAnalise } from '../paginas/Analise';
 import { Calendario } from '../paginas/Calendario';
@@ -240,6 +244,50 @@ export function App() {
     } catch { /* sem armazenamento */ }
     window.location.reload();
   };
+  // Importação de extratos (Definições › Importação; mais tarde também pelo Jarvis)
+  const [, setImportacoes] = useState(0);
+  const avisarImportacao = useRef<(m: string) => void>(() => {});
+  const apiImportacao: ApiImportacao = {
+    obter: () => {
+      const e = estadoAtual.current, hoje = new Date();
+      return {
+        tx: e.transactions, cats: e.categories, inc: e.incomeCategories, sal: e.salaries,
+        acc: e.accounts.map((a) => ({ id: a.id, name: a.name, balance: a.balance || 0, cur: saldoDaConta(a, e.transactions, hoje).atual })),
+      };
+    },
+    regrasPessoais: () => regrasPessoais(estadoAtual.current),
+    juntarMovimentos: (l) => mudarMovimentos((m) => [...l, ...m]),
+    removerLote: (lote) => mudarMovimentos((m) => m.filter((t) => t.importBatch !== lote)),
+    juntarCategorias: (l) => setEstado((s) => ({ ...s, categories: [...s.categories, ...l.filter((c) => !s.categories.includes(c))] })),
+    definirSalario: (ano, pessoa, mes, valor) => setEstado((s) => {
+      const doAno = s.salaries[ano] ?? {}, lista = [...(doAno[pessoa] ?? Array(12).fill(0))];
+      lista[mes] = valor;
+      return { ...s, salaries: { ...s.salaries, [ano]: { ...doAno, [pessoa]: lista } } };
+    }),
+    acertarSaldo: (id, saldo) => {
+      const e = estadoAtual.current, conta = e.accounts.find((a) => a.id === id);
+      if (!conta) return null;
+      const nova = acertarSaldo(conta, e.transactions, saldo, new Date());
+      setEstado((s) => ({ ...s, accounts: s.accounts.map((a) => (a.id === id ? nova : a)) }));
+      return conta;
+    },
+    reporConta: (c) => setEstado((s) => ({ ...s, accounts: s.accounts.map((a) => (a.id !== c.id ? a : c.name ? c : { ...a, balance: c.balance })) })),
+    tipoVisual: (tipo, categoria) => tipoVisual(tipo, categoria),
+    dizer: (t) => { avisarImportacao.current(t); setImportacoes((n) => n + 1); },
+  };
+  const acoesImportacao: AcoesImportacao = {
+    haParaDesfazer: haImportacaoParaDesfazer(),
+    importar: async (f, avisar) => {
+      avisarImportacao.current = avisar;
+      let ext = null;
+      try { ext = await lerFicheiro(f); } catch { /* ficheiro ilegível */ }
+      avisar(ext ? abrirRevisao(ext, apiImportacao) : 'Não reconheci este ficheiro como um extrato bancário (XLSX, XLS ou CSV com data, descrição e valor).');
+    },
+    desfazer: (avisar) => {
+      if (!window.confirm('Desfazer a última importação?')) return;
+      avisar(desfazerImportacao(apiImportacao)); setImportacoes((n) => n + 1);
+    },
+  };
   // Interface da app atual usada pelos avisos (e, mais tarde, pelo Jarvis); avisos ao abrir e de espaço
   useEffect(() => {
     window.ffBk = { get count() { return estadoAtual.current.transactions.length; }, payload: conteudoBackup, download: descarregarBackup, done: registarBackup };
@@ -446,7 +494,7 @@ export function App() {
       {folha ? (
         <FolhaDefinicoes
           modo={folha} seccao={seccao} mudarSeccao={(s) => { if (s === 'backup') setMensagemBackup(''); setSeccao(s); }} fechar={fecharFolha} teclado={teclado} estado={estado}
-          mudarEstado={setEstado} ultimoBackup={ultimoBackup} mensagemBackup={mensagemBackup} acoesBackup={acoesBackup} limparDados={limparDados}
+          mudarEstado={setEstado} ultimoBackup={ultimoBackup} mensagemBackup={mensagemBackup} acoesBackup={acoesBackup} limparDados={limparDados} acoesImportacao={acoesImportacao}
           categoriaRenomeada={(antigo, novo) => setEscolhas((e) => (e.categoria === antigo ? { ...e, categoria: novo } : e))}
           mudarPin={(pinHash) => setEstado((s) => ({ ...s, pinHash }))}
           mudarAparencia={(appearance) => setEstado((s) => ({ ...s, appearance }))}

@@ -1,6 +1,6 @@
 # Plano — Fase 2 da app «Finanças»
 
-> Estado: **aprovado**. Etapa 0 **concluída** (v1.9.3). Etapa 1 **concluída** (`/v2/` 2.00.1, 44/44 na raiz e na `/v2/`). Etapa 2 **concluída** (núcleo de dados em `app/src/dados`, 53 testes unitários). Etapa 3 **concluída** (`/v2/` 2.00.2 = app nova: Principal, navegação e bloqueio). Etapa 4 **concluída** (`/v2/` 2.00.3: registar, editar e eliminar movimentos). Etapa 5 **concluída** (`/v2/` 2.00.4: bloqueio, impressão digital, bloqueio automático e privacidade reescritos em `app/src/bloqueio/`; 2.00.5 mostra a versão no menu «V2 · teste»). Etapa 6 **concluída** (`/v2/` 2.00.6: Definições › Segurança, antecipada; as etapas seguintes passaram uma posição abaixo). Etapa 7 **concluída** (`/v2/` 2.00.7: Análise, Calendário, Categorias, Resumo e botão "voltar" nas páginas). Etapa 8 **concluída** (`/v2/` 2.00.8: Combustível, Veterinário e lembretes veterinários). **Correções pedidas pelo dono** (`/v2/` 2.00.9, só na app nova — ver §4.2). Etapa 9 **concluída** (`/v2/` 2.01.0: restantes Definições, backup/restauro/CSV, espaço, lembrete de backup, saldo corrigido só a partir do dia).
+> Estado: **aprovado**. Etapa 0 **concluída** (v1.9.3). Etapa 1 **concluída** (`/v2/` 2.00.1, 44/44 na raiz e na `/v2/`). Etapa 2 **concluída** (núcleo de dados em `app/src/dados`, 53 testes unitários). Etapa 3 **concluída** (`/v2/` 2.00.2 = app nova: Principal, navegação e bloqueio). Etapa 4 **concluída** (`/v2/` 2.00.3: registar, editar e eliminar movimentos). Etapa 5 **concluída** (`/v2/` 2.00.4: bloqueio, impressão digital, bloqueio automático e privacidade reescritos em `app/src/bloqueio/`; 2.00.5 mostra a versão no menu «V2 · teste»). Etapa 6 **concluída** (`/v2/` 2.00.6: Definições › Segurança, antecipada; as etapas seguintes passaram uma posição abaixo). Etapa 7 **concluída** (`/v2/` 2.00.7: Análise, Calendário, Categorias, Resumo e botão "voltar" nas páginas). Etapa 8 **concluída** (`/v2/` 2.00.8: Combustível, Veterinário e lembretes veterinários). **Correções pedidas pelo dono** (`/v2/` 2.00.9, só na app nova — ver §4.2). Etapa 9 **concluída** (`/v2/` 2.01.0: restantes Definições, backup/restauro/CSV, espaço, lembrete de backup, saldo corrigido só a partir do dia). Etapa 10 **concluída** (`/v2/` 2.01.1: importação de extratos em Definições › Importação e regras pessoais guardadas no telemóvel — ver §7).
 > Base de referência: versão **1.9.2**, **36/36 testes a passar** (medido a 28-09-2026).
 
 ---
@@ -176,7 +176,7 @@ Princípio: **a produção (raiz) só muda nas etapas 0 e 13.** Todas as outras 
 | **7** | **Análise, Calendário, Categorias, Resumo** ✅ — e o botão "voltar" do telemóvel nas páginas | `/v2/` | Comparar lado a lado com a app atual | + `calendario` + `paginas` (HTML igual ao da app atual em 26 estados) |
 | **8** | **Combustível e Veterinário** (+ lembretes) ✅ — páginas, janelas do "+", fotografias dos animais, lembretes (lista, criar/editar, "Feito", ponto no «Mais», aviso ao abrir) | `/v2/` | Lembretes, "feito" | + `veterinario` + `combustivel_vet` (HTML igual em 17 estados) |
 | **9** | **Restantes Definições** ✅ — perfil, categorias, contas, aparência, backup/restauro/CSV, dados, espaço, lembrete de backup; **saldo editado com efeito só a partir do dia da alteração** (pedido do dono, §4.2). Os recibos em PDF são lidos pelo Jarvis (anexar ficheiro) e passam para a etapa 11 | `/v2/` | Exportar backup e restaurar na V2 | + `compatibilidade` |
-| **10** | **Importação de extratos** + **regras pessoais no telemóvel** (secção 7) | `/v2/` | Importar um extrato real na V2 | + `extratos` |
+| **10** | **Importação de extratos** ✅ + **regras pessoais no telemóvel** (secção 7) — na `/v2/` faz-se em Definições › Importação até o Jarvis chegar (etapa 11); deteta como duplicado a cópia automática de um recorrente | `/v2/` | Criar as regras pessoais e importar um extrato real na V2 | + `importacao` (só `/v2/`); `extratos` passa com o Jarvis |
 | **11** | **Jarvis** — motor por regras + interface + ações com confirmação + **leitura de recibos PDF** (anexo) | `/v2/` | Perguntas do dia a dia | + `jarvis` |
 | **12** | **Offline e atualizações** — SW gerado com lista de ficheiros automática, aviso "Nova versão" | `/v2/` | Modo avião; publicar 2 versões seguidas | 36/36 v2 |
 | **13** | **Troca** — build nova passa para a raiz com o prefixo real `financas-familiar:`; app 1.9.x fica em `/v1/` para recuo | **Raiz** (v2.x — ver secção 9) | Backup obrigatório antes; atualizar; confirmar dados, PIN e digital | 36/36 raiz |
@@ -185,7 +185,7 @@ Princípio: **a produção (raiz) só muda nas etapas 0 e 13.** Todas as outras 
 Notas:
 - As etapas 3–11 podem ter subetapas (ex.: 7a Análise, 7b Calendário) se ficarem grandes. **Uma etapa por vez, com preview antes.**
 - Enquanto uma página ainda não estiver migrada, a `/v2/` mostra "Em construção" nesse separador.
-- **Nomes dos animais** (Sam, Lola): a app atual tem-nos fixos no código; na nova ficam num só sítio (`app/src/veterinario/animais.ts`) até passarem para a configuração guardada no telemóvel na etapa 10, com as regras pessoais da importação (secção 7).
+- **Nomes dos animais** (Sam, Lola): a app atual tem-nos fixos no código; na nova ficam num só sítio (`app/src/veterinario/animais.ts`) até passarem para o `profile` na etapa 11 (o Jarvis é quem mais os usa).
 - O botão "voltar" do telemóvel numa página que não seja a Principal volta à Principal (`history.pushState` com `financeTab`), como na app atual: feito na etapa 7.
 
 ---
@@ -227,7 +227,7 @@ Diferenças intencionais face à 1.9.x. As comparações de HTML apagam-nas ante
 | Mudar o nome de uma categoria | Na página Categorias, o ícone abre «Editar categoria» (nome e ícone); o nome muda nos movimentos, no ícone e na cor | — |
 | Saldo editado só a partir do dia (etapa 9) | Em Definições › Contas, o campo «Saldo» mostra o saldo de hoje; o valor escrito passa a ser o saldo a partir de hoje e os dias anteriores ficam com o valor antigo. Na Principal, nos meses anteriores, os cartões das contas mostram o saldo no fim desse mês (a 1.9.x mostrava sempre o de hoje) | Campo novo `adjDays` na conta (AAAA-MM-DD → acerto); o antigo `adj` (por mês) continua a ser lido |
 
-⚠️ **Duplicados com a importação:** uma cópia automática de um recorrente e a mesma linha num extrato importado podem aparecer duas vezes; a etapa 10 acrescenta essa deteção.
+✅ **Duplicados com a importação** (etapa 10): uma linha do extrato com o mesmo valor de um movimento não importado (incluindo as cópias automáticas dos recorrentes) a ±2 dias aparece desmarcada com «Possível duplicado».
 
 ## 5. Estratégia de testes
 
@@ -284,7 +284,14 @@ Pré-requisito: a **etapa 0 tem de estar instalada no telemóvel** antes de abri
 - `js/modulos/extratos.js` tem regras com **nomes de pessoas** (transferências a confirmar), **entidades patronais** (salário → pessoa), um **empréstimo pessoal ignorado** e **investimentos recorrentes**.
 - O núcleo e `veterinario.js` têm os **nomes das pessoas e dos animais** fixos no código (salários por pessoa, fotos, Jarvis).
 
-### Proposta
+### Como ficou (etapa 10)
+- As regras pessoais ficam no campo `importConfig` dos dados da app (`{ "rules": [{ "contem", "acao": "salario|transferir|ignorar|investimento", "pessoa"? }] }`), em vez de uma chave nova: entram sozinhas no backup e no restauro, e a app atual ignora o campo.
+- No código da app nova ficam só as regras genéricas (`app/src/importacao/classificacao.ts`).
+- Definições › Importação: importar extrato, desfazer a última importação e editar as regras pessoais.
+- Sem assistente de sugestões: as regras são poucas e o dono conhece-as; cria-as uma vez na V2.
+- Diferença intencional: o saldo do extrato é lido também quando há espaço antes do «;» (`Saldo contabilístico ;1.000,00`), que a app atual não lia.
+
+### Proposta inicial
 1. **Nova chave** `financas-familiar:import-config` (acrescentar não quebra nada; nenhuma chave existente muda):
    ```json
    { "v": 1, "regras": [ { "contem": "…", "acao": "salario|transferir|ignorar|investimento", "pessoa": "…", "categorias": ["…"] } ] }
