@@ -55,7 +55,9 @@ export function Principal({ estado, mes, ocultos, lista, mudarLista, irPara, vib
     || (contaFiltro === 'principal' ? !m.account || m.account === 'principal'
       : contaFiltro === 'revolut' ? m.account === 'revolut' || m.revolut?.holder === 'Conjunta'
         : m.account === contaFiltro);
-  const visiveis = lista.expandida ? movimentos.filter((m) => passaPesquisa(m) && passaConta(m)) : movimentos.slice(0, 3);
+  // Mais recentes primeiro (no mesmo dia, o último registado primeiro); a app atual mostrava pela ordem de registo
+  const porData = [...movimentos].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  const visiveis = lista.expandida ? porData.filter((m) => passaPesquisa(m) && passaConta(m)) : porData.slice(0, 3);
   const aspetos = aspetosCategorias(estado, mes);
   const editarContas = () => emConstrucao('As definições das contas');
 

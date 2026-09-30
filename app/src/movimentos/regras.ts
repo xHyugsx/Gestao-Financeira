@@ -1,5 +1,6 @@
 // Registar, editar e eliminar movimentos — mesmas regras e mesmo formato gravado que a app atual.
 import { dia, MESES, type Movimento, type TipoMovimento } from '../dados';
+import { alfabetica } from './cores';
 
 /** Interpreta valores escritos à portuguesa: "621,18", "1.234,56", "1.234", "12 €". */
 export function lerValor(v: unknown): number {
@@ -30,6 +31,8 @@ export interface ContextoNovo {
   recorrente: boolean;
   /** "com" ou "sem" valor (só nos recorrentes). */
   tipoValor: string;
+  /** Meses entre repetições (só nos recorrentes). */
+  periodicidade?: number;
   revolut: boolean;
   hoje: Date;
   id: number;
@@ -50,7 +53,7 @@ export function novoMovimento(campos: FormData, c: ContextoNovo): Movimento | Er
     return ['amount', 'Valor inválido. Use, por exemplo, 621,18 ou 1.234,56.'];
   }
   const afetaSaldo = campos.get('affectsBalance') === 'on';
-  const extras = { ...(c.recorrente ? { recurring: c.tipoValor } : {}), ...(nota ? { note: nota } : {}) };
+  const extras = { ...(c.recorrente ? { recurring: c.tipoValor, recurringEvery: c.periodicidade || 1 } : {}), ...(nota ? { note: nota } : {}) };
   if (c.revolut) {
     const revolut = { holder: String(campos.get('revolutHolder') || 'Conjunta'), purpose: String(campos.get('revolutPurpose') || 'Carregamento') };
     return {
@@ -76,15 +79,22 @@ export function movimentoEditado(m: Movimento, campos: FormData): Movimento | nu
   const conta = campos.get('account');
   const nota = String(campos.get('note') ?? '').trim().slice(0, 140);
   if (!titulo || !Number.isFinite(valor)) return null;
+  // Recorrente (só na app nova): desmarcar pára a série; a periodicidade liga a criação automática
+  const recorrencia: Partial<Movimento> = {};
+  if (campos.has('recurringEvery') || campos.get('recurring') === 'on') {
+    const cada = Number(campos.get('recurringEvery') || 0);
+    Object.assign(recorrencia, { recurring: m.recurring || 'com', recurringEvery: cada > 0 ? cada : undefined });
+  } else if (m.recurring) Object.assign(recorrencia, { recurring: undefined, recurringEvery: undefined, recurringDone: undefined });
   return {
-    ...m, title: titulo, amount: m.movementType === 'expense' ? -valor : m.movementType === 'income' ? valor : m.amount, date: data,
+    ...m, ...recorrencia, title: titulo, amount: m.movementType === 'expense' ? -valor : m.movementType === 'income' ? valor : m.amount, date: data,
     note: nota || undefined, ...(m.revolut ? { transferValue: valor } : {}),
     ...(conta != null ? { account: conta === 'principal' ? undefined : String(conta) } : {}),
     detail: `${diaEMes(data)} · ${categoria || 'Outros'}`,
   };
 }
 
-/** Categorias sugeridas ao editar. */
-export function categoriasParaEditar(categorias: string[], receitas: string[]): string[] {
-  return [...new Set([...categorias, ...receitas, 'Combustível', 'Supermercado', 'Transferência'])];
+/** Categorias para escolher ao editar: as do tipo do movimento (mais a atual), por ordem alfabética. */
+export function categoriasParaEditar(m: Movimento, categorias: string[], receitas: string[], atual: string): string[] {
+  const doTipo = m.movementType === 'income' ? receitas : m.movementType === 'expense' && !m.revolut ? categorias : ['Transferência'];
+  return alfabetica([...new Set([...doTipo, ...(atual ? [atual] : [])])]);
 }

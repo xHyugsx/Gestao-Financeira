@@ -16,6 +16,10 @@ export interface Movimento {
   account?: string;
   /** `true`, ou "sem" para recorrentes ainda sem valor definido. */
   recurring?: boolean | string;
+  /** Periodicidade em meses (1, 2, 3 ou 12): a app cria a cópia seguinte sozinha (só na app nova). */
+  recurringEvery?: number;
+  /** A cópia seguinte deste recorrente já foi criada. */
+  recurringDone?: boolean;
   note?: string;
   pet?: string;
   /** `false` nos movimentos importados de extratos: não mexem no saldo. */

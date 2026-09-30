@@ -1,5 +1,5 @@
 """A app nova (/v2/) tem de desenhar exatamente o mesmo que a app atual (raiz) nas partes já migradas."""
-import asyncio, base64, json, pathlib, sys
+import asyncio, base64, json, pathlib, re, sys, unicodedata
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 from correr import verificar
 from capturar_referencias_dados import COMPLETO, CASOS, PERFIL
@@ -17,7 +17,35 @@ ESTADOS = {
 }
 
 
+def preparar(dados):
+    """Dados de teste já pela ordem que a app nova mostra (diferenças intencionais, plano §4.1): movimentos do mais
+    recente para o mais antigo e categorias por ordem alfabética. Assim a comparação continua a valer para o resto."""
+    if not dados:
+        return dados
+    d = dict(dados)
+    if isinstance(d.get('transactions'), list):
+        # sem data: a mesma data por omissão da app (dia no início da descrição, senão 1 de setembro de 2026)
+        dia = lambda m: m.get('date') or '2026-09-%02d' % (int(re.match(r'\d*', str(m.get('detail', ''))).group() or 0) or 1)
+        d['transactions'] = sorted(d['transactions'], key=dia, reverse=True)
+    for k in ('categories', 'incomeCategories'):
+        if isinstance(d.get(k), list):
+            d[k] = sorted(d[k], key=lambda c: unicodedata.normalize('NFD', str(c)).encode('ascii', 'ignore').decode().lower())
+    return d
+
+
+def intencionais(h):
+    """Apaga do HTML as diferenças intencionais da app nova (correções pedidas pelo dono, plano §4.1)."""
+    h = h.replace(' Recorrente mensal</label>', ' Recorrente</label>').replace('Mudar ícone de ', 'Editar categoria ')
+    h = re.sub(r'<label class="ffv2-extra">.*?</label>', '', h, flags=re.S)
+    h = re.sub(r'<div class="movement-checks ffv2-extra">.*?</div>', '', h, flags=re.S)
+    if 'Editar movimento' in h:  # categoria: lista de escolha em vez de texto com sugestões
+        h = re.sub(r'<datalist id="edit-categories">.*?</datalist>', '', h, flags=re.S)
+        h = re.sub(r'<input[^>]*name="category"[^>]*>|<select name="category">.*?</select>', '[categoria]', h, flags=re.S)
+    return h
+
+
 async def abrir(app, url, prefixo, dados):
+    dados = preparar(dados)
     p = app.page
     await p.goto(url); await app.esperar_sw()
     await p.evaluate("([d,P])=>{localStorage.clear();if(d)localStorage.setItem(P+'v3',JSON.stringify(d));localStorage.setItem(P+'last-backup',new Date().toISOString())}", [dados, prefixo])
@@ -30,7 +58,7 @@ async def html(app, url, prefixo, dados, acoes):
     for a in acoes:
         await app.page.evaluate(a); await app.page.wait_for_timeout(250)
     await app.page.wait_for_timeout(500)
-    h = await app.page.evaluate("document.querySelector('.cosmic-app').outerHTML")
+    h = intencionais(await app.page.evaluate("document.querySelector('.cosmic-app').outerHTML"))
     return re.sub(r'(<p class="set-menu-version">v\. )[^<]*', r'\1…', h)  # cada app mostra a sua versão
 
 
@@ -80,14 +108,14 @@ def _caixa(n): return f"document.querySelectorAll('[role=dialog] .movement-check
 def _editar(t, i=0): return f"document.querySelectorAll('[aria-label=\"Editar {t}\"]')[{i}].click()"
 JANELAS = {
     'novo (despesa)': [MAIS], 'novo (receita)': [MAIS, _tipo('Receita')], 'novo (transferência)': [MAIS, _tipo('Transferência')],
-    'novo (recorrente sem valor)': [MAIS, _caixa(0), "(()=>{const s=document.querySelector('[role=dialog] .movement-checks select');s.value='sem';s.dispatchEvent(new Event('change',{bubbles:true}))})()"],
-    'novo (Revolut)': [MAIS, _caixa(2)], 'editar despesa': [_editar('Continente')],
+    'novo (recorrente sem valor)': [MAIS, _caixa(0), "(()=>{const s=[...document.querySelectorAll('[role=dialog] .movement-checks select')].find(x=>!x.name);s.value='sem';s.dispatchEvent(new Event('change',{bubbles:true}))})()"],
+    'novo (Revolut)': [MAIS, _caixa(2)], 'editar despesa': [VER_TODAS, _editar('Continente')],
     'editar transferência': [VER_TODAS, _editar('Transferência')], 'editar Revolut': [VER_TODAS, _editar('Para a conjunta')],
 }
 
 
 def _normalizar(h):
-    h = re.sub(r'radix-[^" ]+', 'radix-ID', h)
+    h = intencionais(re.sub(r'radix-[^" ]+', 'radix-ID', h))
     # titulares da Revolut: a app atual tem nomes fixos no código, a nova usa o perfil (plano §4.1)
     return re.sub(r'(<select name="revolutHolder"[^>]*>).*?(</select>)', r'\1…\2', h, flags=re.S)
 
@@ -127,7 +155,8 @@ async def _registar_editar_eliminar(app, url, prefixo):
     passos.append(await p.evaluate("P=>JSON.parse(localStorage.getItem(P+'v3')).transactions", prefixo))
     await p.evaluate(VER_TODAS); await p.wait_for_timeout(300)
     await p.evaluate(_editar('Galp')); await p.wait_for_timeout(400)
-    await p.fill('[role=dialog] input[name=amount]', '61,2'); await p.fill('[role=dialog] input[name=category]', 'Carro')
+    await p.fill('[role=dialog] input[name=amount]', '61,2')
+    await p.evaluate("v=>{document.querySelector('[role=dialog] [name=category]').value=v}", 'Lazer')
     await p.select_option('[role=dialog] select[name=account]', 'revolut'); await p.click('[role=dialog] button[type=submit]'); await p.wait_for_timeout(500)
     passos.append(await p.evaluate("P=>JSON.parse(localStorage.getItem(P+'v3')).transactions", prefixo))
     await p.evaluate(_editar('Continente')); await p.wait_for_timeout(400)
@@ -251,9 +280,6 @@ PAGINAS_V2 = {
     'categorias recorrentes': [_pg('categorias'), _seg('Recorrentes')], 'categorias pontuais': [_pg('categorias'), _seg('Pontuais')],
     'categoria que já existe': [_pg('categorias'), "(()=>{const i=document.querySelector('.inline-add input');const s=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set;s.call(i,'lazer');i.dispatchEvent(new Event('input',{bubbles:true}))})()",
                                 "document.querySelector('[aria-label=\"Adicionar categoria\"]').click()"],
-    'categoria nova': [_pg('categorias'), "document.querySelector('[aria-label=\"Cinema\"]').click()",
-                       "(()=>{const i=document.querySelector('.inline-add input');const s=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set;s.call(i,'Ginásio');i.dispatchEvent(new Event('input',{bubbles:true}))})()",
-                       "document.querySelector('[aria-label=\"Adicionar categoria\"]').click()"],
     'categoria em uso': [_pg('categorias'), "document.querySelector('[aria-label=\"Eliminar Alimentação\"]').click()"],
     'resumo': [_pg('resumo')], 'resumo trimestre': [_pg('resumo'), _seg('Últimos 3 meses')], 'resumo mês anterior': [_pg('resumo'), ANTERIOR],
     'despesas anuais': [_pg('resumo'), _seg('Despesas anuais')], 'fecho de mês': [_pg('resumo'), _seg('Fecho de mês')],
@@ -274,11 +300,17 @@ async def t_paginas_iguais_com_outros_dados(app):
 
 
 async def t_janela_do_icone_da_categoria_igual(app):
+    """A janela passou a «Editar categoria» (nome e ícone, correção pedida pelo dono); a grelha de ícones tem de ser igual."""
     await app.page.emulate_media(reduced_motion='reduce')
-    acoes = [_pg('categorias'), "document.querySelector('[aria-label=\"Mudar ícone de Lazer\"]').click()"]
-    atual = await _janela(app, app.raiz, 'financas-familiar:', acoes)
-    nova = await _janela(app, app.raiz + 'v2/', 'financas-v2:', acoes)
-    verificar('role="dialog"' in atual, 'a janela não abriu na app atual')
+    acoes = [_pg('categorias'), "[...document.querySelectorAll('.category-row')].find(r=>r.querySelector('h2').textContent==='Lazer').querySelector('.category-icon-edit').click()"]
+    grelhas = []
+    for url, prefixo in ((app.raiz, 'financas-familiar:'), (app.raiz + 'v2/', 'financas-v2:')):
+        await abrir(app, url, prefixo, COMPLETO)
+        for a in acoes:
+            await app.page.evaluate(a); await app.page.wait_for_timeout(300)
+        grelhas.append(await app.page.evaluate("document.querySelector('[role=dialog] .category-icon-groups')?.outerHTML||''"))
+    atual, nova = grelhas
+    verificar(atual, 'a janela não abriu na app atual')
     if atual != nova:
         i = next((k for k in range(min(len(atual), len(nova))) if atual[k] != nova[k]), min(len(atual), len(nova)))
         verificar(False, f'diferente: atual «…{atual[max(0, i - 60):i + 60]}…» · nova «…{nova[max(0, i - 60):i + 60]}…»')

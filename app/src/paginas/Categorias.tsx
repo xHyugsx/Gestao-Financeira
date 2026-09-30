@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import type { Estado } from '../dados';
+import { erroNomeCategoria, renomearCategoria } from '../movimentos/categorias';
+import { coresCategorias, corNova } from '../movimentos/cores';
 import { Botao } from '../ui/Botao';
 import { Dialogo } from '../ui/Dialogo';
 import { formatarEuros } from '../ui/formatos';
@@ -52,10 +54,12 @@ interface Props {
   mudarVista: (v: Partial<VistaCategorias>) => void;
   mudarEstado: (f: (e: Estado) => Estado) => void;
   categoriaEliminada: (nome: string) => void;
+  categoriaRenomeada: (antigo: string, novo: string) => void;
 }
 
-export function Categorias({ estado, mes, ocultos, vista, mudarVista, mudarEstado, categoriaEliminada }: Props) {
-  const [aEditar, setAEditar] = useState<{ nome: string; icone: string } | null>(null);
+export function Categorias({ estado, mes, ocultos, vista, mudarVista, mudarEstado, categoriaEliminada, categoriaRenomeada }: Props) {
+  // Janela «Editar categoria» (nome e ícone; a app atual só deixava mudar o ícone aqui)
+  const [aEditar, setAEditar] = useState<{ antigo: string; nome: string; icone: string; erro: string } | null>(null);
   const receitas = vista.tipo === 'receitas';
   const lista = receitas
     ? categoriasDoMes(estado, mes, 'receitas')
@@ -72,8 +76,23 @@ export function Categorias({ estado, mes, ocultos, vista, mudarVista, mudarEstad
       ...e,
       ...(receitas ? { incomeCategories: [...e.incomeCategories, nome] } : { categories: [...e.categories, nome] }),
       categoryIcons: { ...e.categoryIcons, [nome]: vista.icone },
+      // cor ao acaso, nunca repetida enquanto houver cores livres (só na app nova)
+      extras: { ...e.extras, categoryColors: { ...coresCategorias(e), [nome]: corNova(e) } },
     }));
     mudarVista({ nova: '', icone: 'tags', mensagem: 'Categoria criada.' });
+  };
+
+  const guardarEdicao = () => {
+    if (!aEditar) return;
+    const nome = aEditar.nome.trim();
+    const erro = nome === aEditar.antigo ? null : erroNomeCategoria(estado, nome, aEditar.antigo);
+    if (erro) { setAEditar({ ...aEditar, erro }); return; }
+    mudarEstado((e) => {
+      const renomeada = nome === aEditar.antigo ? e : renomearCategoria(e, aEditar.antigo, nome);
+      return { ...renomeada, categoryIcons: { ...renomeada.categoryIcons, [nome]: aEditar.icone } };
+    });
+    if (nome !== aEditar.antigo) { categoriaRenomeada(aEditar.antigo, nome); mudarVista({ mensagem: 'Categoria renomeada nos movimentos existentes.' }); }
+    setAEditar(null);
   };
 
   const eliminar = (nome: string) => {
@@ -118,8 +137,8 @@ export function Categorias({ estado, mes, ocultos, vista, mudarVista, mudarEstad
         {lista.map((e) => (
           <article key={e.name} className="category-row">
             <button
-              type="button" className={`category-icon category-icon-edit tone-${e.tone}`} aria-label={`Mudar ícone de ${e.name}`}
-              onClick={() => setAEditar({ nome: e.name, icone: estado.categoryIcons[e.name] ?? CATALOGO_ICONES.find((c) => c.icone === e.icone)?.id ?? 'tags' })}
+              type="button" className={`category-icon category-icon-edit tone-${e.tone}`} aria-label={`Editar categoria ${e.name}`}
+              onClick={() => setAEditar({ antigo: e.name, nome: e.name, erro: '', icone: estado.categoryIcons[e.name] ?? CATALOGO_ICONES.find((c) => c.icone === e.icone)?.id ?? 'tags' })}
             >
               <Icone nome={e.icone} />
               <i className="category-icon-badge" aria-hidden="true"><Icone nome="pencil" /></i>
@@ -141,12 +160,20 @@ export function Categorias({ estado, mes, ocultos, vista, mudarVista, mudarEstad
       </section>
       <Dialogo
         aberto={aEditar !== null} aoMudar={(a) => { if (!a) setAEditar(null); }} className="movement-dialog icon-edit-dialog"
-        titulo={`Ícone de ${aEditar?.nome ?? ''}`} descricao="Escolha um novo ícone para esta categoria."
+        titulo="Editar categoria" descricao="Mude o nome ou o ícone desta categoria."
       >
-        {aEditar ? <EscolhaIcone valor={aEditar.icone} aoEscolher={(icone) => setAEditar((a) => a && { ...a, icone })} /> : null}
+        {aEditar ? (
+          <>
+            <label className="ffv2-nome-categoria">Nome
+              <input value={aEditar.nome} maxLength={40} aria-label="Nome da categoria" onChange={(ev) => setAEditar({ ...aEditar, nome: ev.target.value, erro: '' })} />
+            </label>
+            {aEditar.erro ? <p className="settings-message" role="alert">{aEditar.erro}</p> : null}
+            <EscolhaIcone valor={aEditar.icone} aoEscolher={(icone) => setAEditar((a) => a && { ...a, icone })} />
+          </>
+        ) : null}
         <div className="dialog-actions">
           <Botao type="button" variante="ghost" onClick={() => setAEditar(null)}><Icone nome="x" />Cancelar</Botao>
-          <Botao type="button" onClick={() => { if (aEditar) mudarEstado((e) => ({ ...e, categoryIcons: { ...e.categoryIcons, [aEditar.nome]: aEditar.icone } })); setAEditar(null); }}>Guardar</Botao>
+          <Botao type="button" onClick={guardarEdicao}>Guardar</Botao>
         </div>
       </Dialogo>
     </main>

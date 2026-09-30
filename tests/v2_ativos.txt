@@ -25,3 +25,6 @@ teste_paginas
 teste_veterinario:t_lista_e_estados
 teste_veterinario:t_feito_recalcula_a_data
 teste_combustivel_vet
+
+# Correções pedidas pelo dono (V2 2.00.9) — só na app nova
+teste_correcoes

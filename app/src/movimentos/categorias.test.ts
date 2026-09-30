@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { Movimento } from '../dados';
-import { aspetoDoMovimento, aspetosCategorias, categoriaDespesa, iconePorTipo, simplificar } from './categorias';
+import { estadoInicial, type Movimento } from '../dados';
+import { aspetoDoMovimento, aspetosCategorias, categoriaDespesa, erroNomeCategoria, iconePorTipo, renomearCategoria, simplificar } from './categorias';
 
 const mov = (m: Partial<Movimento>): Movimento =>
   ({ id: 1, title: 'X', detail: '4 setembro · Alimentação', amount: -1, date: '2026-09-04', movementType: 'expense', ...m });
@@ -37,5 +37,30 @@ describe('categorias e ícones', () => {
 
   it('pesquisa ignora acentos e maiúsculas', () => {
     expect(simplificar('Pão Açúcar')).toBe('pao acucar');
+  });
+});
+
+describe('mudar o nome de uma categoria', () => {
+  const dados = {
+    ...estadoInicial(), categories: ['Lazer', 'Casa'], categoryIcons: { Lazer: 'bike' }, extras: { categoryColors: { Lazer: 'teal' } },
+    transactions: [
+      { id: 1, title: 'Cinema', detail: '12 setembro · Lazer', amount: -8, date: '2026-09-12', movementType: 'expense' as const },
+      { id: 2, title: 'Renda', detail: '1 setembro · Casa', amount: -600, date: '2026-09-01', movementType: 'expense' as const },
+    ],
+  };
+
+  it('muda nas listas, nos movimentos, no ícone e na cor', () => {
+    const r = renomearCategoria(dados, 'Lazer', 'Diversão');
+    expect(r.categories).toEqual(['Diversão', 'Casa']);
+    expect(r.transactions.map((m) => m.detail)).toEqual(['12 setembro · Diversão', '1 setembro · Casa']);
+    expect(r.categoryIcons).toEqual({ Diversão: 'bike' });
+    expect(r.extras.categoryColors).toEqual({ Diversão: 'teal' });
+  });
+
+  it('valida o nome novo', () => {
+    expect(erroNomeCategoria(dados, '', 'Lazer')).toBe('Escreva o nome da categoria.');
+    expect(erroNomeCategoria(dados, 'casa', 'Lazer')).toBe('Essa categoria já existe.');
+    expect(erroNomeCategoria(dados, 'lazer', 'Lazer')).toBeNull();
+    expect(erroNomeCategoria(dados, 'x'.repeat(41), 'Lazer')).toBe('Use no máximo 40 caracteres.');
   });
 });

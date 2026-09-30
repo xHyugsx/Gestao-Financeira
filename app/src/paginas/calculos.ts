@@ -1,6 +1,7 @@
 // Contas por mês usadas pelas páginas Análise, Categorias, Resumo e Calendário (mesmas regras da app atual).
 import { anoMes, type Estado, gastos, inicioDoMes, type Movimento } from '../dados';
 import { categoriaDespesa, categoriaReceita, simplificar } from '../movimentos/categorias';
+import { coresCategorias } from '../movimentos/cores';
 import { CATALOGO_ICONES, CATEGORIAS_BASE, type NomeIcone } from '../ui/icones';
 
 export const doMes = (movimentos: Movimento[], mes: Date) => movimentos.filter((m) => m.date.startsWith(anoMes(mes)));
@@ -17,6 +18,9 @@ export const eCombustivel = (m: Movimento) => m.movementType === 'expense' && /c
 export const CORES: Record<string, string> = {
   blue: 'var(--cosmic-blue)', green: 'var(--positive)', orange: 'oklch(72% .18 55)', pink: 'var(--negative)',
   violet: 'var(--primary)', red: 'oklch(62% .25 24)', yellow: 'oklch(78% .16 88)', cyan: 'oklch(73% .15 220)',
+  // cores novas (só na app nova, para categorias criadas pelo utilizador)
+  teal: 'oklch(70% .12 185)', lime: 'oklch(82% .19 128)', amber: 'oklch(80% .16 70)', rose: 'oklch(70% .19 5)',
+  indigo: 'oklch(58% .2 275)', sky: 'oklch(78% .12 235)', fuchsia: 'oklch(67% .26 322)', emerald: 'oklch(70% .16 158)',
 };
 
 const ICONE_POR_ID: Record<string, NomeIcone> = Object.fromEntries(CATALOGO_ICONES.map((e) => [e.id, e.icone]));
@@ -51,6 +55,7 @@ export function categoriasDoMes(estado: Estado, mes: Date, tipo: 'despesas' | 'r
     return despesas ? gastos(daCategoria) : daCategoria.reduce((s, m) => s + m.amount, 0);
   };
   const total = despesas ? gastos(atual) : receitas(atual);
+  const cores = coresCategorias(estado);
   const nomes = [...new Set([...definidas, ...[...atual, ...anterior].filter((m) => m.movementType === tipoMov).map(categoria)])];
   return nomes.map((nome) => {
     const base = CATEGORIAS_BASE.find((c) => c.name === nome);
@@ -61,7 +66,7 @@ export function categoriasDoMes(estado: Estado, mes: Date, tipo: 'despesas' | 'r
       name: nome,
       auto: !definidas.includes(nome),
       icone: ICONE_POR_ID[estado.categoryIcons[nome] ?? ''] ?? base?.icone ?? ICONE_POR_ID[(despesas ? ICONE_DESPESA : ICONE_RECEITA)[nome] ?? ''] ?? ICONE_POR_ID.tags!,
-      tone: base?.tone ?? (despesas ? COR_DESPESA : COR_RECEITA)[nome] ?? 'violet',
+      tone: cores[nome] ?? base?.tone ?? (despesas ? COR_DESPESA : COR_RECEITA)[nome] ?? 'violet',
       type: base?.type ?? 'pontual',
       amount,
       share,

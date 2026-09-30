@@ -5,6 +5,8 @@ import { Dialogo } from '../ui/Dialogo';
 import { Icone } from '../ui/Icone';
 import { Segmentado } from '../ui/Segmentado';
 import type { aspetosCategorias } from './categorias';
+import { alfabetica } from './cores';
+import { PERIODICIDADES } from './recorrentes';
 import { novoMovimento } from './regras';
 
 /** Escolhas do formulário que a app atual mantém entre aberturas (tipo e categoria) ou repõe ao abrir. */
@@ -13,6 +15,8 @@ export interface EscolhasNovo {
   categoria: string;
   recorrente: boolean;
   tipoValor: string;
+  /** Meses entre repetições (Mensal = 1, Bimestral = 2, Trimestral = 3, Anual = 12). */
+  periodicidade: number;
   revolut: boolean;
 }
 
@@ -30,7 +34,7 @@ const TIPOS = [{ valor: 'expense', rotulo: 'Despesa' }, { valor: 'income', rotul
 
 export function NovoMovimento({ aberto, aoMudar, estado, escolhas: e, mudarEscolhas, aspetos, aoGuardar }: Props) {
   const mudar = (o: Partial<EscolhasNovo>) => mudarEscolhas({ ...e, ...o });
-  const lista = e.tipo === 'income' ? estado.incomeCategories : estado.categories;
+  const lista = alfabetica(e.tipo === 'income' ? estado.incomeCategories : estado.categories);
   const mapa = e.tipo === 'income' ? aspetos.receitas : aspetos.despesas;
   const semValor = e.recorrente && e.tipoValor === 'sem';
 
@@ -98,7 +102,14 @@ export function NovoMovimento({ aberto, aoMudar, estado, escolhas: e, mudarEscol
           </label>
         ) : null}
         <div className="movement-checks">
-          <label className="checkbox-row"><input type="checkbox" checked={e.recorrente} onChange={(x) => mudar({ recorrente: x.target.checked })} /> Recorrente mensal</label>
+          <label className="checkbox-row"><input type="checkbox" checked={e.recorrente} onChange={(x) => mudar({ recorrente: x.target.checked })} /> Recorrente</label>
+          {e.recorrente ? (
+            <label className="ffv2-extra">Periodicidade
+              <select name="recurringEvery" value={e.periodicidade} onChange={(x) => mudar({ periodicidade: Number(x.target.value) })}>
+                {PERIODICIDADES.map((p) => <option key={p.meses} value={p.meses}>{p.rotulo}</option>)}
+              </select>
+            </label>
+          ) : null}
           {e.recorrente ? (
             <label>Tipo de valor
               <select value={e.tipoValor} onChange={(x) => mudar({ tipoValor: x.target.value })}>
@@ -114,7 +125,8 @@ export function NovoMovimento({ aberto, aoMudar, estado, escolhas: e, mudarEscol
               <label>Revolut Conjunta
                 {/* A app atual lista nomes fixos no código; aqui vêm do perfil (privacidade, plano §4.1). */}
                 <select name="revolutHolder" defaultValue="Conjunta">
-                  {['Conjunta', ...estado.profile.members.filter((n) => n && n !== 'Conjunta')].map((n) => <option key={n}>{n}</option>)}
+                  {/* «Poupança Conjunta»: destino próprio, que não soma ao saldo da Revolut Conjunta */}
+                  {['Conjunta', 'Poupança Conjunta', ...estado.profile.members.filter((n) => n && n !== 'Conjunta' && n !== 'Poupança Conjunta')].map((n) => <option key={n}>{n}</option>)}
                 </select>
               </label>
               <label>Finalidade

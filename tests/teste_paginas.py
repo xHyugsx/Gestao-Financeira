@@ -61,7 +61,7 @@ async def t_criar_mudar_icone_e_eliminar_categoria(app):
     await p.click('.page-current [aria-label="Adicionar categoria"]'); await p.wait_for_timeout(400)
     d = await dados(app)
     verificar('Ginásio' in d['categories'] and d['categoryIcons'].get('Ginásio') == 'books', f'categoria criada: {d["categories"]} {d["categoryIcons"]}')
-    await p.click('.page-current [aria-label="Mudar ícone de Ginásio"]'); await p.wait_for_timeout(400)
+    await p.click('.page-current .category-row:has(h2:text-is("Ginásio")) .category-icon-edit'); await p.wait_for_timeout(400)
     await p.click('[role=dialog] [aria-label="Música"]')
     await p.click('[role=dialog] button:text-is("Guardar")'); await p.wait_for_timeout(400)
     verificar((await dados(app))['categoryIcons'].get('Ginásio') == 'music', 'o ícone novo não ficou gravado')
