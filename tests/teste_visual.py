@@ -39,6 +39,8 @@ def intencionais(h):
     h = re.sub(r'<label class="ffv2-extra">.*?</label>', '', h, flags=re.S)
     h = re.sub(r'<div class="movement-checks ffv2-extra">.*?</div>', '', h, flags=re.S)
     h = re.sub(r'<button[^>]*class="[^"]*ffv2-extra[^"]*"[^>]*>.*?</button>', '', h, flags=re.S)  # Definições › Importação
+    # espaço ocupado: a app atual grava um perfil por omissão com nomes, a nova grava-o vazio (sem nomes no código)
+    h = re.sub(r'<small>[^<]* ocupados neste dispositivo</small>', '<small>… ocupados neste dispositivo</small>', h)
     # contas: o campo «Saldo» mostra o saldo de hoje (a app atual mostra o saldo inicial) — pedido do dono
     h = re.sub(r'(<input[^>]*name="[^"]*-balance"[^>]*?)value="[^"]*"', r'\1value="…"', h)
     h = re.sub(r'value="[^"]*"([^>]*name="[^"]*-balance")', r'value="…"\1', h)
@@ -410,3 +412,21 @@ async def _aviso(app):
     h = await app.page.evaluate("document.getElementById('ff-vetbn')?.outerHTML||''")
     verificar(h, 'o aviso do lembrete não apareceu')
     return h
+
+
+FAB = "document.querySelector('.jarvis-fab').click()"
+def _perguntar(q): return ("(()=>{const i=document.querySelector('[aria-label=\"Mensagem para o Jarvis\"]');"
+                           "Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(i," + json.dumps(q) + ");"
+                           "i.dispatchEvent(new Event('input',{bubbles:true}));"
+                           "setTimeout(()=>document.querySelector('[aria-label=\"Enviar mensagem\"]').click(),50)})()")
+ESPERAR = "new Promise(r=>setTimeout(r,900))"
+JARVIS = {
+    'jarvis (vazio)': [FAB],
+    'jarvis (resposta e seguimento)': [FAB, _perguntar('Quanto gastei no Continente em agosto?'), ESPERAR, _perguntar('E em julho?'), ESPERAR],
+    'jarvis (confirmar)': [FAB, _perguntar('Remove a Galp'), ESPERAR],
+    'jarvis (erros de escrita)': [FAB, _perguntar('qto gastei em agosot?'), ESPERAR],
+}
+
+
+async def t_jarvis_igual_a_app_atual(app):
+    await comparar_html(app, COMPLETO, JARVIS, sem_ceu=True)

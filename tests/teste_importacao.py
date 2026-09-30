@@ -39,7 +39,7 @@ async def t_importar_pelas_definicoes_e_desfazer(app):
     await importar(app, 'tests/dados/extrato_ficticio.xlsx')
     p = app.page
     verificar((await resumo(app)).startswith('12 movimentos'), f'resumo: {await resumo(app)}')
-    verificar('Nada é gravado' in await p.inner_text('.settings-message'), 'falta a mensagem da revisão')
+    verificar('nada é gravado' in await p.inner_text('.settings-message'), 'falta a mensagem da revisão')
     dup = await p.evaluate("[...document.querySelectorAll('.ffst-row')].filter(r=>/Possível duplicado/.test(r.textContent)).map(r=>r.classList.contains('off'))")
     verificar(dup == [True], f'duplicado: {dup}')
     contas = (await dados(app)).get('accounts')

@@ -32,3 +32,10 @@ teste_correcoes
 
 # Etapa 10 — importação de extratos pelas Definições (só na app nova)
 teste_importacao
+
+# Etapa 11 — Jarvis (perguntas, ações com confirmação, anexos: extratos, recibos PDF, backup)
+teste_jarvis
+teste_referencias
+teste_extratos
+teste_veterinario:t_jarvis_responde_sobre_lembretes
+teste_jarvis_v2

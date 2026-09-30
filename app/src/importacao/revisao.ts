@@ -154,7 +154,7 @@ function importar() {
   gravar(ULTIMA, desfazer);
   const nome = d.acc.find((x) => x.id === conta)?.name || 'Principal';
   fechar();
-  api.dizer(`Importação concluída ✅ ${tx.length} movimentos em ${nome}${sal.length ? ` · ${sal.length} salários registados` : ''}${desfazer.bal ? ` · saldo acertado para ${euros(s.ext.balance!)}` : ''}.\nOs movimentos não alteraram o saldo da conta. Para anular, usa «Desfazer a última importação».`);
+  api.dizer(`Importação concluída ✅ ${tx.length} movimentos em ${nome}${sal.length ? ` · ${sal.length} salários registados` : ''}${desfazer.bal ? ` · saldo acertado para ${euros(s.ext.balance!)}` : ''}.\nOs movimentos não alteraram o saldo da conta. Escreve «desfazer importação» para anular.`);
   S = null;
 }
 
@@ -176,11 +176,11 @@ export function abrirRevisao(ext: Extrato, api: ApiImportacao): string {
   ultimoExtrato = ext;
   abrir(ext, api);
   const pend = S ? S.items.filter((o) => o.k === 'ask' && !o.ch).length : 0;
-  return `Encontrei um extrato ${ext.bank === 'banco' ? 'bancário' : `da ${ext.bank}`} com ${ext.lines.length} movimentos (${dataCurta(ext.from)} a ${dataCurta(ext.to)}).\nSeparei despesas, receitas, salários e transferências e sugeri categorias${pend ? `. Há ${pend} ${pend === 1 ? 'movimento' : 'movimentos'} que preciso que confirmes` : ''}. Nada é gravado sem carregares em «Importar».`;
+  return `Encontrei um extrato ${ext.bank === 'banco' ? 'bancário' : `da ${ext.bank}`} com ${ext.lines.length} movimentos (${dataCurta(ext.from)} a ${dataCurta(ext.to)}).\nSeparei despesas, receitas, salários e transferências e sugeri categorias${pend ? `. Há ${pend} ${pend === 1 ? 'movimento' : 'movimentos'} que preciso que confirmes` : ''}. Abri a revisão — nada é gravado sem carregares em «Importar».\n(Se fechares, escreve «rever extrato» para voltar.)`;
 }
 
 export function reabrirRevisao(api: ApiImportacao): string {
-  if (!ultimoExtrato) return 'Não há nenhum extrato por rever.';
+  if (!ultimoExtrato) return 'Não há nenhum extrato por rever. Anexa um ficheiro com o clip 📎.';
   abrir(ultimoExtrato, api);
   return 'Abri a revisão do extrato.';
 }

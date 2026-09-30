@@ -47,8 +47,9 @@ for (const f of ficheirosApp) copiar(join(RAIZ, f), join(SITE, f));
 await build({ configFile: join(RAIZ, 'app', 'vite.config.ts'), logLevel: 'warn' });
 copiar(COMPILADO, V2);
 copiar(join(RAIZ, 'icons'), join(V2, 'icons'));
-// SheetJS para extratos XLS antigos (carregado só quando é preciso, como na app atual)
+// SheetJS (extratos XLS) e pdf.js (recibos PDF): cópias locais, guardadas offline como o resto da app
 copiar(join(RAIZ, 'vendor', 'xlsx'), join(V2, 'vendor', 'xlsx'));
+copiar(join(RAIZ, 'vendor', 'pdfjs'), join(V2, 'vendor', 'pdfjs'));
 
 const manifesto = JSON.parse(readFileSync(join(RAIZ, 'manifest.webmanifest'), 'utf8'));
 Object.assign(manifesto, { id: './', name: 'Finanças V2', short_name: 'Finanças V2' });
@@ -58,7 +59,7 @@ copiar(join(RAIZ, 'service-worker.js'), join(V2, 'service-worker.js'));
 trocar(join(V2, 'service-worker.js'), "const CACHE = 'financas-app';", "const CACHE = 'financas-v2';");
 
 const ficheirosV2 = listar(V2).map((c) => relative(V2, c).split('\\').join('/'))
-  .filter((f) => f !== 'service-worker.js' && f !== 'version.json' && !f.startsWith('vendor/')).sort();
+  .filter((f) => f !== 'service-worker.js' && f !== 'version.json' && !f.endsWith('LICENSE')).sort();
 writeFileSync(join(V2, 'version.json'), JSON.stringify({ version: VERSAO_V2, files: ficheirosV2 }, null, 2) + '\n');
 
 console.log(`Site montado em _site/ (raiz ${versao.version} · /v2/ ${VERSAO_V2}, ${ficheirosV2.length} ficheiros)`);

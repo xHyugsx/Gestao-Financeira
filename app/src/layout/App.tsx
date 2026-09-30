@@ -15,7 +15,14 @@ import { gerarRecorrentes } from '../movimentos/recorrentes';
 import { tipoVisual } from '../movimentos/regras';
 import { regrasPessoais } from '../importacao/config';
 import { lerFicheiro } from '../importacao/leitura';
-import { abrirRevisao, type ApiImportacao, desfazerImportacao, haImportacaoParaDesfazer } from '../importacao/revisao';
+import { abrirRevisao, type ApiImportacao, desfazerImportacao, haImportacaoParaDesfazer, reabrirRevisao } from '../importacao/revisao';
+import { Jarvis, type Mensagem, mensagensGuardadas } from '../jarvis/Jarvis';
+import { type ContextoJarvis, MotorJarvis } from '../jarvis/motor';
+import { lerDocumento, textoDoPdf } from '../jarvis/recibos';
+import { pessoasDosSalarios } from '../paginas/Resumo';
+import { ANIMAIS } from '../veterinario/animais';
+import { feito as lembreteFeito, info as infoLembrete, ordenados as lembretesOrdenados } from '../veterinario/lembretes';
+import { formatarEuros } from '../ui/formatos';
 import { type EscolhasNovo, NovoMovimento } from '../movimentos/NovoMovimento';
 import { Analise, type TipoAnalise } from '../paginas/Analise';
 import { Calendario } from '../paginas/Calendario';
@@ -80,6 +87,10 @@ export function App() {
   const [folha, setFolha] = useState<'list' | 'direct' | null>(null);
   const [seccao, setSeccao] = useState<Seccao | null>(null);
   const [teclado, setTeclado] = useState(0);
+  const [jarvis, setJarvis] = useState(false);
+  const [mensagens, setMensagens] = useState<Mensagem[]>(mensagensGuardadas);
+  const motor = useRef(new MotorJarvis()).current;
+  const fecharJarvisT = useRef<ReturnType<typeof setTimeout>>(undefined);
   const folhaAberta = useRef(folha);
   folhaAberta.current = folha;
   const [ultimoBackup, setUltimoBackup] = useState(() => { try { return localStorage.getItem(chave('ultimoBackup', PREFIXO)) || ''; } catch { return ''; } });
@@ -165,13 +176,13 @@ export function App() {
     return () => document.removeEventListener('keydown', k);
   }, [menu, folha, fecharMenu, fecharFolha]);
   useEffect(() => {
-    if (!folha) { setTeclado(0); return; }
+    if (!folha && !jarvis) { setTeclado(0); return; }
     const v = window.visualViewport;
     const f = () => { if (v) setTeclado(Math.max(0, Math.round(window.innerHeight - v.height - v.offsetTop))); };
     f();
     v?.addEventListener('resize', f); v?.addEventListener('scroll', f);
     return () => { v?.removeEventListener('resize', f); v?.removeEventListener('scroll', f); };
-  }, [folha]);
+  }, [folha, jarvis]);
 
   const irPara = useCallback((para: string, dx = 0) => {
     if (!para || para === pagina || transicao || !ids.includes(para)) return;
@@ -288,7 +299,77 @@ export function App() {
       avisar(desfazerImportacao(apiImportacao)); setImportacoes((n) => n + 1);
     },
   };
-  // Interface da app atual usada pelos avisos (e, mais tarde, pelo Jarvis); avisos ao abrir e de espaço
+  // Jarvis: contexto do motor, anexos (backup, recibos, extratos) e fecho animado
+  const juntarJarvis = (content: string) => setMensagens((m) => [...m, { role: 'assistant' as const, content }].slice(-100));
+  const contextoJarvis = (): ContextoJarvis => ({
+    estado: estadoAtual.current, mes, agora, eur: (v) => formatarEuros(v, ocultos),
+    saldoAtual: (c) => saldoDaConta(c, estadoAtual.current.transactions, new Date()).atual,
+    mudarMovimentos, mudarContas: (f) => setEstado((s) => ({ ...s, accounts: f(s.accounts) })),
+    definirSalario: apiImportacao.definirSalario, vibrar, criarBackup: descarregarBackup,
+    vet: { todos: todosLembretes, ordenados: lembretesOrdenados, feito: lembreteFeito, info: infoLembrete },
+    importacao: {
+      desfazer: () => { const r = desfazerImportacao(apiImportacao); setImportacoes((n) => n + 1); return r; },
+      reabrir: () => { avisarImportacao.current = juntarJarvis; return reabrirRevisao(apiImportacao); },
+    },
+  });
+  const pessoas = () => pessoasDosSalarios(estadoAtual.current.salaries, estadoAtual.current.profile.members);
+  const vocabularioJarvis = () => {
+    const e = estadoAtual.current;
+    return [...e.transactions.map((t) => t.title), ...e.categories, ...e.incomeCategories, ...e.accounts.map((a) => a.name), ...pessoas(), ...ANIMAIS];
+  };
+  const lerDoc = (txt: string) => {
+    const e = estadoAtual.current;
+    const l = lerDocumento(txt, { pessoas: pessoas(), regras: regrasPessoais(e), contas: e.accounts, salarios: e.salaries, agora: new Date(), eur: (v) => formatarEuros(v, ocultos) });
+    motor.pendente = l.pendente ?? motor.pendente;
+    return l.texto;
+  };
+  const lerAnexo = async (f: File): Promise<string> => {
+    const ext = (f.name.split('.').pop() || '').toLowerCase();
+    try {
+      if (ext === 'json') {
+        const texto = await f.text(), t = JSON.parse(texto) as { data?: { transactions?: unknown }; transactions?: unknown } | null;
+        if (!Array.isArray((t?.data ?? t)?.transactions)) return 'Este JSON não parece um backup desta app (falta a lista de movimentos).';
+        const r = lerBackup(texto);
+        if (!r.ok) return 'Ficheiro inválido. Escolha uma cópia JSON exportada por esta app.';
+        if (!window.confirm('Restaurar esta cópia? Os dados atuais serão substituídos.')) return 'Importação cancelada.';
+        setEstado((s) => aplicarBackup(s, r.dados));
+        if (r.jarvisThreads) { try { localStorage.setItem(chave('conversaJarvis', PREFIXO), JSON.stringify(r.jarvisThreads)); } catch { /* sem espaço */ } }
+        if (r.vetReminders) definirLembretes(r.vetReminders);
+        setMensagemBackup('Cópia restaurada com sucesso.');
+        return 'Cópia restaurada com sucesso. ✅';
+      }
+      if (ext === 'pdf') {
+        const txt = await textoDoPdf(f);
+        return txt.trim().length < 20 ? 'Este PDF parece ser uma imagem digitalizada — não tem texto para ler. Tenta exportar como .txt/.csv ou escreve os valores aqui.' : lerDoc(txt);
+      }
+      if (['png', 'jpg', 'jpeg', 'webp', 'heic', 'heif'].includes(ext)) return 'Ainda não consigo ler imagens/fotos. Escreve os valores aqui ou usa um ficheiro .txt/.csv.';
+      if (['xlsx', 'xls', 'csv', 'txt'].includes(ext)) {
+        const extrato = await lerFicheiro(f);
+        if (extrato) { avisarImportacao.current = juntarJarvis; return abrirRevisao(extrato, apiImportacao); }
+        return ext === 'csv' || ext === 'txt' ? lerDoc(await f.text()) : 'Não reconheci este ficheiro como um extrato. Envia-me um exemplo e ensino o Jarvis a lê-lo.';
+      }
+      return lerDoc(await f.text());
+    } catch {
+      return ext === 'xls' ? 'Não consegui ler este ficheiro .xls. Tenta exportar em .xlsx ou .csv.'
+        : ext === 'pdf' ? 'Não consegui ler este PDF. Tenta exportar como .txt/.csv.' : 'Não consegui ler este ficheiro.';
+    }
+  };
+  const fecharJarvis = useCallback(() => {
+    const o = document.querySelector('.jarvis-overlay');
+    if (o?.classList.contains('is-out')) return;
+    if (!o || reduzMovimento()) { setJarvis(false); return; }
+    o.classList.add('is-out');
+    fecharJarvisT.current = setTimeout(() => setJarvis(false), 220);
+  }, []);
+  useEffect(() => {
+    if (!jarvis) return;
+    const k = (e: KeyboardEvent) => { if (e.key === 'Escape') fecharJarvis(); };
+    document.addEventListener('keydown', k);
+    return () => document.removeEventListener('keydown', k);
+  }, [jarvis, fecharJarvis]);
+  useEffect(() => { window.ffImpApi = { get: () => apiImportacao.obter() }; });
+
+  // Interface da app atual usada pelos avisos e pelo Jarvis; avisos ao abrir e de espaço
   useEffect(() => {
     window.ffBk = { get count() { return estadoAtual.current.transactions.length; }, payload: conteudoBackup, download: descarregarBackup, done: registarBackup };
   }, [conteudoBackup, descarregarBackup, registarBackup]);
@@ -482,7 +563,10 @@ export function App() {
       >
         <Icone nome="plus" />
       </Botao>
-      <button type="button" className="jarvis-fab ffjv-fab" aria-label="Abrir Jarvis" onClick={() => emConstrucao('O Jarvis')}>
+      <button
+        type="button" className="jarvis-fab ffjv-fab" aria-label="Abrir Jarvis"
+        onClick={() => { clearTimeout(fecharJarvisT.current); document.querySelector('.jarvis-overlay')?.classList.remove('is-out'); setJarvis(true); }}
+      >
         <svg className="ffjv-orb o1" viewBox="0 0 32 32" aria-hidden="true">
           <ellipse cx="16" cy="16" rx="14.5" ry="5.2" fill="none" stroke="#9ff6ff" strokeOpacity=".75" strokeWidth=".7" transform="rotate(25 16 16)" />
           <circle cx="29.6" cy="12.6" r=".9" fill="#00F0FF" />
@@ -491,6 +575,10 @@ export function App() {
           <ellipse cx="16" cy="16" rx="14.5" ry="5.2" fill="none" stroke="#9ff6ff" strokeOpacity=".45" strokeWidth=".7" transform="rotate(-30 16 16)" />
         </svg>
       </button>
+      <Jarvis
+        aberto={jarvis} fechar={fecharJarvis} motor={motor} contexto={contextoJarvis} vocabulario={vocabularioJarvis} lerAnexo={lerAnexo}
+        pagina={pagina} nome={nome ?? ''} teclado={teclado} vibrar={vibrar} mensagens={mensagens} mudarMensagens={setMensagens}
+      />
       {folha ? (
         <FolhaDefinicoes
           modo={folha} seccao={seccao} mudarSeccao={(s) => { if (s === 'backup') setMensagemBackup(''); setSeccao(s); }} fechar={fecharFolha} teclado={teclado} estado={estado}
