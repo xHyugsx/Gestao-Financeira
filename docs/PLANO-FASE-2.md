@@ -1,6 +1,6 @@
 # Plano — Fase 2 da app «Finanças»
 
-> Estado: **aprovado**. Etapa 0 **concluída** (v1.9.3). Etapa 1 **concluída** (`/v2/` 2.00.1, 44/44 na raiz e na `/v2/`). Etapa 2 **concluída** (núcleo de dados em `app/src/dados`, 53 testes unitários). Etapa 3 **concluída** (`/v2/` 2.00.2 = app nova: Principal, navegação e bloqueio). Etapa 4 **concluída** (`/v2/` 2.00.3: registar, editar e eliminar movimentos). Etapa 5 **concluída** (`/v2/` 2.00.4: bloqueio, impressão digital, bloqueio automático e privacidade reescritos em `app/src/bloqueio/`; 2.00.5 mostra a versão no menu «V2 · teste»). Etapa 6 **concluída** (`/v2/` 2.00.6: Definições › Segurança, antecipada; as etapas seguintes passaram uma posição abaixo). Etapa 7 **concluída** (`/v2/` 2.00.7: Análise, Calendário, Categorias, Resumo e botão "voltar" nas páginas). Etapa 8 **concluída** (`/v2/` 2.00.8: Combustível, Veterinário e lembretes veterinários).
+> Estado: **aprovado**. Etapa 0 **concluída** (v1.9.3). Etapa 1 **concluída** (`/v2/` 2.00.1, 44/44 na raiz e na `/v2/`). Etapa 2 **concluída** (núcleo de dados em `app/src/dados`, 53 testes unitários). Etapa 3 **concluída** (`/v2/` 2.00.2 = app nova: Principal, navegação e bloqueio). Etapa 4 **concluída** (`/v2/` 2.00.3: registar, editar e eliminar movimentos). Etapa 5 **concluída** (`/v2/` 2.00.4: bloqueio, impressão digital, bloqueio automático e privacidade reescritos em `app/src/bloqueio/`; 2.00.5 mostra a versão no menu «V2 · teste»). Etapa 6 **concluída** (`/v2/` 2.00.6: Definições › Segurança, antecipada; as etapas seguintes passaram uma posição abaixo). Etapa 7 **concluída** (`/v2/` 2.00.7: Análise, Calendário, Categorias, Resumo e botão "voltar" nas páginas). Etapa 8 **concluída** (`/v2/` 2.00.8: Combustível, Veterinário e lembretes veterinários). **Correções pedidas pelo dono** (`/v2/` 2.00.9, só na app nova — ver §4.2).
 > Base de referência: versão **1.9.2**, **36/36 testes a passar** (medido a 28-09-2026).
 
 ---
@@ -175,7 +175,7 @@ Princípio: **a produção (raiz) só muda nas etapas 0 e 13.** Todas as outras 
 | **6** | **Definições › Segurança** ✅ *(antecipada a pedido do dono, para se poder definir o PIN na V2)* — menu rápido da roda dentada, lista das Definições (restantes secções "Em construção"), PIN (ativar, alterar, remover — mesmo hash), impressão digital (ligar/desligar), ocultar valores ao sair, bloqueio ao voltar | `/v2/` | Definir o PIN na V2; testar bloqueio, digital e bloqueio ao voltar | + `definicoes` (HTML igual ao da app atual) |
 | **7** | **Análise, Calendário, Categorias, Resumo** ✅ — e o botão "voltar" do telemóvel nas páginas | `/v2/` | Comparar lado a lado com a app atual | + `calendario` + `paginas` (HTML igual ao da app atual em 26 estados) |
 | **8** | **Combustível e Veterinário** (+ lembretes) ✅ — páginas, janelas do "+", fotografias dos animais, lembretes (lista, criar/editar, "Feito", ponto no «Mais», aviso ao abrir) | `/v2/` | Lembretes, "feito" | + `veterinario` + `combustivel_vet` (HTML igual em 17 estados) |
-| **9** | **Restantes Definições** — perfil, aparência, backup/restauro, espaço, lembrete de backup, recibos PDF | `/v2/` | Exportar backup e restaurar na V2 | + `compatibilidade` |
+| **9** | **Restantes Definições** — perfil, aparência, backup/restauro, espaço, lembrete de backup, recibos PDF; **saldo editado com efeito só a partir do dia da alteração** (pedido do dono, §4.2) | `/v2/` | Exportar backup e restaurar na V2 | + `compatibilidade` |
 | **10** | **Importação de extratos** + **regras pessoais no telemóvel** (secção 7) | `/v2/` | Importar um extrato real na V2 | + `extratos` |
 | **11** | **Jarvis** — motor por regras + interface + ações com confirmação | `/v2/` | Perguntas do dia a dia | + `jarvis` |
 | **12** | **Offline e atualizações** — SW gerado com lista de ficheiros automática, aviso "Nova versão" | `/v2/` | Modo avião; publicar 2 versões seguidas | 36/36 v2 |
@@ -211,6 +211,23 @@ Todas invisíveis no uso normal e mais seguras para os dados; os testes de equiv
 | Restauro de backup dá data aos movimentos que não a têm | A 1.9.x só o fazia ao reabrir a app; evita erros até lá |
 | Titulares da Revolut no «Novo movimento» vêm do perfil («Conjunta» + membros) | A 1.9.x tem nomes da família fixos no código (privacidade); com o perfil atual a lista é a mesma |
 | Colunas da tabela de salários (Resumo › Salários) vêm das pessoas já gravadas nos salários; sem nenhuma, dos membros do perfil | A 1.9.x tem dois nomes fixos no código (privacidade); com os dados atuais as colunas são as mesmas |
+
+### 4.2 Correções pedidas pelo dono (só na app nova, 2.00.9)
+
+Diferenças intencionais face à 1.9.x. As comparações de HTML apagam-nas antes de comparar (`intencionais()` em `tests/teste_visual.py`) e usam dados já pela ordem nova (`preparar()`); cada uma tem testes de funcionamento em `tests/teste_correcoes.py` (só na `/v2/`).
+
+| Correção | Como ficou | Dados |
+|---|---|---|
+| «Recorrente mensal» → «Recorrente» com periodicidade | Mensal, Bimestral, Trimestral, Anual; a app **cria sozinha** a cópia seguinte quando chega a data (e as que faltarem). Parar: apagar a última ou desmarcar «Recorrente» ao editar. Recorrentes antigos (sem periodicidade) não geram cópias até se escolher uma | Campos novos no movimento: `recurringEvery` (meses), `recurringDone` |
+| Categorias por ordem alfabética | Listas de escolha (novo movimento, atalhos, editar movimento). A página Categorias continua por gasto | — |
+| Cor ao acaso e nunca repetida para categorias novas | 16 cores (8 novas); escolhe uma que nenhuma categoria usa; esgotadas, a menos usada | Campo novo `categoryColors` |
+| «Poupança Conjunta» na transferência para a Revolut | Destino próprio; sai da Principal mas **não soma** ao saldo da Revolut Conjunta | `revolut.holder = "Poupança Conjunta"` |
+| Categoria no «Editar movimento» | Lista de escolha com as categorias do tipo do movimento (mais a atual), por ordem alfabética | — |
+| «Transações recentes» | Da mais recente para a mais antiga (no mesmo dia, a última registada primeiro) | — |
+| Mudar o nome de uma categoria | Na página Categorias, o ícone abre «Editar categoria» (nome e ícone); o nome muda nos movimentos, no ícone e na cor | — |
+| Saldo editado só a partir do dia | Fica para a etapa 9 (a edição de contas ainda não existe na app nova) | — |
+
+⚠️ **Duplicados com a importação:** uma cópia automática de um recorrente e a mesma linha num extrato importado podem aparecer duas vezes; a etapa 10 acrescenta essa deteção.
 
 ## 5. Estratégia de testes
 

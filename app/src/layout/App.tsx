@@ -3,10 +3,11 @@ import { EcraBloqueio } from '../bloqueio/EcraBloqueio';
 import { ligacoes } from '../bloqueio/estado';
 import { VERSAO } from '../config';
 import { FolhaDefinicoes, MenuRapido, type PosicaoMenu, type Seccao } from '../definicoes/Definicoes';
-import { inicioDoMes, MESES, type Movimento } from '../dados';
+import { dia, inicioDoMes, MESES, type Movimento } from '../dados';
 import { useDados } from '../estado/useDados';
 import { aspetosCategorias } from '../movimentos/categorias';
 import { EditarMovimento } from '../movimentos/EditarMovimento';
+import { gerarRecorrentes } from '../movimentos/recorrentes';
 import { type EscolhasNovo, NovoMovimento } from '../movimentos/NovoMovimento';
 import { Analise, type TipoAnalise } from '../paginas/Analise';
 import { Calendario } from '../paginas/Calendario';
@@ -47,7 +48,7 @@ export function App() {
   const [lista, setLista] = useState<ListaMovimentos>({ expandida: false, pesquisa: '', conta: 'all' });
   const [aviso, setAviso] = useState('');
   const [novoAberto, setNovoAberto] = useState(false);
-  const [escolhas, setEscolhas] = useState<EscolhasNovo>({ tipo: 'expense', categoria: 'Alimentação', recorrente: false, tipoValor: 'com', revolut: false });
+  const [escolhas, setEscolhas] = useState<EscolhasNovo>({ tipo: 'expense', categoria: 'Alimentação', recorrente: false, tipoValor: 'com', periodicidade: 1, revolut: false });
   const [aEditar, setAEditar] = useState<Movimento | null>(null);
   const [menu, setMenu] = useState<PosicaoMenu | null>(null);
   const [folha, setFolha] = useState<'list' | 'direct' | null>(null);
@@ -173,6 +174,12 @@ export function App() {
     return () => { clearInterval(i); document.removeEventListener('visibilitychange', f); };
   }, []);
 
+  // Recorrentes com periodicidade: cria as cópias em falta ao abrir, quando muda o dia e depois de cada alteração
+  const hojeTexto = dia(agora);
+  useEffect(() => {
+    setEstado((s) => { const l = gerarRecorrentes(s.transactions, new Date()); return l ? { ...s, transactions: l } : s; });
+  }, [hojeTexto, estado.transactions, setEstado]);
+
   // Ocultar valores ao sair da app (Aparência › "autoHide")
   useEffect(() => {
     const modo = aparencia.autoHide ?? 'now';
@@ -238,6 +245,7 @@ export function App() {
           <Categorias
             estado={estado} mes={mes} ocultos={ocultos} vista={vistaCategorias} mudarVista={(v) => setVistaCategorias((a) => ({ ...a, ...v }))}
             mudarEstado={setEstado} categoriaEliminada={(nome) => setEscolhas((e) => (e.categoria === nome ? { ...e, categoria: 'Outros' } : e))}
+            categoriaRenomeada={(antigo, novo) => setEscolhas((e) => (e.categoria === antigo ? { ...e, categoria: novo } : e))}
           />
         );
       case 'resumo':
@@ -340,7 +348,7 @@ export function App() {
         onClick={() => {
           if (pagina === 'veterinario') { setDespesaVet(true); return; }
           if (pagina === 'combustivel') { setAbastecimento(true); return; }
-          setEscolhas((e) => ({ ...e, recorrente: false, tipoValor: 'com', revolut: false }));
+          setEscolhas((e) => ({ ...e, recorrente: false, tipoValor: 'com', periodicidade: 1, revolut: false }));
           setNovoAberto(true);
         }}
       >

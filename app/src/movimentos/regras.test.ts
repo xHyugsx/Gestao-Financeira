@@ -34,7 +34,12 @@ describe('novo movimento', () => {
 
   it('transferência para a Revolut', () => {
     const m = novoMovimento(campos({ title: 'Carregar', amount: '30', date: '2026-09-03', revolutPurpose: 'Poupança', affectsBalance: 'on' }), ctx({ revolut: true, recorrente: true }));
-    expect(m).toEqual({ id: 1, title: 'Carregar', detail: '3 setembro · Revolut Conjunta · Poupança', amount: 0, kind: 'transfer', movementType: 'transfer', date: '2026-09-03', affectsBalance: true, revolut: { holder: 'Conjunta', purpose: 'Poupança' }, transferValue: 30, recurring: 'com' });
+    expect(m).toEqual({ id: 1, title: 'Carregar', detail: '3 setembro · Revolut Conjunta · Poupança', amount: 0, kind: 'transfer', movementType: 'transfer', date: '2026-09-03', affectsBalance: true, revolut: { holder: 'Conjunta', purpose: 'Poupança' }, transferValue: 30, recurring: 'com', recurringEvery: 1 });
+  });
+
+  it('recorrente com periodicidade e destino «Poupança Conjunta»', () => {
+    const m = novoMovimento(campos({ title: 'Cofre', amount: '50', date: '2026-09-03', revolutHolder: 'Poupança Conjunta', revolutPurpose: 'Poupança' }), ctx({ revolut: true, recorrente: true, periodicidade: 3 }));
+    expect(m).toMatchObject({ detail: '3 setembro · Revolut Poupança Conjunta · Poupança', revolut: { holder: 'Poupança Conjunta' }, recurring: 'com', recurringEvery: 3 });
   });
 
   it('recorrente sem valor aceita zero', () => {
@@ -77,7 +82,20 @@ describe('editar movimento', () => {
     expect(movimentoEditado(base, campos({ title: ' ', amount: '1' }))).toBeNull();
   });
 
-  it('categorias sugeridas', () => {
-    expect(categoriasParaEditar(['A', 'Combustível'], ['B'])).toEqual(['A', 'Combustível', 'B', 'Supermercado', 'Transferência']);
+  it('categorias para escolher: as do tipo, mais a atual, por ordem alfabética', () => {
+    expect(categoriasParaEditar(base, ['Lazer', 'Casa'], ['Salário'], 'Farmácia')).toEqual(['Casa', 'Farmácia', 'Lazer']);
+    expect(categoriasParaEditar({ ...base, movementType: 'income' }, ['Lazer'], ['Salário', 'Bónus'], 'Salário')).toEqual(['Bónus', 'Salário']);
+  });
+
+  it('recorrente: periodicidade liga a criação automática; desmarcar pára a série', () => {
+    const rec: Movimento = { ...base, recurring: 'com', recurringEvery: 1 };
+    expect(movimentoEditado(rec, campos({ title: 'X', amount: '1', recurring: 'on', recurringEvery: '3' }))).toMatchObject({ recurring: 'com', recurringEvery: 3 });
+    const parado = movimentoEditado(rec, campos({ title: 'X', amount: '1' }))!;
+    expect(parado.recurring).toBeUndefined();
+    expect(parado.recurringEvery).toBeUndefined();
+    expect(movimentoEditado(base, campos({ title: 'X', amount: '1' }))!.recurring).toBeUndefined();
+    const antigo = movimentoEditado({ ...base, recurring: 'sem' }, campos({ title: 'X', amount: '1', recurring: 'on', recurringEvery: '' }))!;
+    expect(antigo.recurring).toBe('sem');
+    expect(antigo.recurringEvery).toBeUndefined();
   });
 });
