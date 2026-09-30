@@ -10,7 +10,7 @@ Contém o contexto do projeto e as regras de trabalho acordadas com o dono da ap
 - **O quê:** app web instalável (PWA) de finanças familiares, publicada no **GitHub Pages** a partir da raiz deste repositório.
 - **Utilizadores:** uma família (duas pessoas adultas e dois animais de estimação). Uso diário no **telemóvel Android**, em modo instalado.
 - **Dados:** 100% locais, no `localStorage` do navegador. **Não há servidor.** A cópia de segurança é um ficheiro JSON exportado pelo utilizador.
-- **Versão atual:** ver `version.json` e a constante `ffVer` em `js/app.js`.
+- **Versão atual:** ver `app/versao.json`.
 
 ### Funcionalidades principais
 - Página principal com **Rendimento mensal em destaque** (círculo animado) e caixas das contas (Principal, Revolut Conjunta, Edenred…).
@@ -28,31 +28,22 @@ Contém o contexto do projeto e as regras de trabalho acordadas com o dono da ap
 
 ## 2. Estrutura e arquitetura atual
 
+Desde a **troca (etapa 13, v2.02.0)** a app publicada na raiz é a **app nova** (React + Vite + TypeScript, código em `app/`).
+
 | Caminho | Conteúdo |
 |---|---|
-| `index.html` | Página base: carrega o CSS, os módulos e o núcleo |
-| `css/app.css` | Todos os estilos (secções marcadas com `/* ===== nome ===== */`) |
-| `js/app.js` | **Núcleo React já compilado e minificado** (não existe código-fonte) |
-| `js/modulos/*.js` | Funcionalidades acrescentadas em JavaScript simples (ver `README.md`) |
-| `img/`, `fonts/`, `icons/` | Recursos estáticos |
-| `manifest.webmanifest` | Dados de instalação |
-| `service-worker.js` | Cache offline e atualizações |
-| `version.json` | Versão + lista de ficheiros guardados offline |
+| `app/src/` | Código da app (TypeScript/React), por áreas: `dados/`, `movimentos/`, `paginas/`, `definicoes/`, `importacao/`, `jarvis/`, `veterinario/`, `bloqueio/`, `layout/`, `ui/` |
+| `app/versao.json` | **Versão da app** (única fonte; o `version.json` publicado é gerado a partir dela) |
+| `app/service-worker.js` | Cache offline e atualizações (limpa os ficheiros de versões anteriores) |
+| `css/app.css`, `img/`, `fonts/`, `icons/`, `vendor/` | Estilos e recursos usados pela app (o Vite junta-os no build) |
+| `scripts/montar-site.mjs` | Monta `_site/`: raiz = app, `/v1/` = app anterior (recuo), `/v2/` = versão de teste |
+| `index.html`, `js/`, `service-worker.js`, `version.json`, `manifest.webmanifest` (raiz do repositório) | **App anterior 1.9.x**, publicada só em `/v1/` para recuo (sai na etapa 14) |
 
-### ⚠️ Limitação conhecida (motivo da Fase 2)
-`js/app.js` é um bundle React **minificado**, alterado por **remendos de substituição de texto** (nomes como `Bn`, `vt`, `ht`, `f`, `p`). É frágil: nomes minificados repetem-se em âmbitos diferentes. Ao mexer nele:
-- confirmar que cada substituição encontra **exatamente uma** ocorrência;
-- validar a sintaxe (`node --check js/app.js`) depois de cada alteração;
-- preferir acrescentar lógica em `js/modulos/` e expor pontos de ligação mínimos (`window.ff…`).
-
-Os módulos comunicam com o núcleo através de globais `window.ff*` (ex.: `ffImpApi`, `ffBk`, `ffVet`, `ffStmt`, `ffStorage`, `ffGoPg`, `ffRelock`).
-
-### Fase 2 em curso
+- **Recuo:** `/v1/` abre a app 1.9.x com os **mesmos dados** (mesmas chaves), com cache própria (`financas-v1`). Se for usada, os campos novos que ela não conhece no nível de topo (`categoryColors`, `importConfig`) perdem-se ao gravar.
+- `/v2/` continua a existir como versão de teste isolada (prefixo `financas-v2:`), que **nunca** pode ler/escrever as chaves `financas-familiar:*` exceto pelo menu "Copiar dados" (só leitura).
 - Plano e estado de cada etapa: `docs/PLANO-FASE-2.md`.
-- O site publicado é montado por `scripts/montar-site.mjs` em `_site/` e publicado pelo GitHub Actions: raiz = app atual (sem alterações); `/v2/` = **app nova** (React + Vite, código em `app/`) com dados isolados (prefixo `financas-v2:`), que **nunca** pode ler/escrever as chaves `financas-familiar:*` exceto pelo menu "Copiar dados" (só leitura).
-- Testes: `python tests/correr.py` (raiz) e `FF_URL=v2/ FF_PREFIX=financas-v2: python tests/correr.py` (`/v2/`).
-- Na `/v2/` só correm os testes listados em `tests/v2_ativos.txt` (os outros ficam "pendente"); cada etapa acrescenta os seus. `tests/teste_visual.py` compara HTML e imagem da raiz com a `/v2/`.
-- Núcleo de dados novo em `app/src/dados/` (TypeScript): `npm ci && npm run verificar`. Tem de dar os mesmos resultados que a 1.9.x (`tests/referencias/dados.json`); diferenças intencionais listadas em `docs/PLANO-FASE-2.md` §4.1.
+- Testes: `python tests/correr.py` (raiz = app de produção) e `FF_URL=v2/ FF_PREFIX=financas-v2: python tests/correr.py` (`/v2/`). `tests/teste_visual.py` compara o HTML da app anterior (`/v1/`) com o da raiz; `tests/teste_troca.py` simula um telemóvel com a 1.9.x a atualizar para a app nova.
+- Núcleo de dados em `app/src/dados/`: `npm ci && npm run verificar` (tipos + testes unitários). Diferenças intencionais face à 1.9.x em `docs/PLANO-FASE-2.md` §4.1, §4.2 e §7.
 
 ---
 
@@ -89,10 +80,9 @@ Qualquer alteração deve manter **compatibilidade total** com os dados já guar
 - **Sem preview (decisão do dono, 30/09/2026):** nas etapas da Fase 2, implementar, testar e **fazer o merge do PR** quando os testes do GitHub ficarem verdes, sem esperar aprovação. Exceção: a **troca** (etapa 13), que mexe na app de produção e nos dados reais, é confirmada antes com o dono.
 - **Parceiro crítico:** se houver uma alternativa melhor ou um risco, dizê-lo antes de avançar.
 - **Versões:** formato `v#.##.#`. Em cada entrega:
-  1. atualizar `ffVer` em `js/app.js`;
-  2. atualizar `version` em `version.json` (e a lista `files`, se houver ficheiros novos);
-  3. indicar **a lista exata de ficheiros alterados** para publicar.
-- **Publicação:** o dono publica pelo GitHub (muitas vezes a partir do telemóvel). O aviso "Nova versão disponível" depende do `version.json`; sem o atualizar, os telemóveis não recebem a versão nova.
+  1. atualizar `versao` em `app/versao.json` (o `version.json` publicado e a lista de ficheiros offline são gerados pelo `montar-site.mjs`);
+  2. indicar **a lista exata de ficheiros alterados** para publicar.
+- **Publicação:** o dono publica pelo GitHub (muitas vezes a partir do telemóvel). O aviso "Nova versão disponível" depende da versão em `app/versao.json`; sem a atualizar, os telemóveis não recebem a versão nova.
 - **Testar sempre** antes de entregar (ver secção 6) e reportar os resultados em tabela.
 
 ---

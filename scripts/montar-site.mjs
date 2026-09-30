@@ -1,7 +1,7 @@
 // Monta o site publicado em _site/:
-//   /      → app atual, ficheiros copiados sem qualquer alteração
-//   /v2/   → app nova em construção (app/, compilada pelo Vite), com dados isolados (financas-v2:),
-//            service worker, cache e manifesto próprios
+//   /      → app (código em app/, compilada pelo Vite em modo «raiz»), com as chaves reais financas-familiar:*
+//   /v1/   → app anterior (1.9.x, ficheiros da raiz do repositório), para recuo; mesmos dados, cache própria
+//   /v2/   → versão de teste (modo «v2»), com dados isolados (financas-v2:*), service worker, cache e manifesto próprios
 // Uso: node scripts/montar-site.mjs
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
@@ -10,12 +10,13 @@ import { build } from 'vite';
 
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SITE = join(RAIZ, '_site');
+const V1 = join(SITE, 'v1');
 const V2 = join(SITE, 'v2');
-const COMPILADO = join(RAIZ, '_build', 'v2');
 
-const versao = JSON.parse(readFileSync(join(RAIZ, 'version.json'), 'utf8'));
-const { versao: VERSAO_V2 } = JSON.parse(readFileSync(join(RAIZ, 'app', 'versao.json'), 'utf8'));
-const ficheirosApp = [...new Set(['index.html', 'version.json', 'service-worker.js', ...versao.files])];
+const antiga = JSON.parse(readFileSync(join(RAIZ, 'version.json'), 'utf8'));
+const { versao: VERSAO } = JSON.parse(readFileSync(join(RAIZ, 'app', 'versao.json'), 'utf8'));
+const ficheirosAntiga = [...new Set(['index.html', 'version.json', 'service-worker.js', ...antiga.files])];
+const manifesto = JSON.parse(readFileSync(join(RAIZ, 'manifest.webmanifest'), 'utf8'));
 
 function copiar(origem, destino) {
   if (!existsSync(origem)) throw new Error(`ficheiro em falta: ${origem}`);
@@ -30,27 +31,45 @@ function listar(pasta) {
   });
 }
 
+// Substitui exatamente uma ocorrência; falha se houver zero ou mais de uma.
+function trocar(caminho, de, para) {
+  const texto = readFileSync(caminho, 'utf8');
+  const n = texto.split(de).length - 1;
+  if (n !== 1) throw new Error(`${relative(RAIZ, caminho)}: esperava 1 ocorrência de «${de.slice(0, 60)}», encontrei ${n}`);
+  writeFileSync(caminho, texto.replace(de, () => para));
+}
+
+/** Compila a app, junta ícones, bibliotecas locais, manifesto e service worker, e gera o version.json. */
+async function app(modo, destino, { cache, nome, id }) {
+  await build({ configFile: join(RAIZ, 'app', 'vite.config.ts'), mode: modo, logLevel: 'warn' });
+  copiar(join(RAIZ, '_build', modo), destino);
+  copiar(join(RAIZ, 'icons'), join(destino, 'icons'));
+  // SheetJS (extratos XLS) e pdf.js (recibos PDF): cópias locais, guardadas offline como o resto da app
+  copiar(join(RAIZ, 'vendor', 'xlsx'), join(destino, 'vendor', 'xlsx'));
+  copiar(join(RAIZ, 'vendor', 'pdfjs'), join(destino, 'vendor', 'pdfjs'));
+  const m = { ...manifesto, ...(nome ? { name: nome, short_name: nome } : {}), ...(id ? { id } : {}) };
+  writeFileSync(join(destino, 'manifest.webmanifest'), JSON.stringify(m, null, 2) + '\n');
+  copiar(join(RAIZ, 'app', 'service-worker.js'), join(destino, 'service-worker.js'));
+  if (cache !== 'financas-v2') trocar(join(destino, 'service-worker.js'), "const CACHE = 'financas-v2';", `const CACHE = '${cache}';`);
+  const ficheiros = listar(destino).filter((c) => destino !== SITE || (!c.startsWith(V1 + '/') && !c.startsWith(V2 + '/')))
+    .map((c) => relative(destino, c).split('\\').join('/'))
+    .filter((f) => f !== 'service-worker.js' && f !== 'version.json' && !f.endsWith('LICENSE')).sort();
+  writeFileSync(join(destino, 'version.json'), JSON.stringify({ version: VERSAO, files: ficheiros }, null, 2) + '\n');
+  return ficheiros.length;
+}
+
 rmSync(SITE, { recursive: true, force: true });
 
-// Raiz: app atual, sem alterações
-for (const f of ficheirosApp) copiar(join(RAIZ, f), join(SITE, f));
+// Raiz: app de produção (manifesto igual ao da app anterior, para o telemóvel a tratar como a mesma app instalada)
+const nRaiz = await app('raiz', SITE, { cache: 'financas-app' });
 
-// /v2/: app nova
-await build({ configFile: join(RAIZ, 'app', 'vite.config.ts'), logLevel: 'warn' });
-copiar(COMPILADO, V2);
-copiar(join(RAIZ, 'icons'), join(V2, 'icons'));
-// SheetJS (extratos XLS) e pdf.js (recibos PDF): cópias locais, guardadas offline como o resto da app
-copiar(join(RAIZ, 'vendor', 'xlsx'), join(V2, 'vendor', 'xlsx'));
-copiar(join(RAIZ, 'vendor', 'pdfjs'), join(V2, 'vendor', 'pdfjs'));
+// /v1/: app anterior, sem alterações exceto o nome da cache (a da raiz é da app nova) e o nome no manifesto
+for (const f of ficheirosAntiga) copiar(join(RAIZ, f), join(V1, f));
+trocar(join(V1, 'service-worker.js'), "const CACHE = 'financas-app';", "const CACHE = 'financas-v1';");
+trocar(join(V1, 'js', 'modulos', 'atualizacoes.js'), "var CACHE='financas-app'", "var CACHE='financas-v1'");
+writeFileSync(join(V1, 'manifest.webmanifest'), JSON.stringify({ ...manifesto, id: './', name: `Finanças ${antiga.version}`, short_name: `Finanças ${antiga.version}` }, null, 2) + '\n');
 
-const manifesto = JSON.parse(readFileSync(join(RAIZ, 'manifest.webmanifest'), 'utf8'));
-Object.assign(manifesto, { id: './', name: 'Finanças V2', short_name: 'Finanças V2' });
-writeFileSync(join(V2, 'manifest.webmanifest'), JSON.stringify(manifesto, null, 2) + '\n');
+// /v2/: versão de teste
+const nV2 = await app('v2', V2, { cache: 'financas-v2', nome: 'Finanças V2', id: './' });
 
-copiar(join(RAIZ, 'app', 'service-worker.js'), join(V2, 'service-worker.js'));
-
-const ficheirosV2 = listar(V2).map((c) => relative(V2, c).split('\\').join('/'))
-  .filter((f) => f !== 'service-worker.js' && f !== 'version.json' && !f.endsWith('LICENSE')).sort();
-writeFileSync(join(V2, 'version.json'), JSON.stringify({ version: VERSAO_V2, files: ficheirosV2 }, null, 2) + '\n');
-
-console.log(`Site montado em _site/ (raiz ${versao.version} · /v2/ ${VERSAO_V2}, ${ficheirosV2.length} ficheiros)`);
+console.log(`Site montado em _site/ (raiz ${VERSAO}, ${nRaiz} ficheiros · /v1/ ${antiga.version} · /v2/ ${VERSAO}, ${nV2} ficheiros)`);

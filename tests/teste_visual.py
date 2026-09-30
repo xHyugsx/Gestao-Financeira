@@ -1,8 +1,12 @@
-"""A app nova (/v2/) tem de desenhar exatamente o mesmo que a app atual (raiz) nas partes já migradas."""
+"""A app nova (raiz) tem de desenhar exatamente o mesmo que a app anterior (/v1/, 1.9.x), com os mesmos dados."""
 import asyncio, base64, json, pathlib, re, sys, unicodedata
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 from correr import verificar
 from capturar_referencias_dados import COMPLETO, CASOS, PERFIL
+
+# Depois da troca (etapa 13): a app anterior está em /v1/ e a nova na raiz, ambas com as chaves reais.
+ANTIGA, PREFIXO_ANTIGA = 'v1/', 'financas-familiar:'
+NOVA, PREFIXO_NOVA = '', 'financas-familiar:'
 
 VER_TODAS = "[...document.querySelectorAll('button')].find(b=>b.textContent==='Ver todas').click()"
 ESTADOS = {
@@ -78,8 +82,8 @@ async def comparar_html(app, dados, estados, sem_ceu=False):
     # o céu da saudação muda com o minuto; nas Definições está só por trás e não entra na comparação
     ceu = (lambda h: re.sub(r'<div class="welcome-sky".*?</svg></div>', '', h, flags=re.S)) if sem_ceu else (lambda h: h)
     for nome, acoes in estados.items():
-        atual = ceu(await html(app, app.raiz, 'financas-familiar:', dados, acoes))
-        nova = ceu(await html(app, app.raiz + 'v2/', 'financas-v2:', dados, acoes))
+        atual = ceu(await html(app, app.raiz + ANTIGA, PREFIXO_ANTIGA, dados, acoes))
+        nova = ceu(await html(app, app.raiz + NOVA, PREFIXO_NOVA, dados, acoes))
         if atual != nova:
             i = next(k for k in range(min(len(atual), len(nova))) if atual[k] != nova[k])
             verificar(False, f'«{nome}» diferente: atual «…{atual[max(0, i - 60):i + 60]}…» · nova «…{nova[max(0, i - 60):i + 60]}…»')
@@ -99,7 +103,7 @@ async def t_principal_imagem_igual_a_app_atual(app):
     p = app.page
     await p.emulate_media(reduced_motion='reduce')
     imagens = []
-    for url, prefixo in ((app.raiz, 'financas-familiar:'), (app.raiz + 'v2/', 'financas-v2:')):
+    for url, prefixo in ((app.raiz + ANTIGA, PREFIXO_ANTIGA), (app.raiz + NOVA, PREFIXO_NOVA)):
         await abrir(app, url, prefixo, COMPLETO)
         await p.wait_for_timeout(800)
         imagens.append(base64.b64encode(await p.screenshot()).decode())
@@ -144,8 +148,8 @@ async def _janela(app, url, prefixo, acoes):
 async def t_janelas_de_movimentos_iguais_a_app_atual(app):
     await app.page.emulate_media(reduced_motion='reduce')
     for nome, acoes in JANELAS.items():
-        atual = await _janela(app, app.raiz, 'financas-familiar:', acoes)
-        nova = await _janela(app, app.raiz + 'v2/', 'financas-v2:', acoes)
+        atual = await _janela(app, app.raiz + ANTIGA, PREFIXO_ANTIGA, acoes)
+        nova = await _janela(app, app.raiz + NOVA, PREFIXO_NOVA, acoes)
         verificar('role="dialog"' in atual, f'«{nome}»: a janela não abriu na app atual')
         if atual != nova:
             i = next((k for k in range(min(len(atual), len(nova))) if atual[k] != nova[k]), min(len(atual), len(nova)))
@@ -185,8 +189,8 @@ async def _registar_editar_eliminar(app, url, prefixo):
 
 
 async def t_registar_editar_eliminar_grava_o_mesmo_que_a_app_atual(app):
-    atual = await _registar_editar_eliminar(app, app.raiz, 'financas-familiar:')
-    nova = await _registar_editar_eliminar(app, app.raiz + 'v2/', 'financas-v2:')
+    atual = await _registar_editar_eliminar(app, app.raiz + ANTIGA, PREFIXO_ANTIGA)
+    nova = await _registar_editar_eliminar(app, app.raiz + NOVA, PREFIXO_NOVA)
     for i, nome in enumerate(['despesa nova', 'transferência Revolut', 'edição', 'eliminação', 'mensagem de valor em falta']):
         verificar(atual[i] == nova[i], f'{nome}: atual {str(atual[i])[:200]} · nova {str(nova[i])[:200]}')
 
@@ -218,8 +222,8 @@ async def _bloqueio(app, url, prefixo, extra, acoes, espera=0):
 async def _comparar_bloqueio(app, estados, extra=None, espera=0):
     await app.page.emulate_media(reduced_motion='reduce')
     for nome, acoes in estados.items():
-        atual = await _bloqueio(app, app.raiz, 'financas-familiar:', extra or {}, acoes, espera)
-        nova = await _bloqueio(app, app.raiz + 'v2/', 'financas-v2:', extra or {}, acoes, espera)
+        atual = await _bloqueio(app, app.raiz + ANTIGA, PREFIXO_ANTIGA, extra or {}, acoes, espera)
+        nova = await _bloqueio(app, app.raiz + NOVA, PREFIXO_NOVA, extra or {}, acoes, espera)
         verificar('ff-lock' in atual, f'«{nome}»: o ecrã de bloqueio não apareceu na app atual')
         if atual != nova:
             i = next((k for k in range(min(len(atual), len(nova))) if atual[k] != nova[k]), min(len(atual), len(nova)))
@@ -244,11 +248,11 @@ async def t_impressao_digital_ativada_na_app_atual_funciona_na_nova(app):
     """No dia da troca, a impressão digital registada na app atual tem de continuar a abrir a app nova."""
     await com_sensor(app)
     p = app.page
-    await _bloqueio(app, app.raiz, 'financas-familiar:', {}, TECLAS(['Enter', '1', '2', '3', '4']), 1200)
+    await _bloqueio(app, app.raiz + ANTIGA, PREFIXO_ANTIGA, {}, TECLAS(['Enter', '1', '2', '3', '4']), 1200)
     await p.click('.ffl-yes'); await p.wait_for_timeout(1500)
     registo = await p.evaluate("localStorage.getItem('financas-familiar:bio')")
     verificar(registo, 'a app atual não registou a impressão digital')
-    await _bloqueio(app, app.raiz + 'v2/', 'financas-v2:', {'bio': registo}, [])
+    await _bloqueio(app, app.raiz + NOVA, PREFIXO_NOVA, {'bio': registo}, [])
     verificar(await p.query_selector('.ffl-key.bio'), 'a app nova não reconheceu o registo da app atual')
     await p.keyboard.press('Enter'); await p.wait_for_timeout(1500)
     verificar(not await p.query_selector('#ff-lock'), 'a impressão digital da app atual não abriu a app nova')
@@ -323,7 +327,7 @@ async def t_janela_do_icone_da_categoria_igual(app):
     await app.page.emulate_media(reduced_motion='reduce')
     acoes = [_pg('categorias'), "[...document.querySelectorAll('.category-row')].find(r=>r.querySelector('h2').textContent==='Lazer').querySelector('.category-icon-edit').click()"]
     grelhas = []
-    for url, prefixo in ((app.raiz, 'financas-familiar:'), (app.raiz + 'v2/', 'financas-v2:')):
+    for url, prefixo in ((app.raiz + ANTIGA, PREFIXO_ANTIGA), (app.raiz + NOVA, PREFIXO_NOVA)):
         await abrir(app, url, prefixo, COMPLETO)
         for a in acoes:
             await app.page.evaluate(a); await app.page.wait_for_timeout(300)
@@ -370,8 +374,8 @@ async def _abrir_com_lembretes(app, url, prefixo, acoes, extra):
 async def _comparar(app, estados, extra, ler):
     await app.page.emulate_media(reduced_motion='reduce')
     for nome, acoes in estados.items():
-        await _abrir_com_lembretes(app, app.raiz, 'financas-familiar:', acoes, extra); atual = await ler()
-        await _abrir_com_lembretes(app, app.raiz + 'v2/', 'financas-v2:', acoes, extra); nova = await ler()
+        await _abrir_com_lembretes(app, app.raiz + ANTIGA, PREFIXO_ANTIGA, acoes, extra); atual = await ler()
+        await _abrir_com_lembretes(app, app.raiz + NOVA, PREFIXO_NOVA, acoes, extra); nova = await ler()
         if atual != nova:
             i = next((k for k in range(min(len(atual), len(nova))) if atual[k] != nova[k]), min(len(atual), len(nova)))
             verificar(False, f'«{nome}» diferente: atual «…{atual[max(0, i - 60):i + 60]}…» · nova «…{nova[max(0, i - 60):i + 60]}…»')
