@@ -41,6 +41,7 @@ def intencionais(h):
     h = re.sub(r'<button[^>]*class="[^"]*ffv2-extra[^"]*"[^>]*>.*?</button>', '', h, flags=re.S)  # Definições › Importação
     # espaço ocupado: a app atual grava um perfil por omissão com nomes, a nova grava-o vazio (sem nomes no código)
     h = re.sub(r'<small>[^<]* ocupados neste dispositivo</small>', '<small>… ocupados neste dispositivo</small>', h)
+    h = re.sub(r'(<small>Espaço local ocupado</small><strong>)[^<]*', r'\1…', h)
     # contas: o campo «Saldo» mostra o saldo de hoje (a app atual mostra o saldo inicial) — pedido do dono
     h = re.sub(r'(<input[^>]*name="[^"]*-balance"[^>]*?)value="[^"]*"', r'\1value="…"', h)
     h = re.sub(r'value="[^"]*"([^>]*name="[^"]*-balance")', r'value="…"\1', h)
