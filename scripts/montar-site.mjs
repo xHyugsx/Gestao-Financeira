@@ -30,14 +30,6 @@ function listar(pasta) {
   });
 }
 
-// Substitui exatamente uma ocorrência; falha se houver zero ou mais de uma.
-function trocar(caminho, de, para) {
-  const texto = readFileSync(caminho, 'utf8');
-  const n = texto.split(de).length - 1;
-  if (n !== 1) throw new Error(`${relative(RAIZ, caminho)}: esperava 1 ocorrência de «${de.slice(0, 60)}», encontrei ${n}`);
-  writeFileSync(caminho, texto.replace(de, () => para));
-}
-
 rmSync(SITE, { recursive: true, force: true });
 
 // Raiz: app atual, sem alterações
@@ -55,8 +47,7 @@ const manifesto = JSON.parse(readFileSync(join(RAIZ, 'manifest.webmanifest'), 'u
 Object.assign(manifesto, { id: './', name: 'Finanças V2', short_name: 'Finanças V2' });
 writeFileSync(join(V2, 'manifest.webmanifest'), JSON.stringify(manifesto, null, 2) + '\n');
 
-copiar(join(RAIZ, 'service-worker.js'), join(V2, 'service-worker.js'));
-trocar(join(V2, 'service-worker.js'), "const CACHE = 'financas-app';", "const CACHE = 'financas-v2';");
+copiar(join(RAIZ, 'app', 'service-worker.js'), join(V2, 'service-worker.js'));
 
 const ficheirosV2 = listar(V2).map((c) => relative(V2, c).split('\\').join('/'))
   .filter((f) => f !== 'service-worker.js' && f !== 'version.json' && !f.endsWith('LICENSE')).sort();
