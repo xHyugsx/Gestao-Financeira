@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 // Pontos de ligação com os módulos em JavaScript simples (js/modulos/*.js) reaproveitados na V2.
 export {};
 

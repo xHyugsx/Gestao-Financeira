@@ -95,8 +95,7 @@ class Pendente(Exception):
 
 
 ATIVOS_V2 = pathlib.Path(__file__).parent / 'v2_ativos.txt'
-SO_RAIZ = {'teste_v2', 'teste_visual'}  # comparam a raiz com a /v2/: correm só na execução da raiz
-SO_V2 = {'teste_correcoes', 'teste_importacao', 'teste_jarvis_v2', 'teste_atualizacao_v2'}  # funções novas da app nova (correções pedidas pelo dono): a app atual não as tem
+SO_RAIZ = {'teste_v2', 'teste_visual', 'teste_troca'}  # usam várias partes do site (/, /v1/, /v2/): correm só na execução da raiz
 
 
 def ativos_v2():
@@ -117,8 +116,6 @@ async def main(filtro):
     if em_v2:
         ficheiros = [f for f in ficheiros if f.stem not in SO_RAIZ]
         ativos = ativos_v2()
-    else:
-        ficheiros = [f for f in ficheiros if f.stem not in SO_V2]
     resultados = []
     async with async_playwright() as pw:
         browser = await pw.chromium.launch()
