@@ -6,6 +6,7 @@ teste_arranque
 teste_bloqueio
 teste_offline
 teste_compatibilidade:t_dados_antigos_abrem
+teste_compatibilidade:t_backup_mantem_as_chaves
 
 # Etapa 4 — movimentos (registar, editar, eliminar) e aviso de gravação falhada
 teste_movimentos

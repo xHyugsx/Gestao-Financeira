@@ -1,7 +1,5 @@
 // Isolamento dos dados da versão de teste: tem de correr antes de qualquer acesso ao localStorage.
 import '../../espelho-v2/prefixo.js';
-// Módulo da app atual reaproveitado até às Definições (etapa 9).
-import '../../js/modulos/armazenamento.js';
 import '../../espelho-v2/menu-v2.js';
 import '../../css/app.css';
 import './v2.css';
@@ -18,5 +16,5 @@ window.ffVer = VERSAO;
 iniciarAtualizacoes();
 iniciarPrivacidade();
 iniciarAutobloqueio(() => ligacoes.bloquear());
-iniciarLembretes((p) => window.ffGoPg?.(p));
+iniciarLembretes();
 createRoot(document.getElementById('root')!).render(<App />);

@@ -30,7 +30,8 @@ export function Principal({ estado, mes, ocultos, lista, mudarLista, irPara, vib
   const { accounts: contas, transactions: movimentos } = estado;
   const hoje = new Date();
   const eur = (v: number) => formatarEuros(v, ocultos);
-  const saldo = (c: Conta | undefined) => saldoDaConta(c, movimentos, hoje);
+  // Meses anteriores: saldo no fim desse mês (correções de saldo só valem a partir do dia em que foram feitas)
+  const saldo = (c: Conta | undefined) => saldoDaConta(c, movimentos, hoje, mes);
   const nivel = (c: Conta | undefined) => {
     const v = saldo(c).atual, l = limiteSaldoBaixo(c);
     return v < 0 ? ' acc-neg' : l != null && v < l ? ' acc-low' : '';

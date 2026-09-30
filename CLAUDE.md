@@ -86,7 +86,7 @@ Qualquer alteração deve manter **compatibilidade total** com os dados já guar
 
 - **Língua:** responder sempre em **português de Portugal**, de forma direta, concisa e estruturada (cabeçalhos, listas curtas, negrito nos termos-chave). Sem introduções artificiais.
 - **Uma alínea de cada vez:** cada pedido é tratado como uma alínea individual.
-- **Preview antes de implementar:** mostrar sempre como vai ficar (descrição, capturas ou página de teste) e **só implementar depois de o dono dizer** "avança", "prossegue", "próximo", "continua" ou "ok".
+- **Sem preview (decisão do dono, 30/09/2026):** nas etapas da Fase 2, implementar, testar e **fazer o merge do PR** quando os testes do GitHub ficarem verdes, sem esperar aprovação. Exceção: a **troca** (etapa 13), que mexe na app de produção e nos dados reais, é confirmada antes com o dono.
 - **Parceiro crítico:** se houver uma alternativa melhor ou um risco, dizê-lo antes de avançar.
 - **Versões:** formato `v#.##.#`. Em cada entrega:
   1. atualizar `ffVer` em `js/app.js`;

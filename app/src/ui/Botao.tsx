@@ -7,6 +7,7 @@ const VARIANTES = {
   ghost: 'hover:bg-accent hover:text-accent-foreground',
   destrutivo: 'bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90',
   secundario: 'bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80',
+  contorno: 'border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground',
 } as const;
 const TAMANHOS = { normal: 'h-9 px-4 py-2', icone: 'h-9 w-9', pequeno: 'h-8 rounded-md px-3 text-xs' } as const;
 

@@ -38,6 +38,13 @@ def intencionais(h):
     h = h.replace(' Recorrente mensal</label>', ' Recorrente</label>').replace('Mudar ícone de ', 'Editar categoria ')
     h = re.sub(r'<label class="ffv2-extra">.*?</label>', '', h, flags=re.S)
     h = re.sub(r'<div class="movement-checks ffv2-extra">.*?</div>', '', h, flags=re.S)
+    # contas: o campo «Saldo» mostra o saldo de hoje (a app atual mostra o saldo inicial) — pedido do dono
+    h = re.sub(r'(<input[^>]*name="[^"]*-balance"[^>]*?)value="[^"]*"', r'\1value="…"', h)
+    h = re.sub(r'value="[^"]*"([^>]*name="[^"]*-balance")', r'value="…"\1', h)
+    # meses anteriores: os cartões das contas mostram o saldo no fim desse mês (a app atual mostra sempre o de hoje)
+    mes = re.search(r'aria-label="Selecionar mês">.*?<span>([^<]*)</span>', h, flags=re.S)
+    if mes and mes.group(1) != 'setembro de 2026':
+        h = re.sub(r'<section class="(?:balance-panel|metric-panel current-panel|metric-panel account-extra-panel)[^"]*".*?</section>', '<section>[saldo]</section>', h, flags=re.S)
     if 'Editar movimento' in h:  # categoria: lista de escolha em vez de texto com sugestões
         h = re.sub(r'<datalist id="edit-categories">.*?</datalist>', '', h, flags=re.S)
         h = re.sub(r'<input[^>]*name="category"[^>]*>|<select name="category">.*?</select>', '[categoria]', h, flags=re.S)
@@ -62,11 +69,13 @@ async def html(app, url, prefixo, dados, acoes):
     return re.sub(r'(<p class="set-menu-version">v\. )[^<]*', r'\1…', h)  # cada app mostra a sua versão
 
 
-async def comparar_html(app, dados, estados):
+async def comparar_html(app, dados, estados, sem_ceu=False):
     await app.page.emulate_media(reduced_motion='reduce')
+    # o céu da saudação muda com o minuto; nas Definições está só por trás e não entra na comparação
+    ceu = (lambda h: re.sub(r'<div class="welcome-sky".*?</svg></div>', '', h, flags=re.S)) if sem_ceu else (lambda h: h)
     for nome, acoes in estados.items():
-        atual = await html(app, app.raiz, 'financas-familiar:', dados, acoes)
-        nova = await html(app, app.raiz + 'v2/', 'financas-v2:', dados, acoes)
+        atual = ceu(await html(app, app.raiz, 'financas-familiar:', dados, acoes))
+        nova = ceu(await html(app, app.raiz + 'v2/', 'financas-v2:', dados, acoes))
         if atual != nova:
             i = next(k for k in range(min(len(atual), len(nova))) if atual[k] != nova[k])
             verificar(False, f'«{nome}» diferente: atual «…{atual[max(0, i - 60):i + 60]}…» · nova «…{nova[max(0, i - 60):i + 60]}…»')
@@ -244,6 +253,7 @@ async def t_impressao_digital_ativada_na_app_atual_funciona_na_nova(app):
 RODA = "document.querySelector('button[aria-label=\"Definições\"]').click()"
 LISTA = [RODA, "document.querySelector('.set-menu-more').click()"]
 SEGURANCA = LISTA + ["[...document.querySelectorAll('.setting-row')].find(b=>b.textContent.includes('Segurança')).click()"]
+def _linha(t): return f"[...document.querySelectorAll('.setting-row')].find(b=>b.textContent.includes('{t}')).click()"
 def _pin(a, b): return ("(()=>{const s=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set;"
                         f"const c=document.querySelectorAll('.settings-panel input');[['{a}',c[0]],['{b}',c[1]]].forEach(([v,i])=>{{s.call(i,v);i.dispatchEvent(new Event('input',{{bubbles:true}}))}});"
                         "document.querySelector('.settings-panel button[type=submit]').click()})()")
@@ -252,12 +262,17 @@ DEFINICOES = {
     'PIN que não coincide': SEGURANCA + [_pin('1234', '4321')], 'PIN definido': SEGURANCA + [_pin('1234', '1234')],
     'PIN alterado': SEGURANCA + [_pin('1234', '1234'), _pin('0000', '0000')],
     'ocultar após 1 min': SEGURANCA + ["[...document.querySelectorAll('.autohide-choice')].find(b=>b.textContent==='Após 1 min').click()"],
+    'perfil': LISTA + [_linha('Perfil e família')], 'categorias (definições)': LISTA + [_linha('Categorias')],
+    'contas': LISTA + [_linha('Contas bancárias')], 'aparência': LISTA + [_linha('Aparência')],
+    'aparência órbita azul': LISTA + [_linha('Aparência'), "[...document.querySelectorAll('.accent-options button')][1].click()"],
+    'backup': LISTA + [_linha('Backup')], 'dados': LISTA + [_linha('Dados')],
+    'perfil guardado': LISTA + [_linha('Perfil e família'), "document.querySelector('.settings-panel button[type=submit]').click()"],
     'segurança pelo menu rápido': [RODA, "[...document.querySelectorAll('.set-menu-item')].find(b=>b.textContent.includes('Segurança')).click()"],
 }
 
 
 async def t_definicoes_seguranca_iguais_a_app_atual(app):
-    await comparar_html(app, COMPLETO, DEFINICOES)
+    await comparar_html(app, COMPLETO, DEFINICOES, sem_ceu=True)
 
 
 async def t_definicoes_seguranca_com_impressao_digital_igual(app):
