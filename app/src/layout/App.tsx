@@ -1,9 +1,13 @@
 import { type TouchEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { EcraBloqueio } from '../bloqueio/EcraBloqueio';
 import { ligacoes } from '../bloqueio/estado';
-import { VERSAO } from '../config';
+import { PREFIXO, VERSAO } from '../config';
+import { iniciarEspaco } from '../definicoes/espaco';
+import { iniciarAvisos } from '../definicoes/lembreteBackup';
+import type { AcoesBackup } from '../definicoes/Seccoes';
 import { FolhaDefinicoes, MenuRapido, type PosicaoMenu, type Seccao } from '../definicoes/Definicoes';
-import { dia, inicioDoMes, MESES, type Movimento } from '../dados';
+import { aplicarBackup, chave, criarBackup, dia, type Estado, inicioDoMes, lerBackup, MESES, type Movimento, nomeFicheiroBackup, PREFIXO_REAL } from '../dados';
+import { aviso as avisoVeterinario, definir as definirLembretes, todos as todosLembretes } from '../veterinario/lembretes';
 import { useDados } from '../estado/useDados';
 import { aspetosCategorias } from '../movimentos/categorias';
 import { EditarMovimento } from '../movimentos/EditarMovimento';
@@ -26,6 +30,24 @@ import { saudacao, svgDoCeu } from './ceu';
 import { PAGINAS, PAGINAS_MAIS } from './paginas';
 
 type Direcao = 'left' | 'right';
+
+/** Descarrega um ficheiro gerado na app (backup, CSV). */
+function descarregar(nome: string, conteudo: string, tipo: string) {
+  const url = URL.createObjectURL(new Blob([conteudo], { type: tipo })), a = document.createElement('a');
+  a.href = url; a.download = nome;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/** Movimentos em CSV (Excel/Sheets), do mais recente para o mais antigo — mesmo formato da app atual. */
+function csvDosMovimentos(movimentos: Estado['transactions']): string {
+  const aspas = (v: unknown) => `"${String(v).replace(/"/g, '""')}"`;
+  const tipos: Record<string, string> = { expense: 'Despesa', income: 'Receita', transfer: 'Transferência' };
+  const linhas = [['Data', 'Descrição', 'Categoria', 'Tipo', 'Valor (€)', 'Nota'],
+    ...[...movimentos].sort((a, b) => b.date.localeCompare(a.date))
+      .map((m) => [m.date, m.title, m.detail.split('·').pop()?.trim() || '', tipos[m.movementType ?? ''], m.amount.toFixed(2).replace('.', ','), m.note || ''])];
+  return `\uFEFF${linhas.map((l) => l.map(aspas).join(';')).join('\r\n')}`;
+}
 interface Transicao { para: string; dir: Direcao; dx: number; volta?: boolean }
 interface Toque { x: number; y: number; t: number; eixo: 'x' | 'y' | null; dx?: number }
 
@@ -56,6 +78,10 @@ export function App() {
   const [teclado, setTeclado] = useState(0);
   const folhaAberta = useRef(folha);
   folhaAberta.current = folha;
+  const [ultimoBackup, setUltimoBackup] = useState(() => { try { return localStorage.getItem(chave('ultimoBackup', PREFIXO)) || ''; } catch { return ''; } });
+  const [mensagemBackup, setMensagemBackup] = useState('');
+  const estadoAtual = useRef(estado);
+  estadoAtual.current = estado;
   // Escolhas dentro das páginas (mantêm-se ao mudar de página, como na app atual)
   const [tipoAnalise, setTipoAnalise] = useState<TipoAnalise>('gastos');
   const [vistaCategorias, setVistaCategorias] = useState<VistaCategorias>(VISTA_CATEGORIAS);
@@ -172,6 +198,60 @@ export function App() {
     const i = setInterval(() => { if (document.visibilityState === 'visible') f(); }, 6e4);
     document.addEventListener('visibilitychange', f);
     return () => { clearInterval(i); document.removeEventListener('visibilitychange', f); };
+  }, []);
+
+  // Backup: criar (descarregar), restaurar, exportar CSV; registo da data do último backup
+  const registarBackup = useCallback(() => {
+    const d = new Date().toISOString();
+    setUltimoBackup(d);
+    try { localStorage.setItem(chave('ultimoBackup', PREFIXO), d); } catch { /* sem armazenamento */ }
+  }, []);
+  const conteudoBackup = useCallback(() => {
+    let jarvisThreads: unknown[] = [];
+    try { const j: unknown = JSON.parse(localStorage.getItem(chave('conversaJarvis', PREFIXO)) || '[]'); if (Array.isArray(j)) jarvisThreads = j; } catch { /* sem conversa */ }
+    return criarBackup(estadoAtual.current, { jarvisThreads, vetReminders: todosLembretes() });
+  }, []);
+  const descarregarBackup = useCallback(() => {
+    descarregar(nomeFicheiroBackup(), JSON.stringify(conteudoBackup(), null, 2), 'application/json');
+    setMensagemBackup('Cópia de segurança descarregada.');
+    registarBackup();
+  }, [conteudoBackup, registarBackup]);
+  const acoesBackup: AcoesBackup = {
+    criar: descarregarBackup,
+    exportarCsv: () => {
+      descarregar(`financas-familiar-movimentos-${new Date().toISOString().slice(0, 10)}.csv`, csvDosMovimentos(estado.transactions), 'text/csv;charset=utf-8');
+      setMensagemBackup('Ficheiro CSV descarregado.');
+    },
+    restaurar: async (f) => {
+      const r = lerBackup(await f.text());
+      if (!r.ok) { setMensagemBackup('Ficheiro inválido. Escolha uma cópia JSON exportada por esta app.'); return; }
+      if (!window.confirm('Restaurar esta cópia? Os dados atuais serão substituídos.')) return;
+      setEstado((s) => aplicarBackup(s, r.dados));
+      if (r.jarvisThreads) { try { localStorage.setItem(chave('conversaJarvis', PREFIXO), JSON.stringify(r.jarvisThreads)); } catch { /* sem espaço */ } }
+      if (r.vetReminders) definirLembretes(r.vetReminders);
+      setMensagemBackup('Cópia restaurada com sucesso.');
+    },
+  };
+  const limparDados = () => {
+    try {
+      Array.from({ length: localStorage.length }, (_, i) => localStorage.key(i))
+        .filter((k): k is string => !!k && (k.startsWith(PREFIXO_REAL) || k.startsWith(PREFIXO)))
+        .forEach((k) => localStorage.removeItem(k));
+    } catch { /* sem armazenamento */ }
+    window.location.reload();
+  };
+  // Interface da app atual usada pelos avisos (e, mais tarde, pelo Jarvis); avisos ao abrir e de espaço
+  useEffect(() => {
+    window.ffBk = { get count() { return estadoAtual.current.transactions.length; }, payload: conteudoBackup, download: descarregarBackup, done: registarBackup };
+  }, [conteudoBackup, descarregarBackup, registarBackup]);
+  const abrirBackupRef = useRef(() => {});
+  abrirBackupRef.current = () => { setMensagemBackup(''); setSeccao('backup'); setFolha('direct'); window.history.pushState({ ...window.history.state, ffSheet: true }, ''); };
+  useEffect(() => {
+    iniciarEspaco({ fazerBackup: () => window.ffBk?.download(), verEspaco: () => abrirBackupRef.current() });
+    iniciarAvisos(
+      { contar: () => estadoAtual.current.transactions.length, conteudo: () => window.ffBk?.payload(), descarregar: () => window.ffBk?.download(), feito: () => window.ffBk?.done() },
+      () => avisoVeterinario((p) => window.ffGoPg?.(p)),
+    );
   }, []);
 
   // Recorrentes com periodicidade: cria as cópias em falta ao abrir, quando muda o dia e depois de cada alteração
@@ -365,7 +445,9 @@ export function App() {
       </button>
       {folha ? (
         <FolhaDefinicoes
-          modo={folha} seccao={seccao} mudarSeccao={setSeccao} fechar={fecharFolha} teclado={teclado} estado={estado}
+          modo={folha} seccao={seccao} mudarSeccao={(s) => { if (s === 'backup') setMensagemBackup(''); setSeccao(s); }} fechar={fecharFolha} teclado={teclado} estado={estado}
+          mudarEstado={setEstado} ultimoBackup={ultimoBackup} mensagemBackup={mensagemBackup} acoesBackup={acoesBackup} limparDados={limparDados}
+          categoriaRenomeada={(antigo, novo) => setEscolhas((e) => (e.categoria === antigo ? { ...e, categoria: novo } : e))}
           mudarPin={(pinHash) => setEstado((s) => ({ ...s, pinHash }))}
           mudarAparencia={(appearance) => setEstado((s) => ({ ...s, appearance }))}
         />

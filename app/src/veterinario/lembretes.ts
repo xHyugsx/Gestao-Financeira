@@ -49,6 +49,8 @@ function gravar(a: Lembrete[]) {
   try { localStorage.setItem(CHAVE, JSON.stringify(a)); } catch { /* sem armazenamento */ }
   atualizar();
 }
+/** Substitui todos os lembretes (restauro de backup). */
+export function definir(a: unknown) { gravar(Array.isArray(a) ? (a as Lembrete[]) : []); }
 export const ordenados = () => todos().sort((a, b) => proxima(a).localeCompare(proxima(b)));
 
 let anfitrioes: HTMLElement[] = [];
@@ -173,17 +175,11 @@ export function aviso(irPara: (p: string) => void): boolean {
   return true;
 }
 
-/** Ponto no «Mais», atualizações ao voltar à app e aviso ao abrir (quando a app está pronta, sem bloqueio). */
-export function iniciarLembretes(irPara: (p: string) => void) {
+/** Ponto no «Mais» e atualizações ao voltar à app (o aviso ao abrir é mostrado por `iniciarAvisos`). */
+export function iniciarLembretes() {
   setInterval(() => { if (document.visibilityState === 'visible') ponto(); }, 10000);
   document.addEventListener('click', () => { setTimeout(ponto, 400); }, true);
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') atualizar(); });
-  const pronta = () => !document.getElementById('ff-lock') && !!document.querySelector('.bottom-nav') && !document.querySelector('.settings-sheet') && document.visibilityState === 'visible';
-  const t = setInterval(() => {
-    if (!pronta()) return;
-    clearInterval(t);
-    setTimeout(() => { if (pronta()) aviso(irPara); }, 2000);
-  }, 1000);
   // A mesma interface da app atual (usada pelos testes e, mais tarde, pelo Jarvis)
-  window.ffVet = { all: todos, sorted: ordenados, done: feito, mount: montar, refresh: atualizar, soon: () => ordenados().some((r) => dias(r) <= 7) };
+  window.ffVet = { all: todos, set: definir, sorted: ordenados, done: feito, mount: montar, refresh: atualizar, soon: () => ordenados().some((r) => dias(r) <= 7) };
 }

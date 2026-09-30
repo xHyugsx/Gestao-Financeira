@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
-  aplicarBackup, chave, criarBackup, dataPorOmissao, estadoInicial, gravarDados, hashPin, lerBackup, lerDados,
+  acertarSaldo, aplicarBackup, chave, type Conta, criarBackup, dataPorOmissao, estadoInicial, gravarDados, hashPin, lerBackup, lerDados,
   limiteSaldoBaixo, type Movimento, normalizar, paraGravar, pinValido, PREFIXO_V2, rendimentoDoMes,
   salariosDoMes, saldoDaConta,
 } from './index';
@@ -182,5 +182,33 @@ describe('cópia de segurança', () => {
     expect(r.hideValues).toBe(true);
     expect(r.pinHash).toBe('antigo');
     expect(r.petPhotos).toEqual({});
+  });
+});
+
+describe('saldo corrigido só a partir do dia da correção', () => {
+  const ed: Conta = { id: 'ed', name: 'Cartão refeição', balance: 126, createdAt: '2026-06' };
+  const mov = (d: string, v: number): Movimento => ({ id: d, title: 'x', detail: 'x', amount: v, date: d, movementType: 'expense', account: 'ed' });
+  const hoje = new Date(2026, 8, 25);
+
+  it('o saldo escrito passa a ser o saldo de hoje; os meses anteriores ficam com o valor antigo', () => {
+    const movimentos = [mov('2026-09-10', -20)];
+    const nova = acertarSaldo(ed, movimentos, 72, hoje);
+    expect(saldoDaConta(nova, movimentos, hoje).atual).toBe(72);
+    expect(nova.adjDays).toEqual({ '2026-09-25': -34 });
+    expect(saldoDaConta(nova, movimentos, hoje, new Date(2026, 7, 1)).atual).toBe(126);
+    expect(saldoDaConta(nova, movimentos, hoje).anterior).toBe(126);
+  });
+
+  it('sem mudança não regista acerto', () => {
+    expect(acertarSaldo(ed, [], 126, hoje)).toBe(ed);
+  });
+
+  it('meses anteriores: tira movimentos e acertos posteriores (também os antigos, por mês)', () => {
+    const c: Conta = { ...ed, balance: 100, adj: { '2026-09': -26 } };
+    const movimentos = [mov('2026-08-05', -10), mov('2026-09-03', -5)];
+    const agosto = saldoDaConta(c, movimentos, hoje, new Date(2026, 7, 1));
+    expect(agosto.atual).toBe(100 - 15 + 5 + 26);
+    expect(agosto.anterior).toBe(agosto.atual + 10);
+    expect(agosto.mesAnterior).toBe('julho');
   });
 });

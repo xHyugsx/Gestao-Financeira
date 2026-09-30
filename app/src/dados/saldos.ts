@@ -44,7 +44,22 @@ export interface SaldoConta {
   mesAnterior: string;
 }
 
-export function saldoDaConta(conta: Conta | undefined, movimentos: Movimento[], hoje: Date): SaldoConta {
+/** Efeito de um movimento no saldo de uma conta (mesmas regras da 1.9.x). */
+function efeitoNaConta(id: string | undefined, m: Movimento): number {
+  if (id === 'principal') return efeitoNaPrincipal(m);
+  const daConta = m.account === id && m.affectsBalance !== false && m.movementType !== 'transfer' && !m.revolut ? m.amount : 0;
+  if (id === 'revolut' && m.revolut?.holder === 'Conjunta' && m.affectsBalance !== false) return daConta + (m.transferValue || 0);
+  return daConta;
+}
+
+const somaDe = (o: Record<string, number> | undefined, incluir: (chave: string) => boolean) =>
+  Object.entries(o ?? {}).reduce((s, [k, v]) => s + (incluir(k) ? Number(v) || 0 : 0), 0);
+
+/**
+ * Saldo de uma conta. Com `ate` num mês anterior ao atual, dá o saldo no fim desse mês: sem os movimentos e os
+ * acertos posteriores (um saldo corrigido só vale a partir do dia da correção — pedido do dono, só na app nova).
+ */
+export function saldoDaConta(conta: Conta | undefined, movimentos: Movimento[], hoje: Date, ate?: Date): SaldoConta {
   const mes = anoMes(hoje);
   const id = conta?.id;
   let atual = conta?.balance ?? 0;
@@ -59,12 +74,34 @@ export function saldoDaConta(conta: Conta | undefined, movimentos: Movimento[], 
     atual += movimentosDaConta(movimentos, id);
     doMes = movimentosDaConta(movimentos, id, mes);
   }
+  const alvo = ate ? anoMes(ate) : mes;
+  if (alvo >= mes) {
+    return {
+      atual,
+      anterior: atual - doMes - (conta?.adj?.[mes] || 0) - somaDe(conta?.adjDays, (d) => d.startsWith(mes)),
+      nova: conta?.createdAt === mes,
+      mesAnterior: MESES[(hoje.getMonth() + 11) % 12]!,
+    };
+  }
+  // Fim de um mês anterior: tira o que aconteceu depois
+  const fim = `${alvo}-31`;
+  const depois = movimentos.filter((m) => (m.date || '') > fim).reduce((s, m) => s + efeitoNaConta(id, m), 0);
+  const noMes = movimentos.filter((m) => m.date?.startsWith(alvo)).reduce((s, m) => s + efeitoNaConta(id, m), 0);
+  const atualAte = atual - depois - somaDe(conta?.adj, (k) => k > alvo) - somaDe(conta?.adjDays, (d) => d > fim);
   return {
-    atual,
-    anterior: atual - doMes - (conta?.adj?.[mes] || 0),
-    nova: conta?.createdAt === mes,
-    mesAnterior: MESES[(hoje.getMonth() + 11) % 12]!,
+    atual: atualAte,
+    anterior: atualAte - noMes - (conta?.adj?.[alvo] || 0) - somaDe(conta?.adjDays, (d) => d.startsWith(alvo)),
+    nova: conta?.createdAt === alvo,
+    mesAnterior: MESES[(ate!.getMonth() + 11) % 12]!,
   };
+}
+
+/** Novo saldo escrito nas Definições: o acerto fica com a data de hoje e o saldo dos dias anteriores não muda. */
+export function acertarSaldo(conta: Conta, movimentos: Movimento[], novoSaldo: number, hoje: Date): Conta {
+  const diferenca = novoSaldo - saldoDaConta(conta, movimentos, hoje).atual;
+  if (!diferenca) return conta;
+  const d = `${anoMes(hoje)}-${String(hoje.getDate()).padStart(2, '0')}`;
+  return { ...conta, balance: (conta.balance ?? 0) + diferenca, adjDays: { ...conta.adjDays, [d]: (conta.adjDays?.[d] || 0) + diferenca } };
 }
 
 /** Variação percentual face ao mês anterior; `null` quando não há base de comparação. */

@@ -43,6 +43,8 @@ export interface Conta {
   createdAt?: string;
   /** Acertos ao saldo por mês (AAAA-MM → valor), ex.: tickets de refeição. */
   adj?: Record<string, number>;
+  /** Acertos ao saldo por dia (AAAA-MM-DD → valor): valem só a partir desse dia (só na app nova). */
+  adjDays?: Record<string, number>;
   tickets?: string[];
   [extra: string]: unknown;
 }

@@ -125,3 +125,23 @@ async def t_mudar_o_nome_de_uma_categoria(app):
     verificar('Supermercado' in d['categories'] and 'Alimentação' not in d['categories'], f'categorias: {d["categories"]}')
     detalhes = sorted(m['detail'] for m in d['transactions'])
     verificar(detalhes == ['10 setembro · Supermercado', '2 setembro · Supermercado', '20 setembro · Lazer'], f'movimentos: {detalhes}')
+
+
+async def t_saldo_corrigido_so_a_partir_do_dia(app):
+    await app.page.emulate_media(reduced_motion='reduce')
+    contas = [{'id': 'principal', 'name': 'Principal', 'balance': 0}, {'id': 'revolut', 'name': 'Revolut Conjunta', 'balance': 0},
+              {'id': 'ed', 'name': 'Cartão refeição', 'balance': 146, 'createdAt': '2026-06'}]
+    await app.abrir({'accounts': contas, 'transactions': [MOV(1, 'Almoço', '2026-09-10', v=-20, account='ed')]})
+    p = app.page
+    saldo = "[...document.querySelectorAll('.account-extra-panel strong')].map(e=>e.textContent)[0]"
+    verificar((await p.evaluate(saldo)).replace('\xa0', ' ') == '126,00 €', f'saldo inicial: {await p.evaluate(saldo)!r}')
+    await p.click('button[aria-label="Definições"]'); await p.wait_for_timeout(400)
+    await p.click('.set-menu-item:has-text("Contas bancárias")'); await p.wait_for_timeout(500)
+    verificar(await p.input_value('input[name="ed-balance"]') == '126', 'o campo não mostra o saldo de hoje')
+    await p.fill('input[name="ed-balance"]', '72'); await p.click('.settings-panel button[type=submit]'); await p.wait_for_timeout(400)
+    conta = next(c for c in (await dados(app))['accounts'] if c['id'] == 'ed')
+    verificar(conta['adjDays'] == {'2026-09-28': -54}, f'acerto: {conta}')
+    await p.go_back(); await p.wait_for_timeout(600)
+    verificar((await p.evaluate(saldo)).replace('\xa0', ' ') == '72,00 €', f'saldo depois da correção: {await p.evaluate(saldo)!r}')
+    await p.click('[aria-label="Mês anterior"]'); await p.wait_for_timeout(400)
+    verificar((await p.evaluate(saldo)).replace('\xa0', ' ') == '146,00 €', f'agosto devia manter o saldo antigo: {await p.evaluate(saldo)!r}')

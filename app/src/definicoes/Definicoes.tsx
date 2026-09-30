@@ -1,10 +1,11 @@
 import { type FormEvent, useMemo, useState } from 'react';
-import { type Aparencia, type Conta, type Estado, hashPin, pinValido, PREFIXO_REAL } from '../dados';
+import { type Aparencia as TipoAparencia, type Conta, type Estado, hashPin, pinValido, PREFIXO_REAL } from '../dados';
 import { PREFIXO } from '../config';
 import { Botao } from '../ui/Botao';
 import { Icone } from '../ui/Icone';
 import type { NomeIcone } from '../ui/icones';
 import { montarAutobloqueio, montarBiometria } from './opcoesSeguranca';
+import { type AcoesBackup, Aparencia, Backup, CategoriasDefinicoes, Contas, Dados, Perfil, Subvista } from './Seccoes';
 
 export type Seccao = 'profile' | 'categories' | 'accounts' | 'appearance' | 'security' | 'backup' | 'data';
 
@@ -19,7 +20,7 @@ const TITULOS: Record<Seccao, [string, string]> = {
 };
 
 const nomesContas = (c: Conta[]) => (c.length > 2 ? `${c.length} contas` : c.map((e) => e.name).join(' e '));
-const tema = (a: Aparencia) => (a.accent === 'violet' ? 'Cósmico' : a.accent === 'blue' ? 'Órbita azul' : 'Nebulosa');
+const tema = (a: TipoAparencia) => (a.accent === 'violet' ? 'Cósmico' : a.accent === 'blue' ? 'Órbita azul' : 'Nebulosa');
 const resumoPerfil = (e: Estado) => `${e.profile.profileName} · ${e.profile.members.length} membros`;
 const resumoPin = (e: Estado) => (e.pinHash ? 'PIN ativo' : 'Sem PIN');
 
@@ -35,9 +36,6 @@ function espacoOcupado(): string {
   return total < 1024 ? `${total} B` : total < 1048576 ? `${(total / 1024).toFixed(1)} KB` : `${(total / 1024 / 1024).toFixed(2)} MB`;
 }
 
-function ultimoBackup(): string {
-  try { return localStorage.getItem(`${PREFIXO}last-backup`) || ''; } catch { return ''; }
-}
 
 export interface PosicaoMenu { t: number; r: number; out?: boolean }
 
@@ -75,15 +73,25 @@ interface PropsFolha {
   teclado: number;
   estado: Estado;
   mudarPin: (hash: string) => void;
-  mudarAparencia: (a: Aparencia) => void;
+  mudarAparencia: (a: TipoAparencia) => void;
+  mudarEstado: (f: (e: Estado) => Estado) => void;
+  categoriaRenomeada: (antigo: string, novo: string) => void;
+  /** Data do último backup (ISO) ou ''. */
+  ultimoBackup: string;
+  mensagemBackup: string;
+  acoesBackup: AcoesBackup;
+  limparDados: () => void;
 }
 
-export function FolhaDefinicoes({ modo, seccao, mudarSeccao, fechar, teclado, estado, mudarPin, mudarAparencia }: PropsFolha) {
-  const lb = useMemo(ultimoBackup, []);
+export function FolhaDefinicoes(props: PropsFolha) {
+  const { modo, seccao, mudarSeccao, fechar, teclado, estado, mudarPin, mudarAparencia, mudarEstado } = props;
+  const lb = props.ultimoBackup;
   const espaco = useMemo(espacoOcupado, [estado]);
+  const [mensagem, setMensagem] = useState('');
+  const abrirSeccao = (s: Seccao | null) => { setMensagem(''); mudarSeccao(s); };
   const a = estado.appearance;
   const linha = (s: Seccao, icone: NomeIcone, titulo: string, resumo: string) => (
-    <Botao variante="ghost" className="setting-row" onClick={() => mudarSeccao(s)}>
+    <Botao variante="ghost" className="setting-row" onClick={() => abrirSeccao(s)}>
       <Icone nome={icone} /><span><strong>{titulo}</strong><small>{resumo}</small></span><Icone nome="chevron-right" />
     </Botao>
   );
@@ -96,7 +104,7 @@ export function FolhaDefinicoes({ modo, seccao, mudarSeccao, fechar, teclado, es
       }}
     >
       <div className="settings-sheet-top">
-        <button type="button" className="sheet-back" onClick={() => (seccao && modo === 'list' ? mudarSeccao(null) : fechar())}>
+        <button type="button" className="sheet-back" onClick={() => (seccao && modo === 'list' ? abrirSeccao(null) : fechar())}>
           <Icone nome="chevron-left" />Voltar
         </button>
         {!seccao ? <h1>Definições</h1> : null}
@@ -104,8 +112,16 @@ export function FolhaDefinicoes({ modo, seccao, mudarSeccao, fechar, teclado, es
       <main className="detail-view settings-view">
         {seccao === 'security' ? (
           <Seguranca estado={estado} mudarPin={mudarPin} mudarAparencia={mudarAparencia} />
+        ) : seccao === 'backup' ? (
+          <Backup ultimo={lb} mensagem={props.mensagemBackup} acoes={props.acoesBackup} />
         ) : seccao ? (
-          <EmConstrucaoDefinicoes seccao={seccao} />
+          <Subvista titulo={TITULOS[seccao][0]} subtitulo={TITULOS[seccao][1]} mensagem={mensagem}>
+            {seccao === 'profile' ? <Perfil estado={estado} mudarEstado={mudarEstado} avisar={setMensagem} />
+              : seccao === 'categories' ? <CategoriasDefinicoes estado={estado} mudarEstado={mudarEstado} avisar={setMensagem} categoriaRenomeada={props.categoriaRenomeada} />
+                : seccao === 'accounts' ? <Contas estado={estado} mudarEstado={mudarEstado} avisar={setMensagem} />
+                  : seccao === 'appearance' ? <Aparencia estado={estado} mudarEstado={mudarEstado} />
+                    : <Dados espaco={espaco} limpar={props.limparDados} />}
+          </Subvista>
         ) : (
           <section className="settings-list">
             {linha('profile', 'user-round', 'Perfil e família', resumoPerfil(estado))}
@@ -127,18 +143,6 @@ function Cabecalho({ seccao }: { seccao: Seccao }) {
   return <div className="view-heading"><p className="eyebrow">{subtitulo}</p><h2>{titulo}</h2></div>;
 }
 
-/** Partes das Definições ainda não migradas (só na versão de teste). */
-function EmConstrucaoDefinicoes({ seccao }: { seccao: Seccao }) {
-  return (
-    <div className="settings-subview">
-      <Cabecalho seccao={seccao} />
-      <section className="settings-panel ffv2-construcao">
-        <h2>Em construção</h2>
-        <p>Esta parte das Definições ainda está a ser reconstruída nesta versão de teste. Use a app «Finanças» para a alterar.</p>
-      </section>
-    </div>
-  );
-}
 
 // Elementos já preenchidos pelas opções desenhadas no DOM (sem marcar atributos no HTML)
 const montados = new WeakMap<HTMLElement, string>();
