@@ -96,7 +96,7 @@ class Pendente(Exception):
 
 ATIVOS_V2 = pathlib.Path(__file__).parent / 'v2_ativos.txt'
 SO_RAIZ = {'teste_v2', 'teste_visual'}  # comparam a raiz com a /v2/: correm só na execução da raiz
-SO_V2 = {'teste_correcoes', 'teste_importacao', 'teste_jarvis_v2'}  # funções novas da app nova (correções pedidas pelo dono): a app atual não as tem
+SO_V2 = {'teste_correcoes', 'teste_importacao', 'teste_jarvis_v2', 'teste_atualizacao_v2'}  # funções novas da app nova (correções pedidas pelo dono): a app atual não as tem
 
 
 def ativos_v2():
