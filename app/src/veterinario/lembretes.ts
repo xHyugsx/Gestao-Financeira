@@ -39,6 +39,14 @@ const curta = (s: string) => { const d = lerData(s); return `${d.getDate()} ${ME
 const icone = (r: Lembrete) => (r.type === 'vacina' ? ICONES.seringa : r.type === 'outro' ? ICONES.sino : ICONES.comprimido);
 const vibrar = (p: number | number[]) => { try { navigator.vibrate?.(p); } catch { /* sem vibração */ } };
 
+export interface InfoLembrete { label: string; next: string; days: number; when: string; short: string; every: string }
+
+/** Nome, próxima data e estado de um lembrete (usado pelo Jarvis). */
+export function info(r: Lembrete): InfoLembrete {
+  const d = dias(r);
+  return { label: nome(r), next: proxima(r), days: d, when: quando(d), short: curta(proxima(r)), every: cadaTexto(r.every) };
+}
+
 export function todos(): Lembrete[] {
   try {
     const a: unknown = JSON.parse(localStorage.getItem(CHAVE) || '[]');
@@ -181,5 +189,5 @@ export function iniciarLembretes() {
   document.addEventListener('click', () => { setTimeout(ponto, 400); }, true);
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') atualizar(); });
   // A mesma interface da app atual (usada pelos testes e, mais tarde, pelo Jarvis)
-  window.ffVet = { all: todos, set: definir, sorted: ordenados, done: feito, mount: montar, refresh: atualizar, soon: () => ordenados().some((r) => dias(r) <= 7) };
+  window.ffVet = { info, all: todos, set: definir, sorted: ordenados, done: feito, mount: montar, refresh: atualizar, soon: () => ordenados().some((r) => dias(r) <= 7) };
 }

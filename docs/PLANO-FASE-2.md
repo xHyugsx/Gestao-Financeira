@@ -1,6 +1,6 @@
 # Plano — Fase 2 da app «Finanças»
 
-> Estado: **aprovado**. Etapa 0 **concluída** (v1.9.3). Etapa 1 **concluída** (`/v2/` 2.00.1, 44/44 na raiz e na `/v2/`). Etapa 2 **concluída** (núcleo de dados em `app/src/dados`, 53 testes unitários). Etapa 3 **concluída** (`/v2/` 2.00.2 = app nova: Principal, navegação e bloqueio). Etapa 4 **concluída** (`/v2/` 2.00.3: registar, editar e eliminar movimentos). Etapa 5 **concluída** (`/v2/` 2.00.4: bloqueio, impressão digital, bloqueio automático e privacidade reescritos em `app/src/bloqueio/`; 2.00.5 mostra a versão no menu «V2 · teste»). Etapa 6 **concluída** (`/v2/` 2.00.6: Definições › Segurança, antecipada; as etapas seguintes passaram uma posição abaixo). Etapa 7 **concluída** (`/v2/` 2.00.7: Análise, Calendário, Categorias, Resumo e botão "voltar" nas páginas). Etapa 8 **concluída** (`/v2/` 2.00.8: Combustível, Veterinário e lembretes veterinários). **Correções pedidas pelo dono** (`/v2/` 2.00.9, só na app nova — ver §4.2). Etapa 9 **concluída** (`/v2/` 2.01.0: restantes Definições, backup/restauro/CSV, espaço, lembrete de backup, saldo corrigido só a partir do dia). Etapa 10 **concluída** (`/v2/` 2.01.1: importação de extratos em Definições › Importação e regras pessoais guardadas no telemóvel — ver §7).
+> Estado: **aprovado**. Etapa 0 **concluída** (v1.9.3). Etapa 1 **concluída** (`/v2/` 2.00.1, 44/44 na raiz e na `/v2/`). Etapa 2 **concluída** (núcleo de dados em `app/src/dados`, 53 testes unitários). Etapa 3 **concluída** (`/v2/` 2.00.2 = app nova: Principal, navegação e bloqueio). Etapa 4 **concluída** (`/v2/` 2.00.3: registar, editar e eliminar movimentos). Etapa 5 **concluída** (`/v2/` 2.00.4: bloqueio, impressão digital, bloqueio automático e privacidade reescritos em `app/src/bloqueio/`; 2.00.5 mostra a versão no menu «V2 · teste»). Etapa 6 **concluída** (`/v2/` 2.00.6: Definições › Segurança, antecipada; as etapas seguintes passaram uma posição abaixo). Etapa 7 **concluída** (`/v2/` 2.00.7: Análise, Calendário, Categorias, Resumo e botão "voltar" nas páginas). Etapa 8 **concluída** (`/v2/` 2.00.8: Combustível, Veterinário e lembretes veterinários). **Correções pedidas pelo dono** (`/v2/` 2.00.9, só na app nova — ver §4.2). Etapa 9 **concluída** (`/v2/` 2.01.0: restantes Definições, backup/restauro/CSV, espaço, lembrete de backup, saldo corrigido só a partir do dia). Etapa 10 **concluída** (`/v2/` 2.01.1: importação de extratos em Definições › Importação e regras pessoais guardadas no telemóvel — ver §7). Etapa 11 **concluída** (`/v2/` 2.01.2: Jarvis reescrito em `app/src/jarvis/` — as 118 respostas de referência são iguais às da app atual; anexos: extratos, recibos PDF, ficheiros de salários e backup).
 > Base de referência: versão **1.9.2**, **36/36 testes a passar** (medido a 28-09-2026).
 
 ---
@@ -177,7 +177,7 @@ Princípio: **a produção (raiz) só muda nas etapas 0 e 13.** Todas as outras 
 | **8** | **Combustível e Veterinário** (+ lembretes) ✅ — páginas, janelas do "+", fotografias dos animais, lembretes (lista, criar/editar, "Feito", ponto no «Mais», aviso ao abrir) | `/v2/` | Lembretes, "feito" | + `veterinario` + `combustivel_vet` (HTML igual em 17 estados) |
 | **9** | **Restantes Definições** ✅ — perfil, categorias, contas, aparência, backup/restauro/CSV, dados, espaço, lembrete de backup; **saldo editado com efeito só a partir do dia da alteração** (pedido do dono, §4.2). Os recibos em PDF são lidos pelo Jarvis (anexar ficheiro) e passam para a etapa 11 | `/v2/` | Exportar backup e restaurar na V2 | + `compatibilidade` |
 | **10** | **Importação de extratos** ✅ + **regras pessoais no telemóvel** (secção 7) — na `/v2/` faz-se em Definições › Importação até o Jarvis chegar (etapa 11); deteta como duplicado a cópia automática de um recorrente | `/v2/` | Criar as regras pessoais e importar um extrato real na V2 | + `importacao` (só `/v2/`); `extratos` passa com o Jarvis |
-| **11** | **Jarvis** — motor por regras + interface + ações com confirmação + **leitura de recibos PDF** (anexo) | `/v2/` | Perguntas do dia a dia | + `jarvis` |
+| **11** | **Jarvis** ✅ — motor por regras + interface + ações com confirmação + **leitura de recibos PDF** (anexo); SheetJS e pdf.js locais e guardados offline na `/v2/` | `/v2/` | Perguntas do dia a dia; anexar um recibo e um extrato | + `jarvis` + `referencias` + `extratos` + `jarvis_v2` (só `/v2/`) |
 | **12** | **Offline e atualizações** — SW gerado com lista de ficheiros automática, aviso "Nova versão" | `/v2/` | Modo avião; publicar 2 versões seguidas | 36/36 v2 |
 | **13** | **Troca** — build nova passa para a raiz com o prefixo real `financas-familiar:`; app 1.9.x fica em `/v1/` para recuo | **Raiz** (v2.x — ver secção 9) | Backup obrigatório antes; atualizar; confirmar dados, PIN e digital | 36/36 raiz |
 | **14** | **Limpeza** — remover `legado/`/`/v1/` após 2–4 semanas sem problemas; atualizar CLAUDE.md e README | Raiz | — | 36/36 |
@@ -185,7 +185,7 @@ Princípio: **a produção (raiz) só muda nas etapas 0 e 13.** Todas as outras 
 Notas:
 - As etapas 3–11 podem ter subetapas (ex.: 7a Análise, 7b Calendário) se ficarem grandes. **Uma etapa por vez, com preview antes.**
 - Enquanto uma página ainda não estiver migrada, a `/v2/` mostra "Em construção" nesse separador.
-- **Nomes dos animais** (Sam, Lola): a app atual tem-nos fixos no código; na nova ficam num só sítio (`app/src/veterinario/animais.ts`) até passarem para o `profile` na etapa 11 (o Jarvis é quem mais os usa).
+- **Nomes dos animais** (Sam, Lola): a app atual tem-nos fixos no código; na nova ficam num só sítio (`app/src/veterinario/animais.ts`) até passarem para o `profile` na etapa 14 (limpeza): mexe na página Veterinário, nos lembretes e no Jarvis, e o dono tem de os escrever uma vez nas Definições.
 - O botão "voltar" do telemóvel numa página que não seja a Principal volta à Principal (`history.pushState` com `financeTab`), como na app atual: feito na etapa 7.
 
 ---
@@ -290,6 +290,11 @@ Pré-requisito: a **etapa 0 tem de estar instalada no telemóvel** antes de abri
 - Definições › Importação: importar extrato, desfazer a última importação e editar as regras pessoais.
 - Sem assistente de sugestões: as regras são poucas e o dono conhece-as; cria-as uma vez na V2.
 - Diferença intencional: o saldo do extrato é lido também quando há espaço antes do «;» (`Saldo contabilístico ;1.000,00`), que a app atual não lia.
+
+### Jarvis (etapa 11)
+- Recibos de vencimento e ficheiros de salários: as pessoas vêm dos salários registados (ou dos membros do perfil) e a entidade patronal das regras pessoais de salário, em vez de «Hugo/Marta/Navigator/Mercadona» fixos no código.
+- A lista de palavras da correção de erros de escrita deixa de ter nomes; os nomes entram pelo vocabulário dos dados (pessoas, animais, títulos, categorias, contas).
+- Diferenças intencionais de texto: «Salário de junho de Rui» (a app atual escrevia «do/da» conforme o nome fixo); recibo sem pessoa conhecida: «…se é de Ana ou Rui.»; ficheiros XLS e PDF ilegíveis deixam de falar em «ligação à internet» (as bibliotecas são locais).
 
 ### Proposta inicial
 1. **Nova chave** `financas-familiar:import-config` (acrescentar não quebra nada; nenhuma chave existente muda):

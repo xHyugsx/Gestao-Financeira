@@ -100,12 +100,14 @@ def pdf_de_texto(linhas):
     return bytes(out)
 
 
+PERFIL = {'profileName': '', 'email': '', 'phone': '', 'members': ['Hugo', 'Marta']}  # o recibo fictício é do «Hugo»
+
+
 async def t_v2_le_extratos_e_recibos_sem_internet(app):
-    raise Pendente('importação e Jarvis ainda não migrados para a app nova (etapas 9 e 10)')
     p = app.page
     externos = []
     p.on('request', lambda r: externos.append(r.url) if not r.url.startswith(app.raiz) else None)
-    await abrir_v2(app, reais={})
+    await abrir_v2(app, reais={}, v2={'financas-v2:v3': {'transactions': [], 'profile': PERFIL}})
     await p.reload(); await p.wait_for_timeout(1500)
     await p.context.set_offline(True)
     try:

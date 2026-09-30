@@ -70,7 +70,7 @@ async def t_limpar_conversa_sem_confirmacao(app):
 
 
 async def t_recibo_le_ticket_refeicao(app):
-    await app.abrir()
+    await app.abrir({'profile': {'profileName': '', 'email': '', 'phone': '', 'members': ['Hugo', 'Marta']}})
     p = app.page
     await p.click('.jarvis-fab'); await p.wait_for_timeout(400)
     await p.set_input_files('.jarvis-attach input', 'tests/dados/recibo_ficticio.txt'); await p.wait_for_timeout(1200)

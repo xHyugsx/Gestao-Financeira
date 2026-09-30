@@ -9,6 +9,7 @@ declare global {
     ffSaveOk?: () => void;
     ffSaveFail?: (erro: unknown) => void;
     ffVet?: Record<string, (...a: never[]) => unknown>;
+    ffImpApi?: { get: () => unknown };
     ffBk?: { readonly count: number; payload: () => unknown; download: () => void; done: () => void };
   }
 }
