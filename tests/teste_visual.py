@@ -237,3 +237,48 @@ async def t_definicoes_seguranca_com_impressao_digital_igual(app):
         'PIN definido com sensor': SEGURANCA + [_pin('1234', '1234')],
         'impressão digital ativada': SEGURANCA + [_pin('1234', '1234'), "document.querySelector('.ff-bio-slot [data-v=on]').click()"],
     })
+
+
+def _pg(p): return f"window.ffGoPg('{p}')"
+def _seg(t, i=0): return f"[...document.querySelectorAll('.segmented button')].filter(b=>b.textContent==='{t}')[{i}].click()"
+ANTERIOR = "document.querySelector('[aria-label=\"Mês anterior\"]').click()"
+PAGINAS_V2 = {
+    'análise': [_pg('analise')], 'análise receitas': [_pg('analise'), _seg('Receitas')], 'análise diário': [_pg('analise'), _seg('Diário')],
+    'análise mês anterior': [_pg('analise'), ANTERIOR], 'análise dezembro': [_pg('analise')] + [ANTERIOR] * 9,
+    'calendário': [_pg('calendario')], 'calendário dia 5': [_pg('calendario'), "[...document.querySelectorAll('.calendar-day')][4].click()"],
+    'calendário mês anterior': [_pg('calendario'), ANTERIOR],
+    'categorias': [_pg('categorias')], 'categorias receitas': [_pg('categorias'), _seg('Receitas')],
+    'categorias recorrentes': [_pg('categorias'), _seg('Recorrentes')], 'categorias pontuais': [_pg('categorias'), _seg('Pontuais')],
+    'categoria que já existe': [_pg('categorias'), "(()=>{const i=document.querySelector('.inline-add input');const s=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set;s.call(i,'lazer');i.dispatchEvent(new Event('input',{bubbles:true}))})()",
+                                "document.querySelector('[aria-label=\"Adicionar categoria\"]').click()"],
+    'categoria nova': [_pg('categorias'), "document.querySelector('[aria-label=\"Cinema\"]').click()",
+                       "(()=>{const i=document.querySelector('.inline-add input');const s=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set;s.call(i,'Ginásio');i.dispatchEvent(new Event('input',{bubbles:true}))})()",
+                       "document.querySelector('[aria-label=\"Adicionar categoria\"]').click()"],
+    'categoria em uso': [_pg('categorias'), "document.querySelector('[aria-label=\"Eliminar Alimentação\"]').click()"],
+    'resumo': [_pg('resumo')], 'resumo trimestre': [_pg('resumo'), _seg('Últimos 3 meses')], 'resumo mês anterior': [_pg('resumo'), ANTERIOR],
+    'despesas anuais': [_pg('resumo'), _seg('Despesas anuais')], 'fecho de mês': [_pg('resumo'), _seg('Fecho de mês')],
+    'fecho mês anterior': [_pg('resumo'), _seg('Fecho de mês'), ANTERIOR], 'salários': [_pg('resumo'), _seg('Salários')],
+    'salários 2025': [_pg('resumo'), _seg('Salários')] + [ANTERIOR] * 12,
+}
+
+
+async def t_paginas_analise_calendario_categorias_resumo_iguais(app):
+    await comparar_html(app, COMPLETO, PAGINAS_V2)
+
+
+async def t_paginas_iguais_com_outros_dados(app):
+    for nome in ('vazio', 'versao_antiga', 'revolut_antigo_e_campos_extra', 'salario_por_movimento'):
+        d = {**(CASOS[nome] or {}), 'profile': PERFIL}
+        await comparar_html(app, d, {f'{nome}: {p}': [_pg(p)] for p in ('analise', 'calendario', 'categorias', 'resumo')})
+        await comparar_html(app, d, {f'{nome}: fecho': [_pg('resumo'), _seg('Fecho de mês')]})
+
+
+async def t_janela_do_icone_da_categoria_igual(app):
+    await app.page.emulate_media(reduced_motion='reduce')
+    acoes = [_pg('categorias'), "document.querySelector('[aria-label=\"Mudar ícone de Lazer\"]').click()"]
+    atual = await _janela(app, app.raiz, 'financas-familiar:', acoes)
+    nova = await _janela(app, app.raiz + 'v2/', 'financas-v2:', acoes)
+    verificar('role="dialog"' in atual, 'a janela não abriu na app atual')
+    if atual != nova:
+        i = next((k for k in range(min(len(atual), len(nova))) if atual[k] != nova[k]), min(len(atual), len(nova)))
+        verificar(False, f'diferente: atual «…{atual[max(0, i - 60):i + 60]}…» · nova «…{nova[max(0, i - 60):i + 60]}…»')
