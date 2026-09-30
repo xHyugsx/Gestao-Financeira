@@ -16,3 +16,7 @@ teste_biometria
 
 # Etapa 6 — Definições › Segurança (PIN, impressão digital, ocultar valores, bloqueio ao voltar)
 teste_definicoes
+
+# Etapa 7 — Análise, Calendário, Categorias, Resumo e botão "voltar" nas páginas
+teste_calendario
+teste_paginas

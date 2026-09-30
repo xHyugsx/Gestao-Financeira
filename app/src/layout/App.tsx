@@ -8,7 +8,12 @@ import { useDados } from '../estado/useDados';
 import { aspetosCategorias } from '../movimentos/categorias';
 import { EditarMovimento } from '../movimentos/EditarMovimento';
 import { type EscolhasNovo, NovoMovimento } from '../movimentos/NovoMovimento';
+import { Analise, type TipoAnalise } from '../paginas/Analise';
+import { Calendario } from '../paginas/Calendario';
+import { Categorias, VISTA_CATEGORIAS, type VistaCategorias } from '../paginas/Categorias';
+import { diasDoMes } from '../paginas/calculos';
 import { EmConstrucao } from '../paginas/EmConstrucao';
+import { type PeriodoResumo, Resumo, type SeccaoResumo } from '../paginas/Resumo';
 import { type ListaMovimentos, Principal } from '../paginas/Principal';
 import { Botao } from '../ui/Botao';
 import { Icone } from '../ui/Icone';
@@ -47,11 +52,19 @@ export function App() {
   const [teclado, setTeclado] = useState(0);
   const folhaAberta = useRef(folha);
   folhaAberta.current = folha;
+  // Escolhas dentro das páginas (mantêm-se ao mudar de página, como na app atual)
+  const [tipoAnalise, setTipoAnalise] = useState<TipoAnalise>('gastos');
+  const [vistaCategorias, setVistaCategorias] = useState<VistaCategorias>(VISTA_CATEGORIAS);
+  const [seccaoResumo, setSeccaoResumo] = useState<SeccaoResumo>('resumo');
+  const [periodoResumo, setPeriodoResumo] = useState<PeriodoResumo>('mes');
+  const [diaEscolhido, setDiaEscolhido] = useState(() => new Date().getDate());
 
   const ocultos = estado.hideValues;
   const setOcultos = useCallback((v: boolean | ((a: boolean) => boolean)) =>
     setEstado((s) => ({ ...s, hideValues: typeof v === 'function' ? v(s.hideValues) : v })), [setEstado]);
   const mes = inicioDoMes(agora, desvioMes);
+  const diasMes = diasDoMes(mes);
+  useEffect(() => { setDiaEscolhido((d) => Math.min(d, diasMes)); }, [diasMes]);
   const aparencia = estado.appearance;
 
   const vibrar = useCallback((padrao: number | number[]) => {
@@ -96,11 +109,16 @@ export function App() {
     setMenu((m) => m && { ...m, out: true });
     setTimeout(() => setMenu(null), 220);
   }, []);
+  // Botão "voltar" do telemóvel: fecha as Definições ou, numa página que não seja a Principal, volta à Principal
   useEffect(() => {
-    const f = () => { if (folhaAberta.current) sairFolha(() => { setFolha(null); setSeccao(null); }); };
+    if (pagina !== 'principal' && window.history.state?.financeTab !== true) window.history.pushState({ ...window.history.state, financeTab: true }, '');
+    const f = () => {
+      if (folhaAberta.current) { sairFolha(() => { setFolha(null); setSeccao(null); }); return; }
+      setPagina('principal');
+    };
     window.addEventListener('popstate', f);
     return () => window.removeEventListener('popstate', f);
-  }, [sairFolha]);
+  }, [pagina, sairFolha]);
   useEffect(() => {
     if (!menu && !folha) return;
     const k = (e: KeyboardEvent) => { if (e.key === 'Escape') { if (menu) fecharMenu(); else fecharFolha(); } };
@@ -199,9 +217,27 @@ export function App() {
   };
   const cancelarToque = () => { toque.current = null; setAArrastar(false); setArrasto(0); };
 
-  const conteudo = (id: string) => id === 'principal'
-    ? <Principal estado={estado} mes={mes} ocultos={ocultos} lista={lista} mudarLista={setLista} irPara={irPara} vibrar={vibrar} emConstrucao={emConstrucao} abrirMovimento={setAEditar} />
-    : <EmConstrucao titulo={PAGINAS.find((p) => p.id === id)?.label ?? id} />;
+  const conteudo = (id: string) => {
+    switch (id) {
+      case 'principal':
+        return <Principal estado={estado} mes={mes} ocultos={ocultos} lista={lista} mudarLista={setLista} irPara={irPara} vibrar={vibrar} emConstrucao={emConstrucao} abrirMovimento={setAEditar} />;
+      case 'analise':
+        return <Analise estado={estado} mes={mes} ocultos={ocultos} tipo={tipoAnalise} mudarTipo={setTipoAnalise} />;
+      case 'calendario':
+        return <Calendario estado={estado} mes={mes} ocultos={ocultos} diaEscolhido={diaEscolhido} escolherDia={setDiaEscolhido} aspetos={aspetosCategorias(estado, mes)} abrirMovimento={setAEditar} />;
+      case 'categorias':
+        return (
+          <Categorias
+            estado={estado} mes={mes} ocultos={ocultos} vista={vistaCategorias} mudarVista={(v) => setVistaCategorias((a) => ({ ...a, ...v }))}
+            mudarEstado={setEstado} categoriaEliminada={(nome) => setEscolhas((e) => (e.categoria === nome ? { ...e, categoria: 'Outros' } : e))}
+          />
+        );
+      case 'resumo':
+        return <Resumo estado={estado} mes={mes} ocultos={ocultos} seccao={seccaoResumo} mudarSeccao={setSeccaoResumo} periodo={periodoResumo} mudarPeriodo={setPeriodoResumo} mudarEstado={setEstado} />;
+      default:
+        return <EmConstrucao titulo={PAGINAS.find((p) => p.id === id)?.label ?? id} />;
+    }
+  };
 
   const cabecalhoDe = transicao && !transicao.volta ? transicao.para : pagina;
   const nome = (estado.profile?.profileName || '').trim().split(/\s+/)[0];
