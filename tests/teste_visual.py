@@ -282,3 +282,83 @@ async def t_janela_do_icone_da_categoria_igual(app):
     if atual != nova:
         i = next((k for k in range(min(len(atual), len(nova))) if atual[k] != nova[k]), min(len(atual), len(nova)))
         verificar(False, f'diferente: atual «…{atual[max(0, i - 60):i + 60]}…» · nova «…{nova[max(0, i - 60):i + 60]}…»')
+
+
+LEMBRETES = {'vet-reminders': json.dumps([{'id': 1, 'pet': 'Sam', 'type': 'vacina', 'last': '2025-10-03', 'every': 12},
+                                           {'id': 2, 'pet': 'Lola', 'type': 'outro', 'label': 'Análises', 'last': '2026-08-26', 'every': 1, 'note': 'clínica <central>'}]),
+             'vet-snooze': '9999999999999'}
+COM_ANIMAIS = {**COMPLETO, 'transactions': COMPLETO['transactions'] + [
+    {'id': 901, 'title': 'Consulta', 'amount': -45, 'date': '2026-09-12', 'detail': '12 setembro · Clínica Fictícia', 'movementType': 'expense', 'kind': 'health', 'pet': 'Sam', 'vetCategory': 'Consultas'},
+    {'id': 902, 'title': 'Vacina', 'amount': -30.5, 'date': '2026-09-03', 'detail': '3 setembro · Vacinas', 'movementType': 'expense', 'kind': 'health', 'pet': 'Lola', 'vetCategory': 'Vacinas'},
+    {'id': 903, 'title': 'Análises', 'amount': -60, 'date': '2026-03-03', 'detail': '3 março · Exames', 'movementType': 'expense', 'kind': 'health', 'pet': 'Lola', 'vetCategory': 'Exames'},
+    {'id': 904, 'title': 'Combustível — Posto Fictício', 'amount': -52, 'date': '2026-09-20', 'detail': '20 setembro · Combustível', 'movementType': 'expense', 'kind': 'car'},
+    {'id': 905, 'title': 'Combustível', 'amount': -40, 'date': '2026-05-02', 'detail': '2 maio · Combustível', 'movementType': 'expense', 'kind': 'car', 'note': 'viagem'}],
+    'petPhotos': {'Lola': 'data:image/png;base64,iVBORw0KGgo='}}
+_pet = lambda a: f"[...document.querySelectorAll('.pet-card-open')].find(b=>b.textContent.includes('{a}')).click()"
+PAGINAS_8 = {
+    'combustível': [_pg('combustivel')], 'combustível mês anterior': [_pg('combustivel'), ANTERIOR],
+    'combustível ano anterior': [_pg('combustivel')] + [ANTERIOR] * 12, 'combustível ano seguinte': [_pg('combustivel')] + [ANTERIOR.replace('anterior', 'seguinte')] * 4,
+    'veterinário': [_pg('veterinario')], 'veterinário filtro Lola': [_pg('veterinario'), _seg('Lola')],
+    'veterinário mês anterior': [_pg('veterinario'), ANTERIOR],
+    'Sam': [_pg('veterinario'), _pet('Sam')], 'Lola no ano': [_pg('veterinario'), _pet('Lola'), _seg('Ano')],
+}
+
+
+async def _abrir_com_lembretes(app, url, prefixo, acoes, extra):
+    p = app.page
+    await p.goto(url); await app.esperar_sw()
+    await p.evaluate("([d,P,x])=>{localStorage.clear();localStorage.setItem(P+'v3',JSON.stringify(d));localStorage.setItem(P+'last-backup',new Date().toISOString());for(const k in x)localStorage.setItem(P+k,x[k])}",
+                     [COM_ANIMAIS, prefixo, extra])
+    await p.goto(url); await p.wait_for_timeout(1500)
+    await p.evaluate("document.getElementById('ffv2-tag')?.remove()")
+    for a in acoes:
+        await p.evaluate(a); await p.wait_for_timeout(300)
+    await p.wait_for_timeout(400)
+
+
+async def _comparar(app, estados, extra, ler):
+    await app.page.emulate_media(reduced_motion='reduce')
+    for nome, acoes in estados.items():
+        await _abrir_com_lembretes(app, app.raiz, 'financas-familiar:', acoes, extra); atual = await ler()
+        await _abrir_com_lembretes(app, app.raiz + 'v2/', 'financas-v2:', acoes, extra); nova = await ler()
+        if atual != nova:
+            i = next((k for k in range(min(len(atual), len(nova))) if atual[k] != nova[k]), min(len(atual), len(nova)))
+            verificar(False, f'«{nome}» diferente: atual «…{atual[max(0, i - 60):i + 60]}…» · nova «…{nova[max(0, i - 60):i + 60]}…»')
+
+
+async def t_combustivel_e_veterinario_iguais_a_app_atual(app):
+    await _comparar(app, PAGINAS_8, LEMBRETES, lambda: app.page.evaluate("document.querySelector('.cosmic-app').outerHTML"))
+
+
+CORPO = "[...document.body.children].filter(e=>!['root','ffv2-tag','ff-privacy'].includes(e.id)&&e.tagName!=='SCRIPT').map(e=>e.outerHTML).join('')"
+JANELAS_8 = {
+    'novo abastecimento': [_pg('combustivel'), "document.querySelector('[aria-label=\"Adicionar abastecimento\"]').click()"],
+    'nova despesa veterinária': [_pg('veterinario'), "document.querySelector('[aria-label=\"Adicionar despesa veterinária\"]').click()"],
+    'despesa veterinária da Lola': [_pg('veterinario'), _pet('Lola'), "document.querySelector('[aria-label=\"Adicionar despesa veterinária\"]').click()"],
+    'fotografia sem foto': [_pg('veterinario'), "document.querySelector('[aria-label=\"Adicionar fotografia de Sam\"]').click()"],
+    'fotografia com foto': [_pg('veterinario'), "document.querySelector('[aria-label=\"Alterar fotografia de Lola\"]').click()"],
+    'novo lembrete': [_pg('veterinario'), "document.querySelector('.ffvr-add').click()"],
+    'lembrete: tipo outro e só uma vez': [_pg('veterinario'), "document.querySelector('.ffvr-add').click()",
+                                           "(()=>{const s=document.querySelector('.ffvr-dlg select[name=type]');s.value='outro';s.dispatchEvent(new Event('change'));const e=document.querySelector('.ffvr-dlg select[name=every]');e.value='0';e.dispatchEvent(new Event('change'))})()"],
+    'editar lembrete': [_pg('veterinario'), "document.querySelectorAll('.ffvr-row')[0].click()"],
+}
+
+
+async def t_janelas_de_combustivel_e_veterinario_iguais(app):
+    await _comparar(app, JANELAS_8, LEMBRETES, lambda: _corpo(app))
+
+
+async def _corpo(app):
+    return _normalizar(await app.page.evaluate(CORPO))
+
+
+async def t_aviso_de_lembrete_veterinario_igual(app):
+    await _comparar(app, {'aviso': []}, {'vet-reminders': LEMBRETES['vet-reminders']},
+                    lambda: _aviso(app))
+
+
+async def _aviso(app):
+    await app.page.wait_for_timeout(3500)
+    h = await app.page.evaluate("document.getElementById('ff-vetbn')?.outerHTML||''")
+    verificar(h, 'o aviso do lembrete não apareceu')
+    return h

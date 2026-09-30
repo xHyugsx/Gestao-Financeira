@@ -12,7 +12,10 @@ import { Analise, type TipoAnalise } from '../paginas/Analise';
 import { Calendario } from '../paginas/Calendario';
 import { Categorias, VISTA_CATEGORIAS, type VistaCategorias } from '../paginas/Categorias';
 import { diasDoMes } from '../paginas/calculos';
+import { Combustivel } from '../paginas/Combustivel';
 import { EmConstrucao } from '../paginas/EmConstrucao';
+import { NovaDespesaVet, NovoAbastecimento } from '../paginas/JanelasRegisto';
+import { JanelaFotografia, Veterinario, VISTA_VETERINARIO, type VistaVeterinario } from '../paginas/Veterinario';
 import { type PeriodoResumo, Resumo, type SeccaoResumo } from '../paginas/Resumo';
 import { type ListaMovimentos, Principal } from '../paginas/Principal';
 import { Botao } from '../ui/Botao';
@@ -58,6 +61,10 @@ export function App() {
   const [seccaoResumo, setSeccaoResumo] = useState<SeccaoResumo>('resumo');
   const [periodoResumo, setPeriodoResumo] = useState<PeriodoResumo>('mes');
   const [diaEscolhido, setDiaEscolhido] = useState(() => new Date().getDate());
+  const [vistaVet, setVistaVet] = useState<VistaVeterinario>(VISTA_VETERINARIO);
+  const mudarVistaVet = (v: Partial<VistaVeterinario>) => setVistaVet((a) => ({ ...a, ...v }));
+  const [abastecimento, setAbastecimento] = useState(false);
+  const [despesaVet, setDespesaVet] = useState(false);
 
   const ocultos = estado.hideValues;
   const setOcultos = useCallback((v: boolean | ((a: boolean) => boolean)) =>
@@ -83,6 +90,7 @@ export function App() {
   const tirarFoco = () => { if (document.activeElement instanceof HTMLElement) document.activeElement.blur(); };
   const mudarMovimentos = (f: (l: Movimento[]) => Movimento[]) => setEstado((s) => ({ ...s, transactions: f(s.transactions) }));
   const guardarNovo = (m: Movimento) => { mudarMovimentos((l) => [m, ...l]); vibrar(30); tirarFoco(); setNovoAberto(false); };
+  const guardarRegisto = (m: Movimento) => { mudarMovimentos((l) => [m, ...l]); vibrar(30); tirarFoco(); setAbastecimento(false); setDespesaVet(false); };
   const guardarEdicao = (m: Movimento) => { mudarMovimentos((l) => l.map((x) => (x.id === m.id ? m : x))); vibrar(30); tirarFoco(); setAEditar(null); };
   const eliminar = (m: Movimento) => {
     if (!window.confirm(`Eliminar "${m.title}"?`)) return;
@@ -234,6 +242,10 @@ export function App() {
         );
       case 'resumo':
         return <Resumo estado={estado} mes={mes} ocultos={ocultos} seccao={seccaoResumo} mudarSeccao={setSeccaoResumo} periodo={periodoResumo} mudarPeriodo={setPeriodoResumo} mudarEstado={setEstado} />;
+      case 'combustivel':
+        return <Combustivel estado={estado} mes={mes} agora={agora} ocultos={ocultos} abrirMovimento={setAEditar} />;
+      case 'veterinario':
+        return <Veterinario estado={estado} mes={mes} ocultos={ocultos} vista={vistaVet} mudarVista={mudarVistaVet} abrirMovimento={setAEditar} />;
       default:
         return <EmConstrucao titulo={PAGINAS.find((p) => p.id === id)?.label ?? id} />;
     }
@@ -326,7 +338,8 @@ export function App() {
         tamanho="icone" className="add-button ffplus"
         aria-label={pagina === 'veterinario' ? 'Adicionar despesa veterinária' : pagina === 'combustivel' ? 'Adicionar abastecimento' : 'Adicionar movimento'}
         onClick={() => {
-          if (pagina === 'veterinario' || pagina === 'combustivel') { emConstrucao(pagina === 'veterinario' ? 'Registar despesas veterinárias' : 'Registar abastecimentos'); return; }
+          if (pagina === 'veterinario') { setDespesaVet(true); return; }
+          if (pagina === 'combustivel') { setAbastecimento(true); return; }
           setEscolhas((e) => ({ ...e, recorrente: false, tipoValor: 'com', revolut: false }));
           setNovoAberto(true);
         }}
@@ -386,7 +399,13 @@ export function App() {
         aberto={novoAberto} aoMudar={setNovoAberto} estado={estado} escolhas={escolhas} mudarEscolhas={setEscolhas}
         aspetos={aspetosCategorias(estado, mes)} aoGuardar={guardarNovo}
       />
+      <NovaDespesaVet aberto={despesaVet} aoMudar={setDespesaVet} aoGuardar={guardarRegisto} animal={vistaVet.animal} />
+      <NovoAbastecimento aberto={abastecimento} aoMudar={setAbastecimento} aoGuardar={guardarRegisto} />
       <EditarMovimento movimento={aEditar} fechar={() => setAEditar(null)} estado={estado} aoGuardar={guardarEdicao} aoEliminar={eliminar} />
+      <JanelaFotografia
+        animal={vistaVet.fotografia} fotos={estado.petPhotos} fechar={() => mudarVistaVet({ fotografia: null })}
+        mudarFotos={(f) => setEstado((s) => ({ ...s, petPhotos: f(s.petPhotos) }))}
+      />
       {aviso ? <div className="ffv2-aviso" role="status">{aviso}</div> : null}
     </div>
   );

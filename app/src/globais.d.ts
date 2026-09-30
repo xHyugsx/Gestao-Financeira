@@ -8,5 +8,6 @@ declare global {
     ffGoPg?: (pagina: string) => void;
     ffSaveOk?: () => void;
     ffSaveFail?: (erro: unknown) => void;
+    ffVet?: Record<string, (...a: never[]) => unknown>;
   }
 }

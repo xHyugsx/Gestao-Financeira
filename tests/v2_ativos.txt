@@ -20,3 +20,8 @@ teste_definicoes
 # Etapa 7 — Análise, Calendário, Categorias, Resumo e botão "voltar" nas páginas
 teste_calendario
 teste_paginas
+
+# Etapa 8 — Combustível, Veterinário e lembretes veterinários (o do Jarvis fica para a etapa 11)
+teste_veterinario:t_lista_e_estados
+teste_veterinario:t_feito_recalcula_a_data
+teste_combustivel_vet

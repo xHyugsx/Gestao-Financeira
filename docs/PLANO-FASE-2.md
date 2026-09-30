@@ -1,6 +1,6 @@
 # Plano — Fase 2 da app «Finanças»
 
-> Estado: **aprovado**. Etapa 0 **concluída** (v1.9.3). Etapa 1 **concluída** (`/v2/` 2.00.1, 44/44 na raiz e na `/v2/`). Etapa 2 **concluída** (núcleo de dados em `app/src/dados`, 53 testes unitários). Etapa 3 **concluída** (`/v2/` 2.00.2 = app nova: Principal, navegação e bloqueio). Etapa 4 **concluída** (`/v2/` 2.00.3: registar, editar e eliminar movimentos). Etapa 5 **concluída** (`/v2/` 2.00.4: bloqueio, impressão digital, bloqueio automático e privacidade reescritos em `app/src/bloqueio/`; 2.00.5 mostra a versão no menu «V2 · teste»). Etapa 6 **concluída** (`/v2/` 2.00.6: Definições › Segurança, antecipada; as etapas seguintes passaram uma posição abaixo). Etapa 7 **concluída** (`/v2/` 2.00.7: Análise, Calendário, Categorias, Resumo e botão "voltar" nas páginas).
+> Estado: **aprovado**. Etapa 0 **concluída** (v1.9.3). Etapa 1 **concluída** (`/v2/` 2.00.1, 44/44 na raiz e na `/v2/`). Etapa 2 **concluída** (núcleo de dados em `app/src/dados`, 53 testes unitários). Etapa 3 **concluída** (`/v2/` 2.00.2 = app nova: Principal, navegação e bloqueio). Etapa 4 **concluída** (`/v2/` 2.00.3: registar, editar e eliminar movimentos). Etapa 5 **concluída** (`/v2/` 2.00.4: bloqueio, impressão digital, bloqueio automático e privacidade reescritos em `app/src/bloqueio/`; 2.00.5 mostra a versão no menu «V2 · teste»). Etapa 6 **concluída** (`/v2/` 2.00.6: Definições › Segurança, antecipada; as etapas seguintes passaram uma posição abaixo). Etapa 7 **concluída** (`/v2/` 2.00.7: Análise, Calendário, Categorias, Resumo e botão "voltar" nas páginas). Etapa 8 **concluída** (`/v2/` 2.00.8: Combustível, Veterinário e lembretes veterinários).
 > Base de referência: versão **1.9.2**, **36/36 testes a passar** (medido a 28-09-2026).
 
 ---
@@ -174,7 +174,7 @@ Princípio: **a produção (raiz) só muda nas etapas 0 e 13.** Todas as outras 
 | **5** | **Bloqueio** ✅ — PIN (mesmo hash), impressão digital (mesmo registo e mesmos parâmetros WebAuthn), autobloqueio, privacidade; as opções das Definições (ligar/desligar digital, tempo do autobloqueio) passaram para a etapa 6 | `/v2/` | Deslizar, PIN, digital, voltar à app | + `bloqueio` + `biometria` (sensor simulado; registo da app atual abre a nova) |
 | **6** | **Definições › Segurança** ✅ *(antecipada a pedido do dono, para se poder definir o PIN na V2)* — menu rápido da roda dentada, lista das Definições (restantes secções "Em construção"), PIN (ativar, alterar, remover — mesmo hash), impressão digital (ligar/desligar), ocultar valores ao sair, bloqueio ao voltar | `/v2/` | Definir o PIN na V2; testar bloqueio, digital e bloqueio ao voltar | + `definicoes` (HTML igual ao da app atual) |
 | **7** | **Análise, Calendário, Categorias, Resumo** ✅ — e o botão "voltar" do telemóvel nas páginas | `/v2/` | Comparar lado a lado com a app atual | + `calendario` + `paginas` (HTML igual ao da app atual em 26 estados) |
-| **8** | **Combustível e Veterinário** (+ lembretes) | `/v2/` | Lembretes, "feito" | + `veterinario` |
+| **8** | **Combustível e Veterinário** (+ lembretes) ✅ — páginas, janelas do "+", fotografias dos animais, lembretes (lista, criar/editar, "Feito", ponto no «Mais», aviso ao abrir) | `/v2/` | Lembretes, "feito" | + `veterinario` + `combustivel_vet` (HTML igual em 17 estados) |
 | **9** | **Restantes Definições** — perfil, aparência, backup/restauro, espaço, lembrete de backup, recibos PDF | `/v2/` | Exportar backup e restaurar na V2 | + `compatibilidade` |
 | **10** | **Importação de extratos** + **regras pessoais no telemóvel** (secção 7) | `/v2/` | Importar um extrato real na V2 | + `extratos` |
 | **11** | **Jarvis** — motor por regras + interface + ações com confirmação | `/v2/` | Perguntas do dia a dia | + `jarvis` |
@@ -185,6 +185,7 @@ Princípio: **a produção (raiz) só muda nas etapas 0 e 13.** Todas as outras 
 Notas:
 - As etapas 3–11 podem ter subetapas (ex.: 7a Análise, 7b Calendário) se ficarem grandes. **Uma etapa por vez, com preview antes.**
 - Enquanto uma página ainda não estiver migrada, a `/v2/` mostra "Em construção" nesse separador.
+- **Nomes dos animais** (Sam, Lola): a app atual tem-nos fixos no código; na nova ficam num só sítio (`app/src/veterinario/animais.ts`) até passarem para a configuração guardada no telemóvel na etapa 10, com as regras pessoais da importação (secção 7).
 - O botão "voltar" do telemóvel numa página que não seja a Principal volta à Principal (`history.pushState` com `financeTab`), como na app atual: feito na etapa 7.
 
 ---

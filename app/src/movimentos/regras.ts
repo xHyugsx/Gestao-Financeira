@@ -11,7 +11,7 @@ export function lerValor(v: unknown): number {
 }
 
 /** "12 setembro" a partir de "AAAA-MM-DD" (meio-dia, para não mudar de dia com o fuso). */
-function diaEMes(data: string): string {
+export function diaEMes(data: string): string {
   const d = new Date(`${data}T12:00:00`);
   return `${d.getDate()} ${MESES[d.getMonth()]}`;
 }
