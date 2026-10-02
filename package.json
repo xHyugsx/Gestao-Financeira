@@ -8,8 +8,7 @@
     "compilar": "vite build --config app/vite.config.ts",
     "testes:unitarios": "vitest run",
     "montar": "node scripts/montar-site.mjs",
-    "testes": "python tests/correr.py",
-    "testes:v2": "FF_URL=v2/ FF_PREFIX=financas-v2: python tests/correr.py"
+    "testes": "python tests/correr.py"
   },
   "devDependencies": {
     "@types/node": "22.20.4",

@@ -5,5 +5,5 @@
     {"id": 1700000000001, "title": "Venda de livros", "amount": 15, "date": "2026-09-02", "detail": "2 setembro · Outras receitas", "kind": "income", "movementType": "income"}
   ],
   "accounts": [{"id": "principal", "name": "Principal", "balance": 500}, {"id": "revolut", "name": "Revolut Conjunta", "balance": 50}],
-  "salaries": {"2026": {"Hugo": [0,0,0,0,0,0,0,1200,0,0,0,0], "Marta": [0,0,0,0,0,0,0,1000,0,0,0,0]}}
+  "salaries": {"2026": {"Davi": [0,0,0,0,0,0,0,1200,0,0,0,0], "Clara": [0,0,0,0,0,0,0,1000,0,0,0,0]}}
 }

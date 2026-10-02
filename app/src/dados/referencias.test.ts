@@ -1,5 +1,5 @@
 // Compara o núcleo de dados com o que a app 1.9.x faz (tests/referencias/dados.json,
-// gravado por tests/capturar_referencias_dados.py). Se algum valor divergir, o comportamento mudou.
+// gravado a partir da 1.9.x com dados fictícios). Se algum valor divergir, o comportamento mudou.
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {

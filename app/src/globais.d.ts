@@ -1,5 +1,5 @@
 /// <reference types="vite/client" />
-// Pontos de ligação com os módulos em JavaScript simples (js/modulos/*.js) reaproveitados na V2.
+// Pontos de ligação globais (window.ff*) usados entre partes da app e pelos testes.
 export {};
 
 declare global {

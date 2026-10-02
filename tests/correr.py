@@ -2,9 +2,8 @@
 
 Uso:  python tests/correr.py            (todos)
       python tests/correr.py jarvis     (só os ficheiros cujo nome contém "jarvis")
-Variáveis opcionais:
-      FF_URL=v2/                        (caminho a testar, relativo à raiz, ou endereço completo)
-      FF_PREFIX=financas-v2:            (prefixo das chaves do localStorage; por omissão financas-familiar:)
+Variável opcional:
+      FF_URL=https://…/                 (endereço a testar em vez do site montado localmente)
 Requer: pip install playwright && python -m playwright install chromium, e Node.js (monta o site em _site/)
 """
 import asyncio, importlib.util, pathlib, sys, os, time, threading, http.server, functools, socket, subprocess, traceback
@@ -13,16 +12,16 @@ RAIZ = pathlib.Path(__file__).resolve().parent.parent
 SITE = RAIZ / '_site'
 DATA_FIXA = '2026-09-28T11:00:00Z'  # 12:00 em Lisboa
 PREFIXO_REAL = 'financas-familiar:'
-PREFIXO = os.environ.get('FF_PREFIX', PREFIXO_REAL)
+PREFIXO = PREFIXO_REAL
 
 
 def chave(k):
-    """Traduz uma chave escrita com o prefixo real para o prefixo em teste."""
+    """Chave do localStorage tal como a app a grava (o prefixo real)."""
     return PREFIXO + k[len(PREFIXO_REAL):] if k.startswith(PREFIXO_REAL) else k
 
 
 def montar():
-    """Monta o site publicado (raiz = app atual, /v2/ = versão de teste) em _site/."""
+    """Monta o site publicado (app na raiz, /v1/ e /v2/ retiradas) em _site/."""
     subprocess.run(['node', str(RAIZ / 'scripts' / 'montar-site.mjs')], check=True, stdout=subprocess.DEVNULL)
 
 
@@ -42,7 +41,7 @@ class App:
     """Ajudas partilhadas pelos testes."""
     def __init__(self, page, url, raiz=None):
         self.page, self.url, self.erros = page, url, []
-        self.raiz = raiz or url  # raiz do site (a app atual); a versão de teste está em raiz + 'v2/'
+        self.raiz = raiz or url  # raiz do site
         page.on('pageerror', lambda e: self.erros.append(str(e)))
 
     async def abrir(self, dados=None, extra=None, sem_backup_aviso=True):
@@ -91,17 +90,7 @@ def verificar(condicao, mensagem):
 
 
 class Pendente(Exception):
-    """Teste de uma parte da app ainda não migrada para a versão de teste (/v2/): não conta como aprovado."""
-
-
-ATIVOS_V2 = pathlib.Path(__file__).parent / 'v2_ativos.txt'
-SO_RAIZ = {'teste_v2', 'teste_visual', 'teste_troca'}  # usam várias partes do site (/, /v1/, /v2/): correm só na execução da raiz
-
-
-def ativos_v2():
-    """Testes já aplicáveis à app nova (ficheiro ou ficheiro:teste por linha)."""
-    linhas = [l.split('#')[0].strip() for l in ATIVOS_V2.read_text(encoding='utf-8').splitlines()]
-    return {l for l in linhas if l}
+    """Teste que não se aplica nesta execução: não conta como aprovado."""
 
 
 async def main(filtro):
@@ -112,10 +101,6 @@ async def main(filtro):
     url = alvo if alvo.startswith('http') else raiz + alvo
     ficheiros = sorted(pathlib.Path(__file__).parent.glob('teste_*.py'))
     if filtro: ficheiros = [f for f in ficheiros if filtro in f.name]
-    em_v2 = alvo.rstrip('/').endswith('v2')
-    if em_v2:
-        ficheiros = [f for f in ficheiros if f.stem not in SO_RAIZ]
-        ativos = ativos_v2()
     resultados = []
     async with async_playwright() as pw:
         browser = await pw.chromium.launch()
@@ -126,8 +111,6 @@ async def main(filtro):
                 page = await ctx.new_page(); await page.clock.set_system_time(DATA_FIXA)
                 app = App(page, url, raiz); t0 = time.time()
                 try:
-                    if em_v2 and f.stem not in ativos and f'{f.stem}:{nome}' not in ativos:
-                        raise Pendente('ainda não migrado para a app nova')
                     await fn(app)
                     verificar(not app.erros, f'erros na página: {app.erros[:2]}')
                     resultados.append((f.stem, nome, True, '', time.time() - t0))
@@ -146,7 +129,7 @@ async def main(filtro):
     for fic, nome, passou, msg, dur in resultados:
         estado = '✔' if passou else '⏸ pendente' if passou is None else '✘ ' + msg
         print(f"{fic:24} {nome[2:].replace('_', ' '):44} {estado}")
-    extra = f' · {pend} pendentes (partes ainda não migradas para a app nova)' if pend else ''
+    extra = f' · {pend} pendentes' if pend else ''
     print(f"\n{ok}/{len(resultados) - pend} testes passaram{extra}.")
     return 0 if not falhas else 1
 

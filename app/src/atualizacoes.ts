@@ -1,5 +1,5 @@
 // Regista o service worker e mostra o aviso "Nova versão disponível" (mesmo comportamento de
-// js/modulos/atualizacoes.js da app atual, com a cache própria da versão de teste).
+// js/modulos/atualizacoes.js da 1.9.x).
 import { CACHE } from './config';
 
 export function iniciarAtualizacoes() {

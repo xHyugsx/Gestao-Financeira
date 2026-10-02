@@ -1,10 +1,10 @@
-"""Atualização da app (raiz e /v2/): aviso «Nova versão», «Atualizar» guarda a versão nova, apaga ficheiros antigos e mantém os dados."""
+"""Atualização da app: aviso «Nova versão», «Atualizar» guarda a versão nova, apaga ficheiros antigos e mantém os dados."""
 import json
 from correr import verificar, PREFIXO
 
 DADOS = {'transactions': [{'id': 1, 'title': 'Mercado', 'amount': -12.3, 'date': '2026-09-20', 'detail': '20 setembro · Alimentação', 'movementType': 'expense'}]}
 VELHO = './assets/fundo-cosmico-versao-antiga.webp'
-CACHE = 'financas-v2' if PREFIXO == 'financas-v2:' else 'financas-app'
+CACHE = 'financas-app'
 
 
 async def t_atualizar_limpa_a_cache_e_mantem_os_dados(app):
