@@ -1,7 +1,7 @@
 Recibo de Vencimento
 Junho 2026
 Empresa Ficticia, SA
-HUGO EXEMPLO TESTE
+DAVI EXEMPLO TESTE
 Remuneração Mensal Valor da Transferência Ticket Refeição
 712,17 €
 Ticket Refeição PT50000000000000000000000 EUR

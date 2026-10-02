@@ -2,7 +2,7 @@
 // Mesma marcação e mesmas regras de js/modulos/veterinario.js (chaves `vet-reminders` e `vet-snooze`).
 import { PREFIXO } from '../config';
 import { chave } from '../dados';
-import { ANIMAIS } from './animais';
+import { animais } from './animais';
 
 export interface Lembrete { id: number | string; pet: string; type: string; label?: string; last: string; every: number; note?: string }
 
@@ -91,14 +91,14 @@ export function feito(id: string | number) {
 
 function janela(id: string | null) {
   const r = id ? todos().find((x) => String(x.id) === String(id)) ?? null : null;
-  const atual: Partial<Lembrete> = r || { pet: ANIMAIS[0], type: 'vacina', every: 12, last: '', note: '' };
+  const atual: Partial<Lembrete> = r || { pet: animais()[0] ?? '', type: 'vacina', every: 12, last: '', note: '' };
   const ov = document.createElement('div');
   ov.className = 'ffvr-ov';
   const opcoesTipo = TIPOS.map((t) => `<option value="${t[0]}"${t[0] === atual.type ? ' selected' : ''}>${t[1]}</option>`).join('');
   const opcoesRepetir = REPETIR.map((t) => `<option value="${t[0]}"${t[0] === atual.every ? ' selected' : ''}>${t[1]}</option>`).join('');
   const titulo = r ? 'Editar lembrete' : 'Novo lembrete';
   ov.innerHTML = `<div class="ffvr-dlg" role="dialog" aria-modal="true" aria-label="${titulo}"><h2>${titulo}</h2><p class="ffvr-sub">A app avisa-te quando estiver a chegar a data.</p>`
-    + `<form class="movement-form"><div class="autohide-options ffvr-pets" role="radiogroup" aria-label="Animal">${ANIMAIS.map((a) => `<button type="button" data-pet="${a}">${a}</button>`).join('')}</div>`
+    + `<form class="movement-form"><div class="autohide-options ffvr-pets" role="radiogroup" aria-label="Animal">${animais().map((a) => `<button type="button" data-pet="${escapar(a)}">${escapar(a)}</button>`).join('')}</div>`
     + `<label>Tipo<select name="type">${opcoesTipo}</select></label>`
     + `<label class="ffvr-lbl">Nome<input name="label" maxlength="40" placeholder="Ex.: Análises anuais" value="${escapar(atual.label || '')}"></label>`
     + `<div class="form-grid"><label><span class="ffvr-dl">Última vez</span><input type="date" name="last" value="${escapar(atual.last)}" max="${hoje()}"></label><label>Repetir<select name="every">${opcoesRepetir}</select></label></div>`

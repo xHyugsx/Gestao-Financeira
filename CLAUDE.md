@@ -55,7 +55,7 @@ Qualquer alteração deve manter **compatibilidade total** com os dados já guar
 
 | Chave | Conteúdo |
 |---|---|
-| `financas-familiar:v3` | Dados principais: `transactions`, `accounts`, `salaries`, `categories`, `incomeCategories`, `petPhotos`, `profile`, `appearance`, `pinHash`, … |
+| `financas-familiar:v3` | Dados principais: `transactions`, `accounts`, `salaries`, `categories`, `incomeCategories`, `petPhotos`, `profile` (com `pets`), `appearance`, `pinHash`, `importConfig`, `categoryColors`, … |
 | `financas-familiar:jarvis-threads:v2` | Conversa do Jarvis |
 | `financas-familiar:last-backup` | Data do último backup |
 | `financas-familiar:backup-snooze` | Adiamento do lembrete de backup |
@@ -94,7 +94,8 @@ Qualquer alteração deve manter **compatibilidade total** com os dados já guar
 - Sugestões de ação do Jarvis (ex.: "Adicionar despesa…") **preenchem a caixa de texto**, não enviam.
 - Ações do Jarvis que alteram dados (apagar, editar, registar, marcar como feito) **pedem sempre confirmação** com botões.
 - Recibos de vencimento: ler o valor da linha que contém "Ticket Refeição" **e** um valor com "€".
-- Importação de extratos: ver as regras em `js/modulos/extratos.js` (regras gerais de categorias + regras pessoais de salários, transferências a confirmar, movimentos ignorados e investimentos recorrentes).
+- Importação de extratos: regras gerais de categorias em `app/src/importacao/classificacao.ts`; regras pessoais (salários, transferências a confirmar, movimentos ignorados, investimentos recorrentes) em **Definições › Importação**, guardadas no telemóvel (`importConfig`), nunca no código.
+- Animais da família: vêm do perfil (`profile.pets`, Definições › Perfil e família); sem perfil, são deduzidos dos dados. Nunca escrever nomes de pessoas ou animais no código.
 - Ideias **descartadas**: aviso de saldo baixo; orçamento por categoria; PIN com hash reforçado (risco para a impressão digital).
 - Ideias **em pausa** (personalização): mais temas de cor; imagem do bloqueio à escolha; modo compacto; tipo de letra; animação dos números; o que aparece no círculo em destaque; reordenar caixas das contas; escolher páginas da barra inferior; tom do Jarvis; perguntas favoritas; frequência do lembrete de backup.
 
@@ -114,7 +115,8 @@ Qualquer alteração deve manter **compatibilidade total** com os dados já guar
 
 - **Este repositório é público.** Nunca acrescentar dados pessoais: extratos, recibos, backups, capturas de ecrã com valores, IBAN, NIF.
 - Os ficheiros de teste devem usar **dados fictícios**.
-- Na Fase 2, mover as regras pessoais da importação (nomes e entidades) do código para uma **configuração guardada no telemóvel**, para deixarem de estar no repositório público.
+- A app não tem nomes nem entidades no código: regras pessoais da importação, pessoas (salários/perfil) e animais (perfil) vêm dos dados do telemóvel.
+- Ainda com nomes reais (saem na etapa 14, quando a `/v1/` deixar de existir): os dados de teste usados na comparação com a 1.9.x (`tests/capturar_referencias_dados.py`, `tests/dados/dados_versao_antiga.json`, `tests/referencias/dados.json`) e a própria app 1.9.x (`js/`). O **histórico do Git** mantém-nos; apagá-lo exige reescrever o histórico — só com ordem explícita do dono.
 
 ---
 

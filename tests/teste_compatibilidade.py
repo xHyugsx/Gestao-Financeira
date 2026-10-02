@@ -11,7 +11,7 @@ async def t_dados_antigos_abrem(app):
 
 
 async def t_backup_mantem_as_chaves(app):
-    await app.abrir(BACKUP, {'financas-familiar:vet-reminders': [{'id': 1, 'pet': 'Sam', 'type': 'vacina', 'last': '2026-01-10', 'every': 12}]})
+    await app.abrir(BACKUP, {'financas-familiar:vet-reminders': [{'id': 1, 'pet': 'Rex', 'type': 'vacina', 'last': '2026-01-10', 'every': 12}]})
     b = await app.page.evaluate("window.ffBk.payload()")
     verificar(b['app'] == 'financas-familiar' and len(b['data']['transactions']) == 3 and len(b['vetReminders']) == 1 and 'jarvisThreads' in b, f'backup incompleto: {list(b)}')
 

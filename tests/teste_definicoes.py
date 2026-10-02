@@ -179,7 +179,7 @@ async def t_aparencia(app):
 
 async def t_backup_csv_e_restauro(app):
     await app.abrir({'transactions': [{'id': 1, 'title': 'Cinema', 'amount': -8.5, 'date': '2026-09-12', 'detail': '12 setembro · Lazer', 'movementType': 'expense'}]},
-                    {'financas-familiar:vet-reminders': [{'id': 1, 'pet': 'Sam', 'type': 'vacina', 'last': '2026-01-10', 'every': 12}]}, sem_backup_aviso=False)
+                    {'financas-familiar:vet-reminders': [{'id': 1, 'pet': 'Rex', 'type': 'vacina', 'last': '2026-01-10', 'every': 12}]}, sem_backup_aviso=False)
     p = app.page
     await seccao(app, 'Backup')
     async with p.expect_download() as d:

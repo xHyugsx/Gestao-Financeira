@@ -43,6 +43,7 @@ def intencionais(h):
     h = re.sub(r'<label class="ffv2-extra">.*?</label>', '', h, flags=re.S)
     h = re.sub(r'<div class="movement-checks ffv2-extra">.*?</div>', '', h, flags=re.S)
     h = re.sub(r'<button[^>]*class="[^"]*ffv2-extra[^"]*"[^>]*>.*?</button>', '', h, flags=re.S)  # Definições › Importação
+    h = re.sub(r'<section class="ffv2-extra[^"]*">.*?</section>', '', h, flags=re.S)  # Perfil › Animais
     # espaço ocupado: a app atual grava um perfil por omissão com nomes, a nova grava-o vazio (sem nomes no código)
     h = re.sub(r'<small>[^<]* ocupados neste dispositivo</small>', '<small>… ocupados neste dispositivo</small>', h)
     h = re.sub(r'(<small>Espaço local ocupado</small><strong>)[^<]*', r'\1…', h)
