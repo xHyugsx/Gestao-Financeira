@@ -8,7 +8,7 @@ DADOS = {'transactions': [
     {'id': 1, 'title': 'Mercado', 'amount': -12.3, 'date': '2026-09-20', 'detail': '20 setembro · Alimentação', 'movementType': 'expense', 'note': 'fruta'},
     {'id': 2, 'title': 'Galp', 'amount': -40, 'date': '2026-09-10', 'detail': '10 setembro · Combustível', 'movementType': 'expense'}],
     'accounts': [{'id': 'principal', 'name': 'Principal', 'balance': 500}, {'id': 'revolut', 'name': 'Revolut Conjunta', 'balance': 80}]}
-EXTRA = {'financas-familiar:vet-reminders': json.dumps([{'id': 1, 'pet': 'Sam', 'type': 'vacina', 'last': '2025-10-20', 'every': 12}]),
+EXTRA = {'financas-familiar:vet-reminders': json.dumps([{'id': 1, 'pet': 'Rex', 'type': 'vacina', 'last': '2025-10-20', 'every': 12}]),
          'financas-familiar:vet-snooze': '9999999999999',
          'financas-familiar:last-backup': '2026-09-27T10:00:00.000Z',
          'financas-familiar:jarvis-threads:v2': json.dumps([{'id': 'x', 'title': 'Nova conversa', 'updatedAt': '2026-09-27T10:00:00.000Z',

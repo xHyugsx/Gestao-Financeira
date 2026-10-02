@@ -5,7 +5,7 @@ import { diaEMes, lerValor } from '../movimentos/regras';
 import { Botao } from '../ui/Botao';
 import { Dialogo } from '../ui/Dialogo';
 import { Icone } from '../ui/Icone';
-import { ANIMAIS } from '../veterinario/animais';
+import { animais } from '../veterinario/animais';
 
 const CATEGORIAS_VET = ['Consultas', 'Vacinas', 'Medicação', 'Exames', 'Cirurgia', 'Outros'];
 
@@ -38,7 +38,7 @@ export function novoAbastecimento(f: FormData, hoje: Date): Movimento | null {
 
 /** Despesa veterinária a partir do formulário (`null` se o valor não for válido). */
 export function novaDespesaVet(f: FormData, hoje: Date): Movimento | null {
-  const animal = String(f.get('pet') || ANIMAIS[0]), titulo = String(f.get('title') || '').trim() || 'Despesa veterinária';
+  const animal = String(f.get('pet') || animais()[0] || ''), titulo = String(f.get('title') || '').trim() || 'Despesa veterinária';
   const clinica = String(f.get('clinic') || '').trim(), categoria = String(f.get('vetCategory') || 'Consultas');
   const valor = lerValor(f.get('amount')), data = String(f.get('date') || dia(hoje));
   if (!Number.isFinite(valor) || valor <= 0) return null;
@@ -73,8 +73,8 @@ export function NovaDespesaVet({ aberto, aoMudar, aoGuardar, animal }: PropsJane
         <div className="form-grid">
           <label>
             Animal
-            <select name="pet" defaultValue={animal || ANIMAIS[0]}>
-              {ANIMAIS.map((a) => <option key={a}>{a}</option>)}
+            <select name="pet" defaultValue={animal || animais()[0]}>
+              {animais().map((a) => <option key={a}>{a}</option>)}
               <option>A confirmar</option>
             </select>
           </label>

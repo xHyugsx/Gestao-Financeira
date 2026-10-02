@@ -5,7 +5,7 @@ import { CATEGORIAS_POR_OMISSAO } from '../dados/esquema';
 import { categoriaDespesa, categoriaReceita } from '../movimentos/categorias';
 import { tipoVisual } from '../movimentos/regras';
 import { categoriasDoMes, eCombustivel, percentagem, variacao } from '../paginas/calculos';
-import { ANIMAIS } from '../veterinario/animais';
+import { animais, deAnimal } from '../veterinario/animais';
 import type { InfoLembrete, Lembrete } from '../veterinario/lembretes';
 import type { PendenteRecibo } from './recibos';
 import { categoriaNoTexto, normal, semAcentos, valorNoTexto } from './texto';
@@ -40,7 +40,6 @@ const P2 = (x: number) => String(x).padStart(2, '0');
 const iso = (d: Date) => `${d.getFullYear()}-${P2(d.getMonth() + 1)}-${P2(d.getDate())}`;
 const gastosDe = (l: Movimento[]) => l.filter((m) => m.movementType === 'expense').reduce((s, m) => s + Math.abs(m.amount), 0);
 const pctAbs = (v: number) => `${Math.abs(v).toLocaleString('pt-PT', { maximumFractionDigits: 1 })}%`;
-const deAnimal = (p: string) => (p === ANIMAIS[1] ? `da ${p}` : `do ${p}`);
 
 export class MotorJarvis {
   /** Tema da última pergunta (seguimento: «E em julho?»). */
@@ -209,7 +208,8 @@ export class MotorJarvis {
       if (/(este|neste|deste) mes|mes atual/.test(n)) return new Date(ffNow.getFullYear(), ffNow.getMonth(), 1);
       return null;
     })();
-    const reAnimais = new RegExp(`veterin|\\bvet\\b|${ANIMAIS.map((a) => `\\b${semAcentos(a)}\\b`).join('|')}|animal|animais`);
+    const ANIMAIS = animais(), nomeRe = (a: string) => `\\b${semAcentos(a).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`;
+    const reAnimais = new RegExp(`veterin|\\bvet\\b|${ANIMAIS.map((a) => `${nomeRe(a)}|`).join('')}animal|animais`);
     let ik: string | null = /combust|gasolin|gasoleo|abastec/.test(n) ? 'comb' : reAnimais.test(n) ? 'vet' : /categor|maior/.test(n) ? 'cat'
       : /salari|ordenad|vencimento/.test(n) ? 'sal' : /rendiment/.test(n) ? 'ren' : /receit|recebi|ganhei/.test(n) ? 'rec'
         : /saldo|conta|revolut|dinheiro/.test(n) ? 'sld' : /gast|despes|paguei/.test(n) ? 'gas' : null;
@@ -229,7 +229,7 @@ export class MotorJarvis {
 
     // Lembretes veterinários
     const ffMes = (s: string) => { const d = new Date(`${s}T00:00`); return `${d.getDate()} de ${hc[d.getMonth()]}${d.getFullYear() !== ffNow.getFullYear() ? ` de ${d.getFullYear()}` : ''}`; };
-    const ffPet = ANIMAIS.find((a) => new RegExp(`\\b${semAcentos(a)}\\b`).test(n)) ?? null;
+    const ffPet = ANIMAIS.find((a) => new RegExp(nomeRe(a)).test(n)) ?? null;
     const ffRT = /vacin/.test(n) ? 'vacina' : /desparasit/.test(n) ? (/extern/.test(n) ? 'externa' : /intern/.test(n) ? 'interna' : 'desp') : null;
     if ((/lembret|vacin|desparasit|em atraso|atrasad/.test(n) || (/\bproxim[ao]s?\b|\bquando\b/.test(n) && (ffPet || /veterin|consulta/.test(n)))) && !/gast|pagu|custo|quanto custou|despes/.test(n)) {
       const V = c.vet, I = (r: Lembrete) => V.info(r);

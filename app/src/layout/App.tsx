@@ -20,7 +20,7 @@ import { Jarvis, type Mensagem, mensagensGuardadas } from '../jarvis/Jarvis';
 import { type ContextoJarvis, MotorJarvis } from '../jarvis/motor';
 import { lerDocumento, textoDoPdf } from '../jarvis/recibos';
 import { pessoasDosSalarios } from '../paginas/Resumo';
-import { ANIMAIS } from '../veterinario/animais';
+import { animais, animaisDe, definirAnimais } from '../veterinario/animais';
 import { feito as lembreteFeito, info as infoLembrete, ordenados as lembretesOrdenados } from '../veterinario/lembretes';
 import { formatarEuros } from '../ui/formatos';
 import { type EscolhasNovo, NovoMovimento } from '../movimentos/NovoMovimento';
@@ -108,6 +108,7 @@ export function App() {
   const [abastecimento, setAbastecimento] = useState(false);
   const [despesaVet, setDespesaVet] = useState(false);
 
+  definirAnimais(animaisDe(estado, todosLembretes()));
   const ocultos = estado.hideValues;
   const setOcultos = useCallback((v: boolean | ((a: boolean) => boolean)) =>
     setEstado((s) => ({ ...s, hideValues: typeof v === 'function' ? v(s.hideValues) : v })), [setEstado]);
@@ -315,7 +316,7 @@ export function App() {
   const pessoas = () => pessoasDosSalarios(estadoAtual.current.salaries, estadoAtual.current.profile.members);
   const vocabularioJarvis = () => {
     const e = estadoAtual.current;
-    return [...e.transactions.map((t) => t.title), ...e.categories, ...e.incomeCategories, ...e.accounts.map((a) => a.name), ...pessoas(), ...ANIMAIS];
+    return [...e.transactions.map((t) => t.title), ...e.categories, ...e.incomeCategories, ...e.accounts.map((a) => a.name), ...pessoas(), ...animais()];
   };
   const lerDoc = (txt: string) => {
     const e = estadoAtual.current;

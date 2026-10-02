@@ -4,7 +4,7 @@ from correr import verificar, Pendente
 
 DADOS = json.loads(pathlib.Path('tests/dados/dados_versao_antiga.json').read_text(encoding='utf-8'))
 REAIS = {'financas-familiar:v3': DADOS,
-         'financas-familiar:vet-reminders': [{'id': 1, 'pet': 'Sam', 'type': 'vacina', 'last': '2026-01-10', 'every': 12}],
+         'financas-familiar:vet-reminders': [{'id': 1, 'pet': 'Rex', 'type': 'vacina', 'last': '2026-01-10', 'every': 12}],
          'financas-familiar:last-backup': '2026-09-27T10:00:00.000Z',
          'financas-familiar:bio': {'id': 'credencial-ficticia', 'pin': 'hash-ficticio'}}
 LER_REAIS = "Object.fromEntries(window.ffV2.chaves().filter(k=>k.startsWith('financas-familiar:')).map(k=>[k,window.ffV2.ler(k)]))"
@@ -100,7 +100,7 @@ def pdf_de_texto(linhas):
     return bytes(out)
 
 
-PERFIL = {'profileName': '', 'email': '', 'phone': '', 'members': ['Hugo', 'Marta']}  # o recibo fictício é do «Hugo»
+PERFIL = {'profileName': '', 'email': '', 'phone': '', 'members': ['Davi', 'Clara']}  # o recibo fictício é do «Davi»
 
 
 async def t_v2_le_extratos_e_recibos_sem_internet(app):

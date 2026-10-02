@@ -19,7 +19,7 @@
   ],
   "salaries": {
    "2026": {
-    "Hugo": [
+    "Davi": [
      0,
      0,
      0,
@@ -33,7 +33,7 @@
      0,
      0
     ],
-    "Marta": [
+    "Clara": [
      0,
      0,
      0,
@@ -114,7 +114,7 @@
     "date": "2026-07-12",
     "detail": "12 julho · Veterinário",
     "movementType": "expense",
-    "pet": "Sam",
+    "pet": "Rex",
     "note": "vacina anual"
    },
    {
@@ -208,7 +208,7 @@
     "date": "2026-08-21",
     "detail": "21 agosto · Veterinário",
     "movementType": "expense",
-    "pet": "Lola",
+    "pet": "Nina",
     "note": "desparasitação"
    },
    {
@@ -287,14 +287,14 @@
   "financas-familiar:vet-reminders": [
    {
     "id": 1,
-    "pet": "Sam",
+    "pet": "Rex",
     "type": "vacina",
     "last": "2025-10-03",
     "every": 12
    },
    {
     "id": 2,
-    "pet": "Lola",
+    "pet": "Nina",
     "type": "externa",
     "last": "2026-08-26",
     "every": 1
@@ -444,7 +444,7 @@
     "Veterinário este mês"
    ],
    "respostas": [
-    "Veterinário em setembro: 0,00 € (Sam 0,00 € · Lola 0,00 €)."
+    "Veterinário em setembro: 0,00 € (Rex 0,00 € · Nina 0,00 €)."
    ]
   },
   {
@@ -452,23 +452,23 @@
     "Quanto gastei no veterinário?"
    ],
    "respostas": [
-    "Veterinário em setembro: 0,00 € (Sam 0,00 € · Lola 0,00 €)."
+    "Veterinário em setembro: 0,00 € (Rex 0,00 € · Nina 0,00 €)."
    ]
   },
   {
    "perguntas": [
-    "Quanto gastei com a Lola?"
+    "Quanto gastei com a Nina?"
    ],
    "respostas": [
-    "Veterinário em setembro: 0,00 € (Sam 0,00 € · Lola 0,00 €)."
+    "Veterinário em setembro: 0,00 € (Rex 0,00 € · Nina 0,00 €)."
    ]
   },
   {
    "perguntas": [
-    "Quanto gastei com o Sam?"
+    "Quanto gastei com o Rex?"
    ],
    "respostas": [
-    "Veterinário em setembro: 0,00 € (Sam 0,00 € · Lola 0,00 €)."
+    "Veterinário em setembro: 0,00 € (Rex 0,00 € · Nina 0,00 €)."
    ]
   },
   {
@@ -617,7 +617,7 @@
   },
   {
    "perguntas": [
-    "Qual foi o salário do Hugo em agosto?"
+    "Qual foi o salário do Davi em agosto?"
    ],
    "respostas": [
     "Salários de agosto: 2620,00 €."
@@ -625,7 +625,7 @@
   },
   {
    "perguntas": [
-    "Salário da Marta em setembro"
+    "Salário da Clara em setembro"
    ],
    "respostas": [
     "Salários de setembro: 2670,00 €."
@@ -820,20 +820,20 @@
     "Lembretes veterinários"
    ],
    "respostas": [
-    "Próximos lembretes: • Lola · Desparasitação externa — em atraso há 2 dias (26 set) • Sam · Vacina anual — daqui a 5 dias (3 out) (entendi: veterinários → veterinário)"
+    "Próximos lembretes: • Nina · Desparasitação externa — em atraso há 2 dias (26 set) • Rex · Vacina anual — daqui a 5 dias (3 out) (entendi: veterinários → veterinário)"
    ]
   },
   {
    "perguntas": [
-    "Quando é a próxima vacina do Sam?"
+    "Quando é a próxima vacina do Rex?"
    ],
    "respostas": [
-    "A próxima Vacina anual do Sam é a 3 de outubro (daqui a 5 dias)."
+    "A próxima Vacina anual do Rex é a 3 de outubro (daqui a 5 dias)."
    ]
   },
   {
    "perguntas": [
-    "A Lola tem alguma desparasitação em atraso?"
+    "A Nina tem alguma desparasitação em atraso?"
    ],
    "respostas": [
     "Tens 1 lembrete em atraso: • Desparasitação externa — em atraso há 2 dias"
@@ -844,7 +844,7 @@
     "Há lembretes em atraso?"
    ],
    "respostas": [
-    "Tens 1 lembrete em atraso: • Lola · Desparasitação externa — em atraso há 2 dias"
+    "Tens 1 lembrete em atraso: • Nina · Desparasitação externa — em atraso há 2 dias"
    ]
   },
   {
@@ -900,7 +900,7 @@
     "veterinaro este mes"
    ],
    "respostas": [
-    "Veterinário em setembro: 0,00 € (Sam 0,00 € · Lola 0,00 €). (entendi: veterinaro → veterinário)"
+    "Veterinário em setembro: 0,00 € (Rex 0,00 € · Nina 0,00 €). (entendi: veterinaro → veterinário)"
    ]
   },
   {
@@ -945,10 +945,10 @@
   },
   {
    "perguntas": [
-    "Marca a desparasitação da Lola como feita"
+    "Marca a desparasitação da Nina como feita"
    ],
    "respostas": [
-    "Vou marcar como feito hoje: Lola · Desparasitação externa. A próxima data passa a ser calculada a partir de hoje. Confirmas?"
+    "Vou marcar como feito hoje: Nina · Desparasitação externa. A próxima data passa a ser calculada a partir de hoje. Confirmas?"
    ]
   },
   {

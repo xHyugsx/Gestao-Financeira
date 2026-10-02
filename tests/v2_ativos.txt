@@ -42,3 +42,4 @@ teste_jarvis_v2
 
 # Etapa 12 — atualizações: limpeza da cache e dados preservados (só na app nova)
 teste_atualizacao_v2
+teste_animais

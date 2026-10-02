@@ -5,7 +5,7 @@ import { Dialogo } from '../ui/Dialogo';
 import { formatarEuros } from '../ui/formatos';
 import { Icone } from '../ui/Icone';
 import { Segmentado } from '../ui/Segmentado';
-import { ANIMAIS, classeDoAnimal, simboloDoAnimal } from '../veterinario/animais';
+import { animais, classeDoAnimal, simboloDoAnimal } from '../veterinario/animais';
 import { montar } from '../veterinario/lembretes';
 import { doMes } from './calculos';
 
@@ -68,7 +68,7 @@ export function Veterinario({ estado, mes, ocultos, vista, mudarVista, abrirMovi
           opcoes={[{ valor: 'mes', rotulo: 'Mês' }, { valor: 'ano', rotulo: 'Ano' }]}
         />
         <section className="vet-total">
-          {(ANIMAIS as readonly string[]).includes(animal) ? (
+          {animais().includes(animal) ? (
             <Botao variante="ghost" className="vet-detail-photo" onClick={() => mudarVista({ fotografia: animal })} aria-label={rotuloFoto(animal)}>
               <Retrato nome={animal} foto={fotos[animal]} />
               <span className="photo-edit-badge"><Icone nome="image-plus" /></span>
@@ -111,7 +111,7 @@ export function Veterinario({ estado, mes, ocultos, vista, mudarVista, abrirMovi
     return (
       <>
         <section className="pet-grid">
-          {ANIMAIS.map((a) => (
+          {animais().map((a) => (
             <article key={a} className="pet-card">
               <div className="pet-photo-area">
                 <Retrato nome={a} foto={fotos[a]} />
@@ -138,7 +138,7 @@ export function Veterinario({ estado, mes, ocultos, vista, mudarVista, abrirMovi
           </div>
           <Segmentado
             valor={vista.filtro} rotulo="Filtrar por animal" aoMudar={(filtro) => mudarVista({ filtro })}
-            opcoes={[{ valor: '', rotulo: 'Todos' }, ...ANIMAIS.map((a) => ({ valor: a, rotulo: a }))]}
+            opcoes={[{ valor: '', rotulo: 'Todos' }, ...animais().map((a) => ({ valor: a, rotulo: a }))]}
           />
           <div className="transaction-list">
             {lista.length ? lista.map((m) => (
