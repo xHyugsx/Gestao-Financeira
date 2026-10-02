@@ -1,5 +1,6 @@
 // Chaves do localStorage (secção 3 do CLAUDE.md): nunca mudar nomes nem formatos.
 export const PREFIXO_REAL = 'financas-familiar:';
+/** Prefixo da antiga versão de teste /v2/ (só para a limpar). */
 export const PREFIXO_V2 = 'financas-v2:';
 
 export const NOMES = {

@@ -1,4 +1,4 @@
-// Ponto de entrada da app (raiz). A versão de teste /v2/ entra por main-v2.tsx.
+// Ponto de entrada da app.
 import '../../css/app.css';
 import './v2.css';
 import { createRoot } from 'react-dom/client';

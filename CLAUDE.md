@@ -28,22 +28,20 @@ Contém o contexto do projeto e as regras de trabalho acordadas com o dono da ap
 
 ## 2. Estrutura e arquitetura atual
 
-Desde a **troca (etapa 13, v2.02.0)** a app publicada na raiz é a **app nova** (React + Vite + TypeScript, código em `app/`).
+A app é feita em **React + Vite + TypeScript** (código em `app/`), compilada pelo GitHub Actions e publicada na raiz do site. A reconstrução (Fase 2) terminou na v2.03.0; histórico em `docs/PLANO-FASE-2.md`.
 
 | Caminho | Conteúdo |
 |---|---|
-| `app/src/` | Código da app (TypeScript/React), por áreas: `dados/`, `movimentos/`, `paginas/`, `definicoes/`, `importacao/`, `jarvis/`, `veterinario/`, `bloqueio/`, `layout/`, `ui/` |
+| `app/src/` | Código da app, por áreas: `dados/`, `movimentos/`, `paginas/`, `definicoes/`, `importacao/`, `jarvis/`, `veterinario/`, `bloqueio/`, `layout/`, `ui/` |
 | `app/versao.json` | **Versão da app** (única fonte; o `version.json` publicado é gerado a partir dela) |
-| `app/service-worker.js` | Cache offline e atualizações (limpa os ficheiros de versões anteriores) |
-| `css/app.css`, `img/`, `fonts/`, `icons/`, `vendor/` | Estilos e recursos usados pela app (o Vite junta-os no build) |
-| `scripts/montar-site.mjs` | Monta `_site/`: raiz = app, `/v1/` = app anterior (recuo), `/v2/` = versão de teste |
-| `index.html`, `js/`, `service-worker.js`, `version.json`, `manifest.webmanifest` (raiz do repositório) | **App anterior 1.9.x**, publicada só em `/v1/` para recuo (sai na etapa 14) |
+| `app/service-worker.js` | Cache offline (`financas-app`) e atualizações (limpa os ficheiros de versões anteriores) |
+| `app/estatico/manifest.webmanifest` | Dados de instalação (copiado tal como está; não mudar o endereço nem o `start_url`) |
+| `app/retirado/` | Página e service worker publicados em `/v1/` e `/v2/`: apagam a cache e o service worker dessas versões antigas (e os dados `financas-v2:*`) e abrem a app |
+| `css/app.css`, `img/`, `fonts/`, `icons/`, `vendor/` | Estilos e recursos usados pela app |
+| `scripts/montar-site.mjs` | Monta `_site/` |
 
-- **Recuo:** `/v1/` abre a app 1.9.x com os **mesmos dados** (mesmas chaves), com cache própria (`financas-v1`). Se for usada, os campos novos que ela não conhece no nível de topo (`categoryColors`, `importConfig`) perdem-se ao gravar.
-- `/v2/` continua a existir como versão de teste isolada (prefixo `financas-v2:`), que **nunca** pode ler/escrever as chaves `financas-familiar:*` exceto pelo menu "Copiar dados" (só leitura).
-- Plano e estado de cada etapa: `docs/PLANO-FASE-2.md`.
-- Testes: `python tests/correr.py` (raiz = app de produção) e `FF_URL=v2/ FF_PREFIX=financas-v2: python tests/correr.py` (`/v2/`). `tests/teste_visual.py` compara o HTML da app anterior (`/v1/`) com o da raiz; `tests/teste_troca.py` simula um telemóvel com a 1.9.x a atualizar para a app nova.
-- Núcleo de dados em `app/src/dados/`: `npm ci && npm run verificar` (tipos + testes unitários). Diferenças intencionais face à 1.9.x em `docs/PLANO-FASE-2.md` §4.1, §4.2 e §7.
+- Testes: `npm run verificar` (tipos + unitários) e `python tests/correr.py` (interface, Playwright). `tests/teste_atualizacao.py` cobre a atualização com dados preservados e `tests/teste_retirados.py` a retirada das versões antigas.
+- Diferenças intencionais face à 1.9.x em `docs/PLANO-FASE-2.md` §4.1, §4.2 e §7.
 
 ---
 
@@ -116,11 +114,11 @@ Qualquer alteração deve manter **compatibilidade total** com os dados já guar
 - **Este repositório é público.** Nunca acrescentar dados pessoais: extratos, recibos, backups, capturas de ecrã com valores, IBAN, NIF.
 - Os ficheiros de teste devem usar **dados fictícios**.
 - A app não tem nomes nem entidades no código: regras pessoais da importação, pessoas (salários/perfil) e animais (perfil) vêm dos dados do telemóvel.
-- Ainda com nomes reais (saem na etapa 14, quando a `/v1/` deixar de existir): os dados de teste usados na comparação com a 1.9.x (`tests/capturar_referencias_dados.py`, `tests/dados/dados_versao_antiga.json`, `tests/referencias/dados.json`) e a própria app 1.9.x (`js/`). O **histórico do Git** mantém-nos; apagá-lo exige reescrever o histórico — só com ordem explícita do dono.
+- O **histórico do Git** ainda contém nomes reais (do código e dos testes da 1.9.x); apagá-los exige reescrever o histórico — só com ordem explícita do dono.
 
 ---
 
-## 8. Fase 2 — objetivo
+## 8. Fase 2 — objetivo (concluída na v2.03.0)
 
 Reconstruir a app com **código-fonte legível e organizado**, eliminando os remendos no bundle minificado, **sem mudar o aspeto nem o comportamento** e **mantendo os dados compatíveis** (secção 3).
 

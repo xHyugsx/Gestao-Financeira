@@ -1,9 +1,9 @@
-// Service worker da app nova (/v2/): modo offline e atualizações controladas pelo version.json.
-// Igual ao da app atual, mais a limpeza dos ficheiros de versões anteriores (os nomes compilados mudam a cada versão).
-const CACHE = 'financas-v2';
+// Service worker da app: modo offline e atualizações controladas pelo version.json.
+// Igual ao da 1.9.x, mais a limpeza dos ficheiros de versões anteriores (os nomes compilados mudam a cada versão).
+const CACHE = 'financas-app';
 const CORE = ['./', './index.html', './version.json'];
 const ROOT = new URL('./', self.location).pathname;
-const SUB_APPS = ['v1/', 'v2/']; // versões de teste/recuo com service worker e cache próprios
+const SUB_APPS = ['v1/', 'v2/']; // versões retiradas: têm o seu próprio service worker, que se limpa e desregista
 const isOwn = (url) => !SUB_APPS.some((p) => url.pathname.startsWith(ROOT + p));
 
 async function fileList() {

@@ -1,4 +1,4 @@
-"""Jarvis na app nova: recibos sem nomes fixos no código (pessoas dos salários/perfil, entidade pelas regras pessoais)."""
+"""Jarvis: recibos sem nomes fixos no código (pessoas dos salários/perfil, entidade pelas regras pessoais)."""
 import json, tempfile
 from correr import verificar, PREFIXO
 

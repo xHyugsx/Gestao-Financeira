@@ -168,7 +168,7 @@
     ],
     "salaries": {
      "2026": {
-      "Hugo": [
+      "Davi": [
        0,
        0,
        0,
@@ -182,7 +182,7 @@
        0,
        0
       ],
-      "Marta": [
+      "Clara": [
        0,
        0,
        0,
@@ -234,7 +234,7 @@
     "annualExpenses": [],
     "salaries": {
      "2026": {
-      "Hugo": [
+      "Davi": [
        0,
        0,
        0,
@@ -248,7 +248,7 @@
        0,
        0
       ],
-      "Marta": [
+      "Clara": [
        0,
        0,
        0,
@@ -340,7 +340,7 @@
      "annualExpenses": [],
      "salaries": {
       "2026": {
-       "Hugo": [
+       "Davi": [
         0,
         0,
         0,
@@ -354,7 +354,7 @@
         0,
         0
        ],
-       "Marta": [
+       "Clara": [
         0,
         0,
         0,
@@ -479,7 +479,7 @@
     ],
     "salaries": {
      "2025": {
-      "Hugo": [
+      "Davi": [
        0,
        0,
        0,
@@ -493,7 +493,7 @@
        0,
        1400
       ],
-      "Marta": [
+      "Clara": [
        0,
        0,
        0,
@@ -509,7 +509,7 @@
       ]
      },
      "2026": {
-      "Hugo": [
+      "Davi": [
        1400,
        1400,
        1450,
@@ -523,7 +523,7 @@
        0,
        0
       ],
-      "Marta": [
+      "Clara": [
        900,
        900,
        900,
@@ -692,7 +692,7 @@
       "date": "2026-07-12",
       "detail": "12 julho · Veterinário",
       "movementType": "expense",
-      "pet": "Sam",
+      "pet": "Rex",
       "note": "vacina",
       "recurring": true
      }
@@ -827,7 +827,7 @@
       "date": "2026-07-12",
       "detail": "12 julho · Veterinário",
       "movementType": "expense",
-      "pet": "Sam",
+      "pet": "Rex",
       "note": "vacina",
       "recurring": true
      }
@@ -843,7 +843,7 @@
     ],
     "salaries": {
      "2025": {
-      "Hugo": [
+      "Davi": [
        0,
        0,
        0,
@@ -857,7 +857,7 @@
        0,
        1400
       ],
-      "Marta": [
+      "Clara": [
        0,
        0,
        0,
@@ -873,7 +873,7 @@
       ]
      },
      "2026": {
-      "Hugo": [
+      "Davi": [
        1400,
        1400,
        1450,
@@ -887,7 +887,7 @@
        0,
        0
       ],
-      "Marta": [
+      "Clara": [
        900,
        900,
        900,
@@ -1096,7 +1096,7 @@
        "date": "2026-07-12",
        "detail": "12 julho · Veterinário",
        "movementType": "expense",
-       "pet": "Sam",
+       "pet": "Rex",
        "note": "vacina",
        "recurring": true
       }
@@ -1112,7 +1112,7 @@
      ],
      "salaries": {
       "2025": {
-       "Hugo": [
+       "Davi": [
         0,
         0,
         0,
@@ -1126,7 +1126,7 @@
         0,
         1400
        ],
-       "Marta": [
+       "Clara": [
         0,
         0,
         0,
@@ -1142,7 +1142,7 @@
        ]
       },
       "2026": {
-       "Hugo": [
+       "Davi": [
         1400,
         1400,
         1450,
@@ -1156,7 +1156,7 @@
         0,
         0
        ],
-       "Marta": [
+       "Clara": [
         900,
         900,
         900,
@@ -1481,7 +1481,7 @@
     "transactions": [],
     "salaries": {
      "2026": {
-      "Hugo": [
+      "Davi": [
        0,
        0,
        0,
@@ -1495,7 +1495,7 @@
        0,
        0
       ],
-      "Marta": [
+      "Clara": [
        0,
        0,
        0,
@@ -1520,7 +1520,7 @@
     "annualExpenses": [],
     "salaries": {
      "2026": {
-      "Hugo": [
+      "Davi": [
        0,
        0,
        0,
@@ -1534,7 +1534,7 @@
        0,
        0
       ],
-      "Marta": [
+      "Clara": [
        0,
        0,
        0,
@@ -1607,7 +1607,7 @@
      "annualExpenses": [],
      "salaries": {
       "2026": {
-       "Hugo": [
+       "Davi": [
         0,
         0,
         0,
@@ -1621,7 +1621,7 @@
         0,
         0
        ],
-       "Marta": [
+       "Clara": [
         0,
         0,
         0,
