@@ -6,6 +6,58 @@ Transformar a app web «Finanças» numa **app Android instalável (.apk)**, par
 
 ---
 
+## Estado — processo «APK» em pausa (13/10/2026)
+
+> Este plano chama-se **APK**. Está **em pausa na etapa 3.0**, sem nada implementado (app na v2.14.0).
+> Só se retoma quando o dono o disser explicitamente (ex.: «retoma o APK»). Os outros pedidos não fazem parte deste plano.
+
+### Decisões da 3.0 (revistas com o dono)
+- **Identificador:** `pt.gestaofinanceira.l4r9` (sufixo aleatório e sem significado, para evitar colisões com o registo de identificadores da Google em 2027). **Nome visível:** «Finanças». **Cor:** `#05091F`. **Ícone:** o robô atual.
+- **Chave de assinatura:** criada no computador do dono, nunca no GitHub Actions nem nesta conversa.
+  1. Instalar o Java (Temurin 21 LTS em adoptium.net) e abrir **um PowerShell novo**.
+  2. Numa pasta só do dono:
+     ```
+     keytool -genkeypair -v -storetype PKCS12 -keystore financas.jks -alias financas -keyalg RSA -keysize 4096 -validity 36500 -dname "CN=Financas"
+     ```
+     Palavra-passe com 16 ou mais caracteres, usada só aqui. O `-dname` evita as perguntas de nome; se aparecer «Is … correct? [no]», escrever `yes`.
+  3. Converter em texto:
+     ```
+     [Convert]::ToBase64String([IO.File]::ReadAllBytes("$PWD\financas.jks")) | Set-Clipboard
+     ```
+  4. Em **Settings › Environments**, criar o Environment `android`, limitado ao ramo `main`. Acrescentar os segredos:
+     - `ANDROID_KEYSTORE_BASE64`
+     - `ANDROID_KEYSTORE_PASSWORD`
+     - `ANDROID_KEY_ALIAS` = `financas`
+  5. Guardar as cópias:
+     - o `financas.jks` no Drive ou OneDrive pessoal **e** numa pen USB;
+     - a palavra-passe num gestor de palavras-passe, nunca junto do ficheiro.
+  6. Limpar a área de transferência: **Win+V › «Limpar tudo»**. Confirmar que «Partilhar entre dispositivos» está desligado.
+  7. Verificar a cópia da pen com `keytool -list -v -keystore "<pen>\financas.jks"` e registar no `CLAUDE.md` a impressão digital **SHA-256** (é pública).
+  8. Obrigatório: em **Settings › Actions › General**, escolher «Require approval for all outside collaborators».
+- Num repositório público, o `.apk` das Releases tem só o código da app. Nunca leva dados pessoais, e os testes usam só dados fictícios.
+
+### Regras já fixadas para a 3.1
+- Nunca usar `pull_request_target`.
+- A chave é descodificada para `$RUNNER_TEMP` e apagada no fim (`if: always()`). Nunca é enviada como artefacto.
+- O job de assinatura usa o Environment `android`, com as actions **fixadas por SHA**.
+- Como a chave é PKCS12, `keyPassword = storePassword`.
+- O certificado do `.apk` é comparado com a SHA-256 registada. Se não coincidir, a compilação falha.
+- **Só há `.apk` novo quando muda a parte nativa:**
+  - controlado por um campo explícito no `app/versao.json` (ex.: `"apk": 1`);
+  - as outras melhorias chegam pela **atualização dentro da app**, que tem de vir já no primeiro `.apk`.
+
+### Para retomar
+1. O dono confirma os pontos que propus na revisão: o sufixo `l4r9`, o `-dname` e o Environment `android`.
+2. O dono cria a chave e os segredos e diz «segredos criados», com a SHA-256.
+3. Com «avança», a 3.0 fica concluída:
+   - registar a SHA-256 neste plano;
+   - acrescentar `*.jks`, `*.keystore` e `keystore.properties` ao `.gitignore`;
+   - criar a secção «App Android» no `CLAUDE.md`;
+   - subir a versão para v2.14.1.
+4. A etapa **3.7 nunca** avança sem confirmação expressa do dono.
+
+---
+
 ## Decisões já tomadas
 
 - **Tecnologia:** Capacitor sobre a app React + Vite + TypeScript existente (reaproveitar o código; nada de reescrever em Kotlin).
