@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#05091F">
+  <title>Finanças</title>
+  <style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#05091F;color:#fff;font:15px system-ui,sans-serif}</style>
+  <script>
+    // Versão retirada: apaga a sua cache e o seu service worker{{DADOS_COMENTARIO}} e abre a app.
+    (async () => {
+      try {
+        const aqui = new URL('./', location.href).href;
+        for (const r of await navigator.serviceWorker.getRegistrations()) if (r.scope === aqui) await r.unregister();
+      } catch { /* sem service worker */ }
+      try { await caches.delete('{{CACHE}}'); } catch { /* sem cache */ }
+      {{LIMPAR_DADOS}}
+      location.replace('../');
+    })();
+  </script>
+</head>
+<body><p>Esta versão foi retirada. A abrir a app…</p></body>
+</html>
