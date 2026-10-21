@@ -18,13 +18,13 @@ describe('recorrentes e subscrições', () => {
     r('2026-09-02', 'Mercado', -50, { recurring: undefined }),
   ];
 
-  it('mês atual: pago, por pagar e atrasado; séries terminadas ficam de fora', () => {
+  it('mês atual: pago, agendado, por pagar e atrasado; séries terminadas ficam de fora', () => {
     const x = recorrentesDoMes(l, new Date(2026, 9, 1), HOJE);
     expect(x.lista.map((i) => [i.titulo, i.dia, i.estado, i.valor])).toEqual([
       ['Renda', 1, 'pago', 600], ['Cofre', 5, 'atrasado', 100], ['Ginásio', 8, 'atrasado', 30], ['Seguro', 15, 'por pagar', 90],
-      ['streaming', 20, 'pago', 12], ['Internet', 25, 'por pagar', 40]]);
-    expect(x.pago).toBe(612);
-    expect(x.falta).toBe(260);
+      ['streaming', 20, 'agendado', 12], ['Internet', 25, 'por pagar', 40]]);
+    expect(x.pago).toBe(600);
+    expect(x.falta).toBe(272);
     expect(x.anual).toBe(600 * 12 + 30 * 12 + 12 * 12 + 40 * 12 + 90 * 4 + 100 * 12);
   });
 
@@ -56,5 +56,11 @@ describe('recorrentes e subscrições', () => {
     const novembro = recorrentesDoMes([...luz.slice(0, 4), { ...luz[4]!, amount: -45 }], new Date(2026, 10, 1), HOJE);
     expect(novembro.lista.map((i) => [i.estado, i.valor, i.estimado])).toEqual([['por pagar', 51.67, true]]);
   });
-});
 
+  it('movimento do mês com data futura: «Agendado», em «falta pagar» (ainda não saiu do saldo)', () => {
+    const x = recorrentesDoMes([r('2026-09-25', 'Renda', -600), r('2026-10-25', 'Renda', -600)], new Date(2026, 9, 1), HOJE);
+    expect(x.lista.map((i) => [i.titulo, i.estado, i.valor])).toEqual([['Renda', 'agendado', 600]]);
+    expect(x.pago).toBe(0);
+    expect(x.falta).toBe(600);
+  });
+});

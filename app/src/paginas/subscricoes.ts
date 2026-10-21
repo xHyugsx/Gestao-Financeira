@@ -4,7 +4,7 @@
 import { anoMes, dia, type Movimento } from '../dados';
 import { estimativa, PERIODICIDADES, porConfirmar, serieDe, somarMeses, valorRecorrente as valorDe } from '../movimentos/recorrentes';
 
-export type EstadoRecorrente = 'pago' | 'por pagar' | 'atrasado' | 'por confirmar';
+export type EstadoRecorrente = 'pago' | 'por pagar' | 'atrasado' | 'por confirmar' | 'agendado';
 
 export interface Recorrente {
   titulo: string;
@@ -60,9 +60,9 @@ export function recorrentesDoMes(movimentos: Movimento[], mes: Date, hoje = new 
     if (doMes.length) {
       for (const m of doMes) {
         const d = Number(m.date.slice(8, 10));
-        lista.push(porConfirmar(m)
-          ? { ...base, valor: estimado, estimado: true, dia: d, estado: 'por confirmar', movimento: m }
-          : { ...base, valor: valorDe(m), estimado: false, dia: d, estado: 'pago', movimento: m });
+        // Data futura: ainda não saiu do saldo (agendado); valor 0 numa série variável: falta confirmar
+        const semValor = porConfirmar(m), estado = m.date > hojeDia ? 'agendado' : semValor ? 'por confirmar' : 'pago';
+        lista.push({ ...base, valor: semValor ? estimado : valorDe(m), estimado: semValor, dia: d, estado, movimento: m });
       }
       continue;
     }
@@ -76,6 +76,6 @@ export function recorrentesDoMes(movimentos: Movimento[], mes: Date, hoje = new 
   }
   lista.sort((a, b) => a.dia - b.dia || a.titulo.localeCompare(b.titulo));
   const soma = (e: EstadoRecorrente[]) => lista.filter((r) => e.includes(r.estado)).reduce((s, r) => s + r.valor, 0);
-  // Por confirmar conta em «falta pagar»: ainda não saiu do saldo
-  return { lista, pago: soma(['pago']), falta: soma(['por pagar', 'atrasado', 'por confirmar']), anual };
+  // Por confirmar e agendado contam em «falta pagar»: ainda não saíram do saldo
+  return { lista, pago: soma(['pago']), falta: soma(['por pagar', 'atrasado', 'por confirmar', 'agendado']), anual };
 }

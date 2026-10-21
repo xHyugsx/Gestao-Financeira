@@ -38,4 +38,13 @@ describe('ano em revista', () => {
     expect(s.diasSemGastos).toBe(10);
     expect(s.maiorSequencia).toBe(7);
   });
+
+  it('recorrentes variáveis ainda sem valor não contam como movimento nem como dia com despesas', () => {
+    const base = [m('2026-02-01', 'A', -10), m('2026-02-03', 'B', -10)];
+    const pendente: Movimento = { ...m('2026-02-02', 'Luz', 0), movementType: 'expense', recurring: 'sem' };
+    const com = anoEmRevista({ transactions: [...base, pendente] }, 2026, new Date(2026, 1, 3, 12));
+    const sem = anoEmRevista({ transactions: base }, 2026, new Date(2026, 1, 3, 12));
+    expect(com.movimentos).toBe(2);
+    expect(com.diasSemGastos).toBe(sem.diasSemGastos);
+  });
 });

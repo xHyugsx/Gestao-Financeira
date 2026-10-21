@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { estadoInicial, type Movimento } from '../dados';
 import { alfabetica, corNova, TONS } from './cores';
-import { estimativa, gerarRecorrentes, porConfirmar, somarMeses, valoresDaSerie } from './recorrentes';
+import { estimativa, gerarRecorrentes, porConfirmar, somarMeses, tipoNaSerie, valoresDaSerie } from './recorrentes';
 
 const renda: Movimento = { id: 1, title: 'Renda', detail: '5 julho · Habitação', amount: -600, date: '2026-07-05', movementType: 'expense', recurring: 'com', recurringEvery: 1 };
 let n = 100;
@@ -83,5 +83,16 @@ describe('recorrentes de valor variável', () => {
     expect(estimativa(valoresDaSerie(l, l[3]!))).toBe(43.07);
     expect(estimativa([])).toBe(0);
     expect(estimativa([10, 20, 30, 40])).toBe(30);
+  });
+
+  it('mudar o tipo de valor num movimento antigo aplica-se ao que cria as cópias seguintes', () => {
+    const l = [luz(3, '2026-09-05', -43, { recurring: 'com' }), luz(2, '2026-08-05', -46, { recurring: 'com', recurringDone: true }),
+      luz(9, '2026-09-08', -10, { title: 'Água', recurring: 'com' })];
+    const antes = l[1]!, depois = { ...antes, recurring: 'sem' };
+    const r = tipoNaSerie(l.map((x) => (x.id === 2 ? depois : x)), antes, depois);
+    expect(r.map((x) => [x.id, x.recurring])).toEqual([[3, 'sem'], [2, 'sem'], [9, 'com']]);
+    expect(tipoNaSerie(l, antes, { ...antes, amount: -50 })).toBe(l);
+    const fixo = tipoNaSerie(r, r[1]!, { ...r[1]!, recurring: 'com' });
+    expect(fixo.map((x) => x.recurring)).toEqual(['com', 'sem', 'com']);
   });
 });

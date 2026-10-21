@@ -23,3 +23,17 @@ async def t_agendados_nao_contam_no_saldo(app):
     saldos = await app.saldos()
     verificar(saldos.get('Principal') == '630,00 €', f'previsão de outubro (com os agendados): {saldos}')
     verificar(not app.erros, f'erros: {app.erros}')
+
+
+async def t_recorrente_agendado_nos_recorrentes(app):
+    await app.page.emulate_media(reduced_motion='reduce')
+    await app.abrir(DADOS)
+    p = app.page
+    await p.evaluate("window.ffGoPg('resumo')"); await p.wait_for_timeout(400)
+    await p.click('.segmented button:text-is("Recorrentes")'); await p.wait_for_timeout(500)
+    rec = await p.evaluate("""[...document.querySelectorAll('.page-current .transaction-list article')].map(a=>
+      [a.querySelector('h3').textContent, a.querySelector('.ffrec-dir small').textContent])""")
+    verificar(rec == [['Renda', 'Agendado']], f'a renda de 30/09 ainda não saiu do saldo: {rec}')
+    resumo = await p.evaluate("[...document.querySelectorAll('.page-current .summary-grid article strong')].map(e=>e.textContent.replace(/\\u00a0/g,' '))")
+    verificar(resumo[:2] == ['0,00 €', '300,00 €'], f'pago / falta: {resumo}')
+    verificar(not app.erros, f'erros: {app.erros}')

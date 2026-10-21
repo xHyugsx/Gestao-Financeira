@@ -2,6 +2,7 @@
 // investimentos (poupar não é gastar); no ano atual conta só até hoje.
 import { dia, type Estado, MESES, type Movimento } from '../dados';
 import { categoriaDespesa, simplificar } from '../movimentos/categorias';
+import { porConfirmar } from '../movimentos/recorrentes';
 import { fechoDoMes, textoDe } from './calculos';
 
 const eGasto = (m: Movimento) => m.movementType === 'expense' && !/poupanca|investiment/.test(textoDe(m));
@@ -30,7 +31,8 @@ export interface AnoEmRevista {
 export function anoEmRevista(estado: Pick<Estado, 'transactions'>, ano: number, hoje = new Date()): AnoEmRevista {
   const limite = ano < hoje.getFullYear() ? `${ano}-12-31` : dia(hoje);
   const ateMes = ano < hoje.getFullYear() ? 11 : hoje.getMonth();
-  const doAno = (a: number, ate: string) => estado.transactions.filter((m) => m.date.startsWith(`${a}-`) && m.date <= ate);
+  // Recorrentes variáveis ainda sem valor não contam (nem como movimento, nem como dia com despesas)
+  const doAno = (a: number, ate: string) => estado.transactions.filter((m) => m.date.startsWith(`${a}-`) && m.date <= ate && !porConfirmar(m));
   const l = doAno(ano, limite), gastos = l.filter(eGasto);
   const soma = (x: Movimento[]) => x.reduce((s, m) => s + Math.abs(m.amount), 0);
   const gasto = soma(gastos);

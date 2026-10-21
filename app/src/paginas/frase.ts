@@ -7,8 +7,8 @@ import { diasDoMes, doMes, fechoDoMes, textoDe } from './calculos';
 import { recorrentesDoMes } from './subscricoes';
 
 const soma = (l: Movimento[]) => l.reduce((s, m) => s + Math.abs(m.amount), 0);
-/** Despesas sem poupança nem investimentos. */
-const consumo = (l: Movimento[]) => l.filter((m) => m.movementType === 'expense' && !/poupanca|investiment/.test(textoDe(m)));
+/** Despesas sem poupança nem investimentos (nem recorrentes variáveis ainda sem valor). */
+const consumo = (l: Movimento[]) => l.filter((m) => m.movementType === 'expense' && !porConfirmar(m) && !/poupanca|investiment/.test(textoDe(m)));
 const euros = (v: number) => `${Math.round(v).toLocaleString('pt-PT')}\u00a0€`;
 
 /**

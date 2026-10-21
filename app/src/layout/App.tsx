@@ -13,7 +13,7 @@ import { useDados } from '../estado/useDados';
 import { aspetosCategorias } from '../movimentos/categorias';
 import { EditarMovimento } from '../movimentos/EditarMovimento';
 import { aplicarJuncao, novoLote, prepararJuncao, semJuncao, ultimaJuncao } from '../movimentos/juntar';
-import { gerarRecorrentes } from '../movimentos/recorrentes';
+import { gerarRecorrentes, tipoNaSerie } from '../movimentos/recorrentes';
 import { tipoVisual } from '../movimentos/regras';
 import { regrasPessoais } from '../importacao/config';
 import { lerFicheiro } from '../importacao/leitura';
@@ -138,7 +138,9 @@ export function App() {
   const mudarMovimentos = (f: (l: Movimento[]) => Movimento[]) => setEstado((s) => ({ ...s, transactions: f(s.transactions) }));
   const guardarNovo = (m: Movimento) => { mudarMovimentos((l) => [m, ...l]); vibrar(30); tirarFoco(); setNovoAberto(false); };
   const guardarRegisto = (m: Movimento) => { mudarMovimentos((l) => [m, ...l]); vibrar(30); tirarFoco(); setAbastecimento(false); setDespesaVet(false); };
-  const guardarEdicao = (m: Movimento) => { mudarMovimentos((l) => l.map((x) => (x.id === m.id ? m : x))); vibrar(30); tirarFoco(); setAEditar(null); };
+  const guardarEdicao = (m: Movimento) => {
+    mudarMovimentos((l) => tipoNaSerie(l.map((x) => (x.id === m.id ? m : x)), l.find((x) => x.id === m.id), m)); vibrar(30); tirarFoco(); setAEditar(null);
+  };
   const eliminar = (m: Movimento) => {
     if (!window.confirm(`Eliminar "${m.title}"?`)) return;
     mudarMovimentos((l) => l.filter((x) => x.id !== m.id)); vibrar([40, 60, 40]); setAEditar(null);
