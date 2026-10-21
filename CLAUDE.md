@@ -14,7 +14,7 @@ Contém o contexto do projeto e as regras de trabalho acordadas com o dono da ap
 
 ### Funcionalidades principais
 - Página principal com **Rendimento mensal em destaque** (círculo animado, só esse valor) e **frase do dia** do Jarvis (observação sobre os gastos do mês atual). Os **saldos das contas** estão no **Resumo** (no fim do mês escolhido) e os **gastos por conta** na **Análise › Gastos**.
-- Movimentos (despesas, receitas, transferências), categorias, notas por movimento, filtro por conta, pesquisa. Nas despesas, campo **«Quem fez»** (membros do perfil; pré-escolhe a pessoa da última despesa), etiqueta na lista e **gastos por pessoa** na Análise. No «Novo movimento», sugestão de títulos e da categoria usada da última vez (só enquanto não se escolhe à mão).
+- Movimentos (despesas, receitas, transferências), categorias, notas por movimento, filtro por conta, pesquisa. Movimentos com data futura ficam **«Agendado»** e só mexem no saldo no próprio dia. Nas despesas, campo **«Quem fez»** (membros do perfil; pré-escolhe a pessoa da última despesa), etiqueta na lista e **gastos por pessoa** na Análise. No «Novo movimento», sugestão de títulos e da categoria usada da última vez (só enquanto não se escolhe à mão).
 - **Atalhos** no ícone da app (manifesto `shortcuts`): «Nova despesa» e «Jarvis» (`index.html?acao=despesa|jarvis`, executados depois do desbloqueio).
 - Páginas: Principal, Análise, Calendário, Categorias, Resumo, Combustível, Veterinário.
   - Resumo › **Ano em revista**: ecrãs ao estilo «stories» com o ano em números (gasto, mês mais caro/leve, categorias, sítios, poupança, dias sem despesas); poupança não conta como gasto.
@@ -75,6 +75,7 @@ Qualquer alteração deve manter **compatibilidade total** com os dados já guar
 - **Backup/restauro:** o JSON exportado tem de continuar a ser restaurável, incluindo `vetReminders` e `jarvisThreads`.
 - **Rendimento do mês X = salários do mês X−1** (regra de negócio já em uso).
 - **Saldo das contas:** saldo guardado + movimentos com efeito no saldo; movimentos importados de extratos têm `affectsBalance:false`. O saldo da Edenred **transita** de mês para mês (nunca volta a zero).
+- **Movimentos agendados** (data futura): só contam no saldo **a partir do próprio dia** (data local do telemóvel); na lista têm a etiqueta «Agendado». No Resumo de um mês futuro, o saldo é a **previsão** para o fim desse mês. Os gastos do mês continuam a contá-los (decisão do dono, 21/10/2026, v2.15.0).
 
 ---
 

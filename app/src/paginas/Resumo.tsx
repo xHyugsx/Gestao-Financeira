@@ -79,7 +79,7 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
         <article><span>Receitas</span><strong className="amount-positive">{eur(recebido)}</strong></article>
       </section>
       <div className="view-heading ffsaldos-titulo">
-        <p className="eyebrow">{anoMes(mes) < anoMes(hoje) ? `Fim de ${MESES[mes.getMonth()]}` : 'Hoje'}</p><h2>Saldos das contas</h2>
+        <p className="eyebrow">{anoMes(mes) < anoMes(hoje) ? `Fim de ${MESES[mes.getMonth()]}` : anoMes(mes) > anoMes(hoje) ? `Previsão para o fim de ${MESES[mes.getMonth()]}` : 'Hoje'}</p><h2>Saldos das contas</h2>
       </div>
       <section className="summary-grid ffsaldos">
         {contas.map((c) => {

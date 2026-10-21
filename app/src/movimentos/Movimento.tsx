@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { Conta, Movimento } from '../dados';
+import { agendado, type Conta, type Movimento } from '../dados';
 import { formatarEuros } from '../ui/formatos';
 import { Icone } from '../ui/Icone';
 import { aspetoDoMovimento, type aspetosCategorias, iconePorTipo } from './categorias';
@@ -24,7 +24,7 @@ export function ArtigoMovimento({ movimento: m, aoAbrir, children }: { movimento
   );
 }
 
-/** Título, descrição (com a conta, se não for a Principal) e nota. */
+/** Título, descrição (com a conta, se não for a Principal, a pessoa e «Agendado» se a data for futura) e nota. */
 export function TextoMovimento({ movimento: m, contas }: { movimento: Movimento; contas: Conta[] }) {
   return (
     <div className="min-w-0">
@@ -35,6 +35,7 @@ export function TextoMovimento({ movimento: m, contas }: { movimento: Movimento;
           ? <span className="tx-acc">{contas.find((c) => c.id === m.account)?.name || 'Conta'}</span>
           : null}
         {m.person ? <span className="tx-acc ffpessoa">{m.person}</span> : null}
+        {agendado(m, new Date()) ? <span className="tx-acc ffagendado">Agendado</span> : null}
       </p>
       {m.note ? <p className="ffnote" title={m.note}>{m.note}</p> : null}
     </div>
