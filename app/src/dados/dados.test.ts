@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
-  acertarSaldo, aplicarBackup, chave, type Conta, criarBackup, dataPorOmissao, estadoInicial, gravarDados, hashPin, lerBackup, lerDados,
+  acertarSaldo, agendado, aplicarBackup, chave, type Conta, criarBackup, dataPorOmissao, estadoInicial, gravarDados, hashPin, lerBackup, lerDados,
   limiteSaldoBaixo, type Movimento, normalizar, paraGravar, pinValido, PREFIXO_V2, rendimentoDoMes,
   salariosDoMes, saldoDaConta,
 } from './index';
@@ -210,5 +210,53 @@ describe('saldo corrigido só a partir do dia da correção', () => {
     expect(agosto.atual).toBe(100 - 15 + 5 + 26);
     expect(agosto.anterior).toBe(agosto.atual + 10);
     expect(agosto.mesAnterior).toBe('julho');
+  });
+});
+
+describe('movimentos agendados (data futura) só contam no saldo a partir do dia', () => {
+  const p: Conta = { id: 'principal', name: 'Principal', balance: 1000 };
+  const ed: Conta = { id: 'ed', name: 'Cartão refeição', balance: 100 };
+  const ms = [
+    mov({ id: 1, amount: -50, date: '2026-10-10' }),
+    mov({ id: 2, amount: -300, date: '2026-10-25', recurring: 'com', recurringEvery: 1 }),
+    mov({ id: 3, amount: 0, movementType: 'transfer', transferValue: 200, revolut: { holder: 'Conjunta' }, date: '2026-10-28' }),
+    mov({ id: 4, amount: -20, date: '2026-11-05' }),
+    mov({ id: 5, amount: -10, date: '2026-10-30', account: 'ed' }),
+  ];
+  const hoje = new Date(2026, 9, 21, 18, 43);
+
+  it('hoje só conta o que já aconteceu', () => {
+    expect(saldoDaConta(p, ms, hoje).atual).toBe(950);
+    expect(saldoDaConta({ id: 'revolut', name: 'Revolut Conjunta', balance: 0 }, ms, hoje).atual).toBe(0);
+    expect(saldoDaConta(ed, ms, hoje).atual).toBe(100);
+    expect(agendado(ms[1]!, hoje)).toBe(true);
+    expect(agendado(ms[0]!, hoje)).toBe(false);
+  });
+
+  it('no próprio dia passa a contar', () => {
+    expect(saldoDaConta(p, ms, new Date(2026, 9, 25, 0, 1)).atual).toBe(650);
+    expect(agendado(ms[1]!, new Date(2026, 9, 25, 0, 1))).toBe(false);
+  });
+
+  it('mês futuro: previsão para o fim desse mês com os agendados até lá', () => {
+    const nov = saldoDaConta(p, ms, hoje, new Date(2026, 10, 1));
+    expect(nov.atual).toBe(1000 - 50 - 300 - 200 - 20);
+    expect(nov.anterior).toBe(1000 - 50 - 300 - 200);
+    expect(nov.mesAnterior).toBe('outubro');
+    expect(saldoDaConta(ed, ms, hoje, new Date(2026, 10, 1)).atual).toBe(90);
+  });
+
+  it('meses anteriores não mudam', () => {
+    expect(saldoDaConta(p, ms, hoje, new Date(2026, 8, 1)).atual).toBe(1000);
+  });
+
+  it('o acerto de saldo ignora os agendados', () => {
+    const nova = acertarSaldo(p, ms, 900, hoje);
+    expect(saldoDaConta(nova, ms, hoje).atual).toBe(900);
+    expect(saldoDaConta(nova, ms, new Date(2026, 9, 25)).atual).toBe(600);
+  });
+
+  it('movimentos antigos sem data continuam a contar', () => {
+    expect(saldoDaConta(p, [mov({ amount: -5, date: undefined as never })], hoje).atual).toBe(995);
   });
 });

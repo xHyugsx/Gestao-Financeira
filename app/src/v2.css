@@ -136,3 +136,7 @@
 @media (prefers-reduced-motion: reduce) {
   .ffrev-ecra > *, .ffrev-progresso i.atual::after, .ffrev-barras i, .ffrev-lista i { animation: none; }
 }
+
+/* Movimentos com data futura: ainda não contam no saldo */
+.tx-acc.ffagendado { color: var(--cosmic-blue); background: color-mix(in oklab, var(--cosmic-blue) 16%, transparent); }
+.transaction-row:has(.ffagendado) > strong { opacity: .6; }

@@ -36,6 +36,17 @@ function esperado(nome: string, caso: Caso, v: Record<string, unknown>): Record<
   return r;
 }
 
+/**
+ * Diferença intencional (v2.15.0): movimentos agendados (data futura) só contam no saldo a partir do dia.
+ * No caso «completo», os 300 € de 2/10 (Principal) e os 4,20 € de 30/09 (Poupança) são posteriores à data de
+ * referência; a tendência da Principal deixa de comparar com um fim de agosto que incluía os 300 € futuros.
+ */
+const AGENDADOS: Record<string, [string, string][]> = {
+  completo: [['Principal: 576,60 €', 'Principal: 276,60 €'], ['Poupança: 1004,20 €', 'Poupança: 1000,00 €'],
+    ['↓ 32,2% vs. agosto', '↓ 49,7% vs. agosto'], ['↑ 0,4% vs. início do mês', '↑ 0% vs. início do mês']],
+};
+const semAgendados = (nome: string, texto: string) => (AGENDADOS[nome] ?? []).reduce((t, [de, para]) => t.replace(de, para), texto);
+
 describe.each(Object.entries(REF.casos))('igual à 1.9.x: %s', (nome, caso) => {
   const estado = normalizar(json(caso.entrada ?? {}));
 
@@ -51,7 +62,7 @@ describe.each(Object.entries(REF.casos))('igual à 1.9.x: %s', (nome, caso) => {
 
   if (caso.saldos) it('saldos das contas', () => {
     const texto = estado.accounts.map((c) => `${c.name}: ${eur(saldoDaConta(c, estado.transactions, HOJE).atual)}`).join(' · ');
-    expect(`Saldos — ${texto}.`).toBe(caso.saldos);
+    expect(`Saldos — ${texto}.`).toBe(semAgendados(nome, caso.saldos!));
   });
 
   if (caso.tendencias) it('tendência das contas', () => {
@@ -60,7 +71,7 @@ describe.each(Object.entries(REF.casos))('igual à 1.9.x: %s', (nome, caso) => {
       const t = tendencia(s), rotulo = s.nova ? 'início do mês' : s.mesAnterior;
       return `SALDO ${c.name.toUpperCase()} | ${t === null ? `— vs. ${rotulo}` : `${t >= 0 ? '↑' : '↓'} ${pct(t)} vs. ${rotulo}`}`;
     });
-    expect(linhas).toEqual(caso.tendencias);
+    expect(linhas).toEqual(caso.tendencias!.map((l) => semAgendados(nome, l)));
   });
 
   if (caso.rendimento) it('rendimento mensal (setembro de 2026 a dezembro de 2025)', () => {

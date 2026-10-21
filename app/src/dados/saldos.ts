@@ -1,7 +1,8 @@
 // Saldos das contas, com as mesmas regras da 1.9.x (secção 3 do CLAUDE.md):
 // saldo guardado + movimentos com efeito no saldo. Os saldos acumulam todos os meses,
 // por isso o da Edenred transita de mês para mês e nunca volta a zero.
-import { anoMes, MESES } from './datas';
+// Movimentos com data futura (agendados) só contam no saldo a partir do próprio dia (pedido do dono, v2.15.0).
+import { anoMes, dia, MESES } from './datas';
 import type { Conta, Movimento } from './esquema';
 
 /** Total gasto (despesas em valor absoluto). */
@@ -55,12 +56,19 @@ function efeitoNaConta(id: string | undefined, m: Movimento): number {
 const somaDe = (o: Record<string, number> | undefined, incluir: (chave: string) => boolean) =>
   Object.entries(o ?? {}).reduce((s, [k, v]) => s + (incluir(k) ? Number(v) || 0 : 0), 0);
 
+/** O movimento tem data posterior a hoje (só conta no saldo a partir desse dia). */
+export const agendado = (m: Movimento, hoje: Date) => !!m.date && m.date > dia(hoje);
+
 /**
  * Saldo de uma conta. Com `ate` num mês anterior ao atual, dá o saldo no fim desse mês: sem os movimentos e os
  * acertos posteriores (um saldo corrigido só vale a partir do dia da correção — pedido do dono, só na app nova).
+ * Com `ate` num mês futuro, dá a previsão para o fim desse mês (com os agendados até lá).
  */
-export function saldoDaConta(conta: Conta | undefined, movimentos: Movimento[], hoje: Date, ate?: Date): SaldoConta {
+export function saldoDaConta(conta: Conta | undefined, todos: Movimento[], hoje: Date, ate?: Date): SaldoConta {
   const mes = anoMes(hoje);
+  const alvo = ate ? anoMes(ate) : mes;
+  const limite = alvo > mes ? `${alvo}-31` : dia(hoje);
+  const movimentos = todos.filter((m) => !m.date || m.date <= limite);
   const id = conta?.id;
   let atual = conta?.balance ?? 0;
   let doMes: number;
@@ -74,8 +82,11 @@ export function saldoDaConta(conta: Conta | undefined, movimentos: Movimento[], 
     atual += movimentosDaConta(movimentos, id);
     doMes = movimentosDaConta(movimentos, id, mes);
   }
-  const alvo = ate ? anoMes(ate) : mes;
-  if (alvo >= mes) {
+  if (alvo > mes) {
+    const noMes = movimentos.filter((m) => m.date?.startsWith(alvo)).reduce((s, m) => s + efeitoNaConta(id, m), 0);
+    return { atual, anterior: atual - noMes, nova: false, mesAnterior: MESES[(ate!.getMonth() + 11) % 12]! };
+  }
+  if (alvo === mes) {
     return {
       atual,
       anterior: atual - doMes - (conta?.adj?.[mes] || 0) - somaDe(conta?.adjDays, (d) => d.startsWith(mes)),
