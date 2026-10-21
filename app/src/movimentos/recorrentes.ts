@@ -69,6 +69,17 @@ export function valoresDaSerie(movimentos: Movimento[], m: Movimento): number[] 
     .map(valorRecorrente);
 }
 
+/**
+ * Mudar o tipo de valor (fixo/variável) num movimento de uma série aplica-se também ao movimento que cria as cópias
+ * seguintes (o mais recente da série); sem isso, mudar num movimento antigo não teria efeito.
+ */
+export function tipoNaSerie(lista: Movimento[], antes: Movimento | undefined, depois: Movimento): Movimento[] {
+  const variavel = (m: Movimento) => m.recurring === 'sem';
+  if (!antes || !depois.recurring || variavel(antes) === variavel(depois)) return lista;
+  const k = serieDe(antes);
+  return lista.map((x) => (x.id !== depois.id && repete(x) && serieDe(x) === k ? { ...x, recurring: depois.recurring } : x));
+}
+
 /** Estimativa de um valor variável: média dos últimos 3 valores (0 se ainda não houver nenhum). */
 export function estimativa(valores: number[]): number {
   const u = valores.filter((v) => v > 0).slice(-3);

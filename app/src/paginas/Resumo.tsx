@@ -113,7 +113,7 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
   const recorrentes = () => {
     const r = recorrentesDoMes(movimentos, mes, hoje);
     const total = r.pago + r.falta;
-    const ROTULO = { pago: 'Pago', 'por pagar': 'Por pagar', atrasado: 'Atrasado', 'por confirmar': 'Por confirmar' } as const;
+    const ROTULO = { pago: 'Pago', 'por pagar': 'Por pagar', atrasado: 'Atrasado', 'por confirmar': 'Por confirmar', agendado: 'Agendado' } as const;
     return (
       <>
         <div className="view-heading"><p className="eyebrow">{MESES[mes.getMonth()]}</p><h2>Recorrentes e subscrições</h2></div>
