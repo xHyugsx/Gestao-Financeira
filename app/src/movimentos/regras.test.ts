@@ -96,6 +96,10 @@ describe('editar movimento', () => {
     expect(movimentoEditado(base, campos({ title: 'X', amount: '1' }))!.recurring).toBeUndefined();
     const antigo = movimentoEditado({ ...base, recurring: 'sem' }, campos({ title: 'X', amount: '1', recurring: 'on', recurringEvery: '' }))!;
     expect(antigo.recurring).toBe('sem');
+    expect(movimentoEditado({ ...base, recurring: true }, campos({ title: 'X', amount: '1', recurring: 'on', tipoValor: 'sem' }))!.recurring).toBe('sem');
+    expect(movimentoEditado({ ...base, recurring: 'sem' }, campos({ title: 'X', amount: '1', recurring: 'on', tipoValor: 'com' }))!.recurring).toBe('com');
+    expect(movimentoEditado({ ...base, recurring: true }, campos({ title: 'X', amount: '1', recurring: 'on', tipoValor: 'com' }))!.recurring).toBe(true);
+    expect(movimentoEditado({ ...base, recurring: 'sem', amount: 0 }, campos({ title: 'X', amount: '', recurring: 'on', tipoValor: 'sem' }))!.amount).toBe(-0);
     expect(antigo.recurringEvery).toBeUndefined();
   });
 });

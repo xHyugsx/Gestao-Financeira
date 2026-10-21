@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { estadoInicial, type Movimento } from '../dados';
 import { alfabetica, corNova, TONS } from './cores';
-import { gerarRecorrentes, somarMeses } from './recorrentes';
+import { estimativa, gerarRecorrentes, porConfirmar, somarMeses, valoresDaSerie } from './recorrentes';
 
 const renda: Movimento = { id: 1, title: 'Renda', detail: '5 julho · Habitação', amount: -600, date: '2026-07-05', movementType: 'expense', recurring: 'com', recurringEvery: 1 };
 let n = 100;
@@ -62,5 +62,26 @@ describe('cores das categorias', () => {
 
   it('ordena por ordem alfabética portuguesa', () => {
     expect(alfabetica(['Saúde', 'alimentação', 'Educação', 'Água'])).toEqual(['Água', 'alimentação', 'Educação', 'Saúde']);
+  });
+});
+
+describe('recorrentes de valor variável', () => {
+  const luz = (id: number, date: string, amount: number, extra: Partial<Movimento> = {}): Movimento =>
+    ({ id, title: 'Luz', detail: 'x · Casa', amount, date, movementType: 'expense', recurring: 'sem', recurringEvery: 1, ...extra });
+
+  it('a cópia nasce por confirmar e deixa de estar quando se escreve o valor', () => {
+    const l = gerarRecorrentes([luz(1, '2026-09-05', -42)], new Date(2026, 9, 5), id)!;
+    expect(porConfirmar(l[0]!)).toBe(true);
+    expect(porConfirmar({ ...l[0]!, amount: -38.5 })).toBe(false);
+    expect(porConfirmar(luz(2, '2026-10-05', 0, { recurring: 'com' }))).toBe(false);
+  });
+
+  it('valores da série até à data, sem os por confirmar nem outras séries', () => {
+    const l = [luz(1, '2026-07-05', -40), luz(2, '2026-08-05', -46), luz(3, '2026-09-05', -43.2), luz(4, '2026-10-05', 0),
+      luz(5, '2026-09-10', -99, { title: 'Água' }), luz(6, '2026-11-05', -50)];
+    expect(valoresDaSerie(l, l[3]!)).toEqual([40, 46, 43.2]);
+    expect(estimativa(valoresDaSerie(l, l[3]!))).toBe(43.07);
+    expect(estimativa([])).toBe(0);
+    expect(estimativa([10, 20, 30, 40])).toBe(30);
   });
 });

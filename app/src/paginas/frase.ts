@@ -2,6 +2,7 @@
 // Poupança e investimentos não contam como gasto (mesmas regras do «Fecho de mês»).
 import { dia, type Estado, inicioDoMes, MESES, type Movimento } from '../dados';
 import { categoriaDespesa } from '../movimentos/categorias';
+import { porConfirmar } from '../movimentos/recorrentes';
 import { diasDoMes, doMes, fechoDoMes, textoDe } from './calculos';
 import { recorrentesDoMes } from './subscricoes';
 
@@ -13,9 +14,16 @@ const euros = (v: number) => `${Math.round(v).toLocaleString('pt-PT')}\u00a0€`
 /**
  * Frase do dia: uma observação sobre os gastos, escolhida pelo dia do ano entre as que se aplicam.
  * Só olha para o mês atual; devolve `null` se não houver nada a dizer.
+ * Enquanto houver recorrentes de valor variável por confirmar (este mês ou no anterior), a frase lembra-os.
  */
 export function fraseDoDia(estado: Pick<Estado, 'transactions'>, hoje = new Date()): string | null {
   const l = estado.transactions, d = hoje.getDate();
+  const desdeMesAnterior = dia(inicioDoMes(hoje, -1));
+  const pendentes = [...new Set(l.filter((m) => porConfirmar(m) && m.date >= desdeMesAnterior && m.date <= dia(hoje)).map((m) => m.title.trim()))];
+  if (pendentes.length) {
+    const nomes = pendentes.length > 1 ? `${pendentes.slice(0, -1).join(', ')} e ${pendentes.at(-1)}` : pendentes[0];
+    return `Falta confirmar o valor de ${nomes}: toca no movimento e escreve o valor deste mês.`;
+  }
   const gastoAte = (mes: Date, ate: number) => soma(consumo(doMes(l, mes)).filter((m) => Number(m.date.slice(8, 10)) <= ate));
   const frases: string[] = [];
 

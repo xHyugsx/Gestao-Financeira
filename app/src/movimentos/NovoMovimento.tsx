@@ -142,8 +142,8 @@ export function NovoMovimento({ aberto, aoMudar, estado, escolhas: e, mudarEscol
           {e.recorrente ? (
             <label>Tipo de valor
               <select value={e.tipoValor} onChange={(x) => mudar({ tipoValor: x.target.value })}>
-                <option value="com">Com valor</option>
-                <option value="sem">Sem valor (definir mais tarde)</option>
+                <option value="com">Valor fixo</option>
+                <option value="sem">Valor variável (confirmar todos os meses)</option>
               </select>
             </label>
           ) : null}

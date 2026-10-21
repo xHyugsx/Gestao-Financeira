@@ -81,7 +81,9 @@
 .ffrec-pago { color: #34d399; background: rgba(52, 211, 153, .14); }
 .ffrec-por-pagar { color: #a5b4fc; background: rgba(129, 140, 248, .16); }
 .ffrec-atrasado { color: #fb7185; background: rgba(244, 63, 94, .16); }
-.ffrec-ic-pago { color: #34d399; } .ffrec-ic-por-pagar { color: #a5b4fc; } .ffrec-ic-atrasado { color: #fb7185; }
+.ffrec-por-confirmar { color: #fbbf24; background: rgba(251, 191, 36, .14); }
+.ffrec-estimado { opacity: .75; }
+.ffrec-ic-pago { color: #34d399; } .ffrec-ic-por-pagar { color: #a5b4fc; } .ffrec-ic-atrasado { color: #fb7185; } .ffrec-ic-por-confirmar { color: #fbbf24; }
 .ffrec-subiu { color: #fb7185; }
 @media (prefers-reduced-motion: reduce) { .ffrec-barra b { animation: none; } }
 .segmented.ffseg-2l { grid-auto-flow: row; grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -140,3 +142,7 @@
 /* Movimentos com data futura: ainda não contam no saldo */
 .tx-acc.ffagendado { color: var(--cosmic-blue); background: color-mix(in oklab, var(--cosmic-blue) 16%, transparent); }
 .transaction-row:has(.ffagendado) > strong { opacity: .6; }
+
+/* Recorrentes de valor variável à espera do valor do mês */
+.tx-acc.ffconfirmar { color: #fbbf24; background: rgba(251, 191, 36, .14); }
+.ffultimo { justify-self: start; margin-top: -.35rem; padding: .2rem .55rem; border: 0; border-radius: 999px; font: inherit; font-size: .72rem; color: #fbbf24; background: rgba(251, 191, 36, .12); cursor: pointer; }
