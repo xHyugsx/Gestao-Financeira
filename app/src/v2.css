@@ -147,3 +147,6 @@
 /* Recorrentes de valor variável à espera do valor do mês */
 .tx-acc.ffconfirmar { color: #fbbf24; background: rgba(251, 191, 36, .14); }
 .ffultimo { justify-self: start; margin-top: -.35rem; padding: .2rem .55rem; border: 0; border-radius: 999px; font: inherit; font-size: .72rem; color: #fbbf24; background: rgba(251, 191, 36, .12); cursor: pointer; }
+
+/* Resumo de um mês futuro: nota dos recorrentes previstos incluídos na previsão */
+.ffprevistos { margin: -.3rem 0 .4rem; text-align: center; font-size: .72rem; color: var(--muted-foreground); }
