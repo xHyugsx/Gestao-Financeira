@@ -31,7 +31,7 @@ export function Principal({ estado, mes, ocultos, lista, mudarLista, vibrar, abr
   const eur = (v: number) => formatarEuros(v, ocultos);
   const rendimento = rendimentoDoMes(estado, mes);
   const desceu = rendimento.anterior ? rendimento.valor < rendimento.anterior : false;
-  const frase = !ocultos && anoMes(mes) === anoMes(hoje) ? fraseDoDia({ transactions: todos }, hoje) : null;
+  const frase = !ocultos && anoMes(mes) === anoMes(hoje) ? fraseDoDia({ transactions: todos, annualExpenses: estado.annualExpenses }, hoje) : null;
 
   const termo = simplificar(lista.pesquisa.trim());
   const contaFiltro = lista.conta === 'all' || contas.some((c) => c.id === lista.conta) ? lista.conta : 'all';

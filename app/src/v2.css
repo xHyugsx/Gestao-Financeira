@@ -154,3 +154,8 @@
 /* Apagar a última cópia de uma série recorrente */
 .ffapagar-opcoes { display: grid; gap: .45rem; margin: 0; padding-left: 1.1rem; font-size: .82rem; color: var(--muted-foreground); }
 .ffapagar-opcoes strong { color: var(--foreground); }
+
+/* Despesas anuais: por pagar (este mês) e em atraso, com «Registar pagamento» e «Renovar sem registar» */
+.ffanual-acoes { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: .4rem; justify-content: flex-end; margin-top: -.2rem; }
+.tx-acc.ffanual-estado-por-pagar { color: #fbbf24; background: rgba(251, 191, 36, .14); }
+.tx-acc.ffanual-estado-em-atraso { color: #fb7185; background: rgba(244, 63, 94, .16); }
