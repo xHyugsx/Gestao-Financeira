@@ -30,4 +30,12 @@ describe('frase do dia', () => {
     const l = [{ ...m('2026-09-20', 'Internet', -40, 'Casa'), recurring: 'com' as const }, m('2026-10-11', 'X', -5, 'Lazer')];
     expect(fraseDoDia({ transactions: l }, HOJE)).toBe('Falta pagar 1 recorrente este mês (≈ 40\u00a0€).');
   });
+
+  it('lembra os recorrentes de valor variável por confirmar (este mês e o anterior)', () => {
+    const v = (date: string, title: string) => ({ ...m(date, title, 0, 'Casa'), movementType: 'expense' as const, recurring: 'sem' as const });
+    expect(fraseDoDia({ transactions: [v('2026-10-05', 'Luz'), v('2026-09-28', 'Água '), v('2026-10-06', 'Luz')] }, HOJE))
+      .toBe('Falta confirmar o valor de Luz e Água: toca no movimento e escreve o valor deste mês.');
+    expect(fraseDoDia({ transactions: [v('2026-08-05', 'Luz'), m('2026-10-07', 'X', -5, 'Lazer')] }, HOJE)).not.toMatch(/confirmar/);
+  });
 });
+

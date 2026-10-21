@@ -1,11 +1,12 @@
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useRef, useState } from 'react';
 import type { Estado, Movimento } from '../dados';
 import { Botao } from '../ui/Botao';
 import { Dialogo } from '../ui/Dialogo';
+import { formatarEuros } from '../ui/formatos';
 import { Icone } from '../ui/Icone';
 import { categoriaDoDetalhe } from './categorias';
 import { pessoasDaFamilia } from './pessoas';
-import { PERIODICIDADES } from './recorrentes';
+import { PERIODICIDADES, porConfirmar, valoresDaSerie } from './recorrentes';
 import { categoriasParaEditar, movimentoEditado } from './regras';
 
 interface Props {
@@ -20,6 +21,10 @@ function Formulario({ m, estado, aoGuardar, aoEliminar }: { m: Movimento } & Pic
   const [recorrente, setRecorrente] = useState(!!m.recurring);
   const pessoas = pessoasDaFamilia(estado);
   const atual = categoriaDoDetalhe(m);
+  // Valor variável por confirmar: campo vazio e o valor da última vez à mão
+  const pendente = porConfirmar(m);
+  const ultimo = pendente ? valoresDaSerie(estado.transactions, m).at(-1) : undefined;
+  const campoValor = useRef<HTMLInputElement>(null);
   const guardar = (ev: FormEvent<HTMLFormElement>) => {
     ev.preventDefault();
     const novo = movimentoEditado(m, new FormData(ev.currentTarget));
@@ -32,14 +37,20 @@ function Formulario({ m, estado, aoGuardar, aoEliminar }: { m: Movimento } & Pic
         <label>Valor
           <div className="input-suffix">
             <input
-              name="amount" inputMode="decimal" defaultValue={String(m.revolut ? m.transferValue || 0 : Math.abs(m.amount)).replace('.', ',')}
-              disabled={m.movementType === 'transfer' && !m.revolut} required
+              ref={campoValor} name="amount" inputMode="decimal" placeholder={pendente ? 'A definir' : undefined}
+              defaultValue={pendente ? '' : String(m.revolut ? m.transferValue || 0 : Math.abs(m.amount)).replace('.', ',')}
+              disabled={m.movementType === 'transfer' && !m.revolut} required={!pendente}
             />
             <span>€</span>
           </div>
         </label>
         <label>Data<input name="date" type="date" defaultValue={m.date} required /></label>
       </div>
+      {ultimo ? (
+        <button type="button" className="ffultimo" onClick={() => { if (campoValor.current) { campoValor.current.value = String(ultimo).replace('.', ','); campoValor.current.focus(); } }}>
+          Da última vez: {formatarEuros(ultimo, false)} · usar
+        </button>
+      ) : null}
       {/* Lista de escolha (a app atual tinha um campo de texto com sugestões) */}
       <label>Categoria
         <select name="category" defaultValue={atual}>
@@ -68,6 +79,14 @@ function Formulario({ m, estado, aoGuardar, aoEliminar }: { m: Movimento } & Pic
             <select name="recurringEvery" defaultValue={m.recurringEvery ? String(m.recurringEvery) : ''}>
               <option value="">Não criar automaticamente</option>
               {PERIODICIDADES.map((p) => <option key={p.meses} value={p.meses}>{p.rotulo}</option>)}
+            </select>
+          </label>
+        ) : null}
+        {recorrente ? (
+          <label>Tipo de valor
+            <select name="tipoValor" defaultValue={m.recurring === 'sem' ? 'sem' : 'com'}>
+              <option value="com">Valor fixo</option>
+              <option value="sem">Valor variável (confirmar todos os meses)</option>
             </select>
           </label>
         ) : null}

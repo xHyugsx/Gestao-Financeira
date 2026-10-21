@@ -85,7 +85,10 @@ export function movimentoEditado(m: Movimento, campos: FormData): Movimento | nu
   const recorrencia: Partial<Movimento> = {};
   if (campos.has('recurringEvery') || campos.get('recurring') === 'on') {
     const cada = Number(campos.get('recurringEvery') || 0);
-    Object.assign(recorrencia, { recurring: m.recurring || 'com', recurringEvery: cada > 0 ? cada : undefined });
+    // Tipo de valor: "sem" = valor variável; ao passar a fixo, um `true` antigo (1.9.x) fica como estava
+    const tipo = campos.get('tipoValor');
+    const recurring = tipo === 'sem' ? 'sem' : tipo === 'com' && m.recurring === 'sem' ? 'com' : m.recurring || 'com';
+    Object.assign(recorrencia, { recurring, recurringEvery: cada > 0 ? cada : undefined });
   } else if (m.recurring) Object.assign(recorrencia, { recurring: undefined, recurringEvery: undefined, recurringDone: undefined });
   return {
     ...m, ...recorrencia, title: titulo, amount: m.movementType === 'expense' ? -valor : m.movementType === 'income' ? valor : m.amount, date: data,

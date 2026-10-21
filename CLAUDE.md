@@ -18,7 +18,7 @@ Contém o contexto do projeto e as regras de trabalho acordadas com o dono da ap
 - **Atalhos** no ícone da app (manifesto `shortcuts`): «Nova despesa» e «Jarvis» (`index.html?acao=despesa|jarvis`, executados depois do desbloqueio).
 - Páginas: Principal, Análise, Calendário, Categorias, Resumo, Combustível, Veterinário.
   - Resumo › **Ano em revista**: ecrãs ao estilo «stories» com o ano em números (gasto, mês mais caro/leve, categorias, sítios, poupança, dias sem despesas); poupança não conta como gasto.
-  - Resumo › **Recorrentes**: recorrentes do mês (pago / por pagar / atrasado), subidas de preço e custo anual (séries pelo título; despesas e transferências para a Revolut marcadas como recorrentes).
+  - Resumo › **Recorrentes**: recorrentes do mês (pago / por pagar / atrasado), subidas de preço e custo anual (séries pelo título; despesas e transferências para a Revolut marcadas como recorrentes). Séries de **valor variável**: cada cópia nasce «Valor por confirmar» (sem mexer no saldo), com estimativa «≈» (média dos últimos 3 valores), «Da última vez» ao editar e lembrete na frase do dia.
   - Calendário com **mapa de calor** dos gastos (4 níveis pela posição entre os dias com gastos; poupança não conta) e dias sem despesas assinalados.
   - Barra inferior: Principal · Análise · [+] · Calendário · **Mais** (painel com Categorias, Resumo, Combustível, Veterinário).
   - Ordem ao deslizar: Principal → Análise → Calendário → Categorias → Resumo → Combustível → Veterinário.
@@ -71,7 +71,7 @@ Qualquer alteração deve manter **compatibilidade total** com os dados já guar
 | `financas-familiar:storage-warn` | Aviso diário de espaço |
 
 - **PIN:** `pinHash = SHA-256("financas-familiar:" + PIN)` em hexadecimal. O registo da impressão digital guarda este hash; se o formato mudar, a impressão digital deixa de funcionar e o utilizador pode ficar sem acesso.
-- **Movimentos:** campos `id, title, detail ("dia mês · Categoria"), amount (negativo = despesa), date (AAAA-MM-DD), movementType (expense|income|transfer), account?, recurring?, note?, pet?, affectsBalance?, importKey?, importBatch?, mergeBatch?, person?`.
+- **Movimentos:** campos `id, title, detail ("dia mês · Categoria"), amount (negativo = despesa), date (AAAA-MM-DD), movementType (expense|income|transfer), account?, recurring? (`true`/`"com"` = valor fixo, `"sem"` = valor variável), note?, pet?, affectsBalance?, importKey?, importBatch?, mergeBatch?, person?`.
 - **Backup/restauro:** o JSON exportado tem de continuar a ser restaurável, incluindo `vetReminders` e `jarvisThreads`.
 - **Rendimento do mês X = salários do mês X−1** (regra de negócio já em uso).
 - **Saldo das contas:** saldo guardado + movimentos com efeito no saldo; movimentos importados de extratos têm `affectsBalance:false`. O saldo da Edenred **transita** de mês para mês (nunca volta a zero).

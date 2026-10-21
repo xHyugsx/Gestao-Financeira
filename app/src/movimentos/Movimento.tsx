@@ -3,9 +3,10 @@ import { agendado, type Conta, type Movimento } from '../dados';
 import { formatarEuros } from '../ui/formatos';
 import { Icone } from '../ui/Icone';
 import { aspetoDoMovimento, type aspetosCategorias, iconePorTipo } from './categorias';
+import { porConfirmar } from './recorrentes';
 
 function valor(m: Movimento, ocultos: boolean): string {
-  if (m.recurring === 'sem' && !m.amount && !m.transferValue) return 'A definir';
+  if (porConfirmar(m)) return 'A definir';
   if (m.revolut) return `→ ${formatarEuros(m.transferValue || 0, ocultos)}`;
   if (m.movementType === 'transfer') return 'Movido';
   return `${m.amount > 0 ? '+' : '−'}${formatarEuros(Math.abs(m.amount), ocultos)}`;
@@ -24,7 +25,7 @@ export function ArtigoMovimento({ movimento: m, aoAbrir, children }: { movimento
   );
 }
 
-/** Título, descrição (com a conta, se não for a Principal, a pessoa e «Agendado» se a data for futura) e nota. */
+/** Título, descrição (com a conta, se não for a Principal, a pessoa, «Agendado» e «Valor por confirmar») e nota. */
 export function TextoMovimento({ movimento: m, contas }: { movimento: Movimento; contas: Conta[] }) {
   return (
     <div className="min-w-0">
@@ -36,6 +37,7 @@ export function TextoMovimento({ movimento: m, contas }: { movimento: Movimento;
           : null}
         {m.person ? <span className="tx-acc ffpessoa">{m.person}</span> : null}
         {agendado(m, new Date()) ? <span className="tx-acc ffagendado">Agendado</span> : null}
+        {porConfirmar(m) ? <span className="tx-acc ffconfirmar">Valor por confirmar</span> : null}
       </p>
       {m.note ? <p className="ffnote" title={m.note}>{m.note}</p> : null}
     </div>

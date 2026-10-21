@@ -42,4 +42,19 @@ describe('recorrentes e subscrições', () => {
     expect(nov.lista.every((i) => i.estado === 'por pagar')).toBe(true);
     expect(recorrentesDoMes(l, new Date(2027, 0, 1), HOJE).lista.map((i) => i.titulo)).toContain('Seguro');
   });
+
+  it('valor variável: estimativa (média dos últimos 3), por confirmar conta em «falta pagar», sem subidas de preço', () => {
+    const v = (date: string, amount: number) => r(date, 'Luz', amount, { recurring: 'sem', recurringEvery: 1 });
+    const luz = [v('2026-06-05', -30), v('2026-07-05', -40), v('2026-08-05', -60), v('2026-09-05', -50), v('2026-10-05', 0)];
+    const x = recorrentesDoMes(luz, new Date(2026, 9, 1), HOJE);
+    expect(x.lista.map((i) => [i.titulo, i.estado, i.valor, i.estimado, i.subiu])).toEqual([['Luz', 'por confirmar', 50, true, null]]);
+    expect(x.pago).toBe(0);
+    expect(x.falta).toBe(50);
+    expect(x.anual).toBe(600);
+    const confirmada = recorrentesDoMes([...luz.slice(0, 4), { ...luz[4]!, amount: -45 }], new Date(2026, 9, 1), HOJE);
+    expect(confirmada.lista.map((i) => [i.estado, i.valor, i.estimado])).toEqual([['pago', 45, false]]);
+    const novembro = recorrentesDoMes([...luz.slice(0, 4), { ...luz[4]!, amount: -45 }], new Date(2026, 10, 1), HOJE);
+    expect(novembro.lista.map((i) => [i.estado, i.valor, i.estimado])).toEqual([['por pagar', 51.67, true]]);
+  });
 });
+
