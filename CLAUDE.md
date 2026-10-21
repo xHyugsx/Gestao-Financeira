@@ -75,7 +75,7 @@ Qualquer alteração deve manter **compatibilidade total** com os dados já guar
 - **Backup/restauro:** o JSON exportado tem de continuar a ser restaurável, incluindo `vetReminders` e `jarvisThreads`.
 - **Rendimento do mês X = salários do mês X−1** (regra de negócio já em uso).
 - **Saldo das contas:** saldo guardado + movimentos com efeito no saldo; movimentos importados de extratos têm `affectsBalance:false`. O saldo da Edenred **transita** de mês para mês (nunca volta a zero).
-- **Movimentos agendados** (data futura): só contam no saldo **a partir do próprio dia** (data local do telemóvel); na lista têm a etiqueta «Agendado». No Resumo de um mês futuro, o saldo é a **previsão** para o fim desse mês. Os gastos do mês continuam a contá-los (decisão do dono, 21/10/2026, v2.15.0).
+- **Movimentos agendados** (data futura): só contam no saldo **a partir do próprio dia** (data local do telemóvel); na lista têm a etiqueta «Agendado». No Resumo de um mês futuro, o saldo é a **previsão** para o fim desse mês, com os agendados e os **recorrentes que a app ainda vai criar** (valor fixo ou estimativa dos variáveis; nota «Inclui N recorrentes previstos», v2.17.0). Os gastos do mês continuam a contá-los (decisão do dono, 21/10/2026, v2.15.0).
 
 ---
 

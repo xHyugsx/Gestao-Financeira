@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { estadoInicial, type Movimento } from '../dados';
+import { estadoInicial, type Movimento, saldoDaConta } from '../dados';
 import { alfabetica, corNova, TONS } from './cores';
-import { estimativa, gerarRecorrentes, porConfirmar, somarMeses, tipoNaSerie, valoresDaSerie } from './recorrentes';
+import { estimativa, gerarRecorrentes, porConfirmar, recorrentesPrevistos, somarMeses, tipoNaSerie, valoresDaSerie } from './recorrentes';
 
 const renda: Movimento = { id: 1, title: 'Renda', detail: '5 julho · Habitação', amount: -600, date: '2026-07-05', movementType: 'expense', recurring: 'com', recurringEvery: 1 };
 let n = 100;
@@ -96,3 +96,41 @@ describe('recorrentes de valor variável', () => {
     expect(fixo.map((x) => x.recurring)).toEqual(['com', 'sem', 'com']);
   });
 });
+
+describe('recorrentes previstos (previsão do saldo dos meses futuros)', () => {
+  const hoje = new Date(2026, 9, 21, 18, 43);
+  const rendaSet: Movimento = { ...renda, id: 50, date: '2026-09-25', detail: '25 setembro · Habitação' };
+
+  it('cópias que ainda vão ser criadas, depois de hoje e até ao limite', () => {
+    const p = recorrentesPrevistos([rendaSet], hoje, '2026-11-30');
+    expect(p.map((m) => [m.date, m.amount, m.detail])).toEqual([['2026-10-25', -600, '25 outubro · Habitação'], ['2026-11-25', -600, '25 novembro · Habitação']]);
+    expect(recorrentesPrevistos([rendaSet], hoje, '2026-10-24')).toEqual([]);
+  });
+
+  it('mesma cadeia de datas das cópias reais (31 jan → 28 fev → 28 mar)', () => {
+    const p = recorrentesPrevistos([{ ...renda, date: '2026-01-31' }], new Date(2026, 1, 1), '2026-03-31');
+    expect(p.map((m) => m.date)).toEqual(['2026-02-28', '2026-03-28']);
+  });
+
+  it('valor variável usa a estimativa; transferências para a Revolut usam o valor transferido', () => {
+    const v = (id: number, date: string, amount: number, extra: Partial<Movimento> = {}): Movimento =>
+      ({ id, title: 'Luz', detail: 'x · Casa', amount, date, movementType: 'expense', recurring: 'sem', recurringEvery: 1, recurringDone: true, ...extra });
+    const luz = [v(1, '2026-08-05', -40), v(2, '2026-09-05', -46), v(3, '2026-10-05', 0, { recurringDone: undefined })];
+    expect(recorrentesPrevistos(luz, hoje, '2026-11-30').map((m) => [m.date, m.amount])).toEqual([['2026-11-05', -43]]);
+    const cofre: Movimento = { ...rendaSet, amount: 0, movementType: 'transfer', revolut: { holder: 'Conjunta', purpose: 'Poupança' }, transferValue: 100 };
+    expect(recorrentesPrevistos([cofre], hoje, '2026-10-31').map((m) => [m.amount, m.transferValue])).toEqual([[0, 100]]);
+  });
+
+  it('séries paradas, sem periodicidade ou sem valor não entram', () => {
+    expect(recorrentesPrevistos([{ ...rendaSet, recurringDone: true }, { ...rendaSet, id: 51, recurringEvery: undefined }], hoje, '2027-01-31')).toEqual([]);
+    expect(recorrentesPrevistos([{ ...rendaSet, recurring: 'sem', amount: 0 }], hoje, '2027-01-31')).toEqual([]);
+  });
+
+  it('com os previstos, a previsão do saldo de novembro já desconta a renda de outubro e de novembro', () => {
+    const p = { id: 'principal', name: 'Principal', balance: 1000 };
+    const nov = new Date(2026, 10, 1), l = [rendaSet];
+    expect(saldoDaConta(p, l, hoje).atual).toBe(400);
+    expect(saldoDaConta(p, [...l, ...recorrentesPrevistos(l, hoje, '2026-11-31')], hoje, nov).atual).toBe(-800);
+  });
+});
+

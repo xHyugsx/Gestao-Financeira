@@ -80,6 +80,25 @@ export function tipoNaSerie(lista: Movimento[], antes: Movimento | undefined, de
   return lista.map((x) => (x.id !== depois.id && repete(x) && serieDe(x) === k ? { ...x, recurring: depois.recurring } : x));
 }
 
+/**
+ * Cópias que a app ainda vai criar depois de hoje e até `ate` ("AAAA-MM-DD", inclusive), para a previsão do saldo
+ * dos meses futuros. Seguem a mesma cadeia de datas das cópias reais; nos de valor variável usam a estimativa.
+ */
+export function recorrentesPrevistos(movimentos: Movimento[], hoje: Date, ate: string): Movimento[] {
+  const desde = dia(hoje), previstos: Movimento[] = [];
+  for (const g of movimentos) {
+    if (!repete(g) || !g.date) continue;
+    const valor = g.recurring === 'sem' ? estimativa([...valoresDaSerie(movimentos, g), valorRecorrente(g)]) : valorRecorrente(g);
+    if (!valor) continue;
+    for (let d = somarMeses(g.date, g.recurringEvery!); d <= ate; d = somarMeses(d, g.recurringEvery!)) {
+      if (d <= desde) continue;
+      const efeito = g.revolut ? { transferValue: valor } : g.movementType === 'transfer' ? {} : { amount: g.movementType === 'income' ? valor : -valor };
+      previstos.push({ ...g, ...efeito, id: `previsto-${g.id}-${d}`, date: d, detail: detalheCom(g.detail, d), recurringDone: true });
+    }
+  }
+  return previstos;
+}
+
 /** Estimativa de um valor variável: média dos últimos 3 valores (0 se ainda não houver nenhum). */
 export function estimativa(valores: number[]): number {
   const u = valores.filter((v) => v > 0).slice(-3);

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { anoMes, type Conta, type Estado, gastos, inicioDoMes, MESES, type Movimento, saldoDaConta, type Salarios } from '../dados';
 import { ArtigoMovimento } from '../movimentos/Movimento';
+import { recorrentesPrevistos, valorRecorrente } from '../movimentos/recorrentes';
 import { lerValor } from '../movimentos/regras';
 import { Botao } from '../ui/Botao';
 import { formatarEuros, formatarPercentagem } from '../ui/formatos';
@@ -57,6 +58,10 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
     ...estado.accounts.filter((c) => c.id !== 'principal' && c.id !== 'revolut'),
   ];
   const anuais = estado.annualExpenses as DespesaAnual[];
+  // Mês futuro: a previsão conta também os recorrentes que a app ainda vai criar até ao fim desse mês
+  const previstos = anoMes(mes) > anoMes(hoje) ? recorrentesPrevistos(movimentos, hoje, `${anoMes(mes)}-31`) : [];
+  const comPrevistos = previstos.length ? [...movimentos, ...previstos] : movimentos;
+  const pagamentosPrevistos = previstos.filter((m) => m.movementType !== 'income' && m.affectsBalance !== false);
 
   const resumo = () => (
     <>
@@ -83,10 +88,16 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
       </div>
       <section className="summary-grid ffsaldos">
         {contas.map((c) => {
-          const v = saldoDaConta(c, movimentos, hoje, mes).atual;
+          const v = saldoDaConta(c, comPrevistos, hoje, mes).atual;
           return <article key={c.id}><span>{c.name}</span><strong className={v < 0 ? 'amount-negative' : 'amount-positive'}>{eur(v)}</strong></article>;
         })}
       </section>
+      {pagamentosPrevistos.length ? (
+        <p className="ffprevistos">
+          Inclui {pagamentosPrevistos.length === 1 ? '1 recorrente previsto' : `${pagamentosPrevistos.length} recorrentes previstos`} até ao fim de {MESES[mes.getMonth()]}
+          {' '}(≈ {eur(pagamentosPrevistos.reduce((s, m) => s + valorRecorrente(m), 0))}).
+        </p>
+      ) : null}
       {gastoAnterior > 0 ? (
         <section className={evolucao <= 0 ? 'insight-card insight-good' : 'insight-card'}>
           <Icone nome="trending-up" />
