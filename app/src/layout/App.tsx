@@ -1,4 +1,4 @@
-import { type TouchEvent, useCallback, useEffect, useRef, useState } from 'react';
+import { type TouchEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { EcraBloqueio } from '../bloqueio/EcraBloqueio';
 import { ligacoes } from '../bloqueio/estado';
 import { PREFIXO, VERSAO } from '../config';
@@ -11,9 +11,9 @@ import { acertarSaldo, aplicarBackup, chave, cifrarBackup, criarBackup, decifrar
 import { aviso as avisoVeterinario, definir as definirLembretes, todos as todosLembretes } from '../veterinario/lembretes';
 import { useDados } from '../estado/useDados';
 import { aspetosCategorias } from '../movimentos/categorias';
-import { EditarMovimento } from '../movimentos/EditarMovimento';
+import { ApagarRecorrente, EditarMovimento } from '../movimentos/EditarMovimento';
 import { aplicarJuncao, novoLote, prepararJuncao, semJuncao, ultimaJuncao } from '../movimentos/juntar';
-import { gerarRecorrentes, tipoNaSerie } from '../movimentos/recorrentes';
+import { criaCopias, gerarRecorrentes, saltarEsteMes, semSaltados, tipoNaSerie } from '../movimentos/recorrentes';
 import { tipoVisual } from '../movimentos/regras';
 import { regrasPessoais } from '../importacao/config';
 import { lerFicheiro } from '../importacao/leitura';
@@ -71,6 +71,8 @@ const reduzMovimento = () => window.matchMedia?.('(prefers-reduced-motion: reduc
 
 export function App() {
   const [estado, setEstado] = useDados();
+  // O que as páginas mostram e contam: sem as cópias saltadas dos recorrentes («só este mês»)
+  const visivel = useMemo(() => semSaltados(estado), [estado]);
   const [pagina, setPagina] = useState('principal');
   const [direcao, setDirecao] = useState<Direcao | ''>('');
   const [transicao, setTransicao] = useState<Transicao | null>(null);
@@ -141,10 +143,15 @@ export function App() {
   const guardarEdicao = (m: Movimento) => {
     mudarMovimentos((l) => tipoNaSerie(l.map((x) => (x.id === m.id ? m : x)), l.find((x) => x.id === m.id), m)); vibrar(30); tirarFoco(); setAEditar(null);
   };
+  const [aApagarSerie, setAApagarSerie] = useState<Movimento | null>(null);
+  const apagar = (m: Movimento) => { mudarMovimentos((l) => l.filter((x) => x.id !== m.id)); vibrar([40, 60, 40]); setAEditar(null); setAApagarSerie(null); };
   const eliminar = (m: Movimento) => {
+    // A cópia mais recente de uma série é a que cria a seguinte: apagá-la parava a série sem aviso
+    if (criaCopias(m)) { setAEditar(null); setAApagarSerie(m); return; }
     if (!window.confirm(`Eliminar "${m.title}"?`)) return;
-    mudarMovimentos((l) => l.filter((x) => x.id !== m.id)); vibrar([40, 60, 40]); setAEditar(null);
+    apagar(m);
   };
+  const saltarMes = (m: Movimento) => { mudarMovimentos((l) => saltarEsteMes(l, m)); vibrar(30); setAApagarSerie(null); };
 
   // Definições: menu rápido da roda dentada e folha das Definições (o botão "voltar" do telemóvel fecha a folha)
   const sairFolha = useCallback((depois: () => void) => {
@@ -254,7 +261,7 @@ export function App() {
   const acoesBackup: AcoesBackup = {
     criar: descarregarBackup,
     exportarCsv: () => {
-      descarregar(`financas-familiar-movimentos-${new Date().toISOString().slice(0, 10)}.csv`, csvDosMovimentos(estado.transactions), 'text/csv;charset=utf-8');
+      descarregar(`financas-familiar-movimentos-${new Date().toISOString().slice(0, 10)}.csv`, csvDosMovimentos(visivel.transactions), 'text/csv;charset=utf-8');
       setMensagemBackup('Ficheiro CSV descarregado.');
     },
     criarProtegido: async (senha) => {
@@ -309,7 +316,7 @@ export function App() {
     obter: () => {
       const e = estadoAtual.current, hoje = new Date();
       return {
-        tx: e.transactions, cats: e.categories, inc: e.incomeCategories, sal: e.salaries,
+        tx: e.transactions.filter((m) => !m.skipped), cats: e.categories, inc: e.incomeCategories, sal: e.salaries,
         acc: e.accounts.map((a) => ({ id: a.id, name: a.name, balance: a.balance || 0, cur: saldoDaConta(a, e.transactions, hoje).atual })),
       };
     },
@@ -349,7 +356,7 @@ export function App() {
   // Jarvis: contexto do motor, anexos (backup, recibos, extratos) e fecho animado
   const juntarJarvis = (content: string) => setMensagens((m) => [...m, { role: 'assistant' as const, content }].slice(-100));
   const contextoJarvis = (): ContextoJarvis => ({
-    estado: estadoAtual.current, mes, agora, eur: (v) => formatarEuros(v, ocultos),
+    estado: semSaltados(estadoAtual.current), mes, agora, eur: (v) => formatarEuros(v, ocultos),
     saldoAtual: (c) => saldoDaConta(c, estadoAtual.current.transactions, new Date()).atual,
     mudarMovimentos, mudarContas: (f) => setEstado((s) => ({ ...s, accounts: f(s.accounts) })),
     definirSalario: apiImportacao.definirSalario, vibrar, criarBackup: descarregarBackup,
@@ -507,25 +514,25 @@ export function App() {
   const conteudo = (id: string) => {
     switch (id) {
       case 'principal':
-        return <Principal estado={estado} mes={mes} ocultos={ocultos} lista={lista} mudarLista={setLista} vibrar={vibrar} abrirMovimento={setAEditar} />;
+        return <Principal estado={visivel} todos={estado.transactions} mes={mes} ocultos={ocultos} lista={lista} mudarLista={setLista} vibrar={vibrar} abrirMovimento={setAEditar} />;
       case 'analise':
-        return <Analise estado={estado} mes={mes} ocultos={ocultos} tipo={tipoAnalise} mudarTipo={setTipoAnalise} />;
+        return <Analise estado={visivel} mes={mes} ocultos={ocultos} tipo={tipoAnalise} mudarTipo={setTipoAnalise} />;
       case 'calendario':
-        return <Calendario estado={estado} mes={mes} ocultos={ocultos} diaEscolhido={diaEscolhido} escolherDia={setDiaEscolhido} aspetos={aspetosCategorias(estado, mes)} abrirMovimento={setAEditar} />;
+        return <Calendario estado={visivel} mes={mes} ocultos={ocultos} diaEscolhido={diaEscolhido} escolherDia={setDiaEscolhido} aspetos={aspetosCategorias(visivel, mes)} abrirMovimento={setAEditar} />;
       case 'categorias':
         return (
           <Categorias
-            estado={estado} mes={mes} ocultos={ocultos} vista={vistaCategorias} mudarVista={(v) => setVistaCategorias((a) => ({ ...a, ...v }))}
+            estado={visivel} mes={mes} ocultos={ocultos} vista={vistaCategorias} mudarVista={(v) => setVistaCategorias((a) => ({ ...a, ...v }))}
             mudarEstado={setEstado} categoriaEliminada={(nome) => setEscolhas((e) => (e.categoria === nome ? { ...e, categoria: 'Outros' } : e))}
             categoriaRenomeada={(antigo, novo) => setEscolhas((e) => (e.categoria === antigo ? { ...e, categoria: novo } : e))}
           />
         );
       case 'resumo':
-        return <Resumo estado={estado} mes={mes} ocultos={ocultos} seccao={seccaoResumo} mudarSeccao={setSeccaoResumo} periodo={periodoResumo} mudarPeriodo={setPeriodoResumo} mudarEstado={setEstado} abrirMovimento={setAEditar} />;
+        return <Resumo estado={visivel} todos={estado.transactions} mes={mes} ocultos={ocultos} seccao={seccaoResumo} mudarSeccao={setSeccaoResumo} periodo={periodoResumo} mudarPeriodo={setPeriodoResumo} mudarEstado={setEstado} abrirMovimento={setAEditar} />;
       case 'combustivel':
-        return <Combustivel estado={estado} mes={mes} agora={agora} ocultos={ocultos} abrirMovimento={setAEditar} />;
+        return <Combustivel estado={visivel} mes={mes} agora={agora} ocultos={ocultos} abrirMovimento={setAEditar} />;
       case 'veterinario':
-        return <Veterinario estado={estado} mes={mes} ocultos={ocultos} vista={vistaVet} mudarVista={mudarVistaVet} abrirMovimento={setAEditar} />;
+        return <Veterinario estado={visivel} mes={mes} ocultos={ocultos} vista={vistaVet} mudarVista={mudarVistaVet} abrirMovimento={setAEditar} />;
       default:
         return <EmConstrucao titulo={PAGINAS.find((p) => p.id === id)?.label ?? id} />;
     }
@@ -644,7 +651,7 @@ export function App() {
       />
       {folha ? (
         <FolhaDefinicoes
-          modo={folha} seccao={seccao} mudarSeccao={(s) => { if (s === 'backup') setMensagemBackup(''); setSeccao(s); }} fechar={fecharFolha} teclado={teclado} estado={estado}
+          modo={folha} seccao={seccao} mudarSeccao={(s) => { if (s === 'backup') setMensagemBackup(''); setSeccao(s); }} fechar={fecharFolha} teclado={teclado} estado={visivel}
           mudarEstado={setEstado} ultimoBackup={ultimoBackup} mensagemBackup={mensagemBackup} acoesBackup={acoesBackup} limparDados={limparDados} acoesImportacao={acoesImportacao} protegido={protegido}
           categoriaRenomeada={(antigo, novo) => setEscolhas((e) => (e.categoria === antigo ? { ...e, categoria: novo } : e))}
           mudarPin={(pinHash) => setEstado((s) => ({ ...s, pinHash }))}
@@ -653,7 +660,7 @@ export function App() {
       ) : null}
       {menu ? (
         <MenuRapido
-          posicao={menu} estado={estado} versao={VERSAO} fechar={fecharMenu}
+          posicao={menu} estado={visivel} versao={VERSAO} fechar={fecharMenu}
           abrir={(s) => { setMenu(null); abrirFolha(s ? 'direct' : 'list', s); }}
         />
       ) : null}
@@ -685,12 +692,13 @@ export function App() {
         </div>
       ) : null}
       <NovoMovimento
-        aberto={novoAberto} aoMudar={setNovoAberto} estado={estado} escolhas={escolhas} mudarEscolhas={setEscolhas}
-        aspetos={aspetosCategorias(estado, mes)} aoGuardar={guardarNovo}
+        aberto={novoAberto} aoMudar={setNovoAberto} estado={visivel} escolhas={escolhas} mudarEscolhas={setEscolhas}
+        aspetos={aspetosCategorias(visivel, mes)} aoGuardar={guardarNovo}
       />
       <NovaDespesaVet aberto={despesaVet} aoMudar={setDespesaVet} aoGuardar={guardarRegisto} animal={vistaVet.animal} />
       <NovoAbastecimento aberto={abastecimento} aoMudar={setAbastecimento} aoGuardar={guardarRegisto} />
-      <EditarMovimento movimento={aEditar} fechar={() => setAEditar(null)} estado={estado} aoGuardar={guardarEdicao} aoEliminar={eliminar} />
+      <EditarMovimento movimento={aEditar} fechar={() => setAEditar(null)} estado={visivel} aoGuardar={guardarEdicao} aoEliminar={eliminar} />
+      <ApagarRecorrente movimento={aApagarSerie} fechar={() => setAApagarSerie(null)} saltar={saltarMes} parar={apagar} />
       <JanelaFotografia
         animal={vistaVet.fotografia} fotos={estado.petPhotos} fechar={() => mudarVistaVet({ fotografia: null })}
         mudarFotos={(f) => setEstado((s) => ({ ...s, petPhotos: f(s.petPhotos) }))}

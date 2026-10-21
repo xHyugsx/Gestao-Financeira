@@ -21,15 +21,17 @@ interface Props {
   mudarLista: (l: ListaMovimentos) => void;
   vibrar: (padrao: number | number[]) => void;
   abrirMovimento: (m: Movimento) => void;
+  /** Todos os movimentos, com as cópias saltadas (a frase do dia precisa delas para os recorrentes). */
+  todos?: Movimento[];
 }
 
-export function Principal({ estado, mes, ocultos, lista, mudarLista, vibrar, abrirMovimento }: Props) {
+export function Principal({ estado, mes, ocultos, lista, mudarLista, vibrar, abrirMovimento, todos = estado.transactions }: Props) {
   const { accounts: contas, transactions: movimentos } = estado;
   const hoje = new Date();
   const eur = (v: number) => formatarEuros(v, ocultos);
   const rendimento = rendimentoDoMes(estado, mes);
   const desceu = rendimento.anterior ? rendimento.valor < rendimento.anterior : false;
-  const frase = !ocultos && anoMes(mes) === anoMes(hoje) ? fraseDoDia(estado, hoje) : null;
+  const frase = !ocultos && anoMes(mes) === anoMes(hoje) ? fraseDoDia({ transactions: todos }, hoje) : null;
 
   const termo = simplificar(lista.pesquisa.trim());
   const contaFiltro = lista.conta === 'all' || contas.some((c) => c.id === lista.conta) ? lista.conta : 'all';

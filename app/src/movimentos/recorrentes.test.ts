@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { estadoInicial, type Movimento, saldoDaConta } from '../dados';
 import { alfabetica, corNova, TONS } from './cores';
-import { estimativa, gerarRecorrentes, porConfirmar, recorrentesPrevistos, somarMeses, tipoNaSerie, valoresDaSerie } from './recorrentes';
+import {
+  criaCopias, estimativa, gerarRecorrentes, porConfirmar, recorrentesPrevistos, saltarEsteMes, semSaltados, somarMeses, tipoNaSerie, valoresDaSerie,
+} from './recorrentes';
 
 const renda: Movimento = { id: 1, title: 'Renda', detail: '5 julho · Habitação', amount: -600, date: '2026-07-05', movementType: 'expense', recurring: 'com', recurringEvery: 1 };
 let n = 100;
@@ -131,6 +133,35 @@ describe('recorrentes previstos (previsão do saldo dos meses futuros)', () => {
     const nov = new Date(2026, 10, 1), l = [rendaSet];
     expect(saldoDaConta(p, l, hoje).atual).toBe(400);
     expect(saldoDaConta(p, [...l, ...recorrentesPrevistos(l, hoje, '2026-11-31')], hoje, nov).atual).toBe(-800);
+  });
+});
+
+describe('saltar só este mês', () => {
+  const set: Movimento = { ...renda, id: 70, date: '2026-09-05', detail: '5 setembro · Habitação', recurringDone: true };
+  const out: Movimento = { ...renda, id: 71, date: '2026-10-05', detail: '5 outubro · Habitação' };
+
+  it('só a cópia mais recente cria cópias; saltá-la mantém a série', () => {
+    expect(criaCopias(out)).toBe(true);
+    expect(criaCopias(set)).toBe(false);
+    const l = saltarEsteMes([out, set], out);
+    expect(l[0]).toMatchObject({ id: 71, skipped: true });
+    const novembro = gerarRecorrentes(l, new Date(2026, 10, 5), id)!;
+    expect(novembro[0]).toMatchObject({ date: '2026-11-05', amount: -600 });
+    expect(novembro[0]!.skipped).toBeUndefined();
+    expect(novembro.find((m) => m.id === 71)).toMatchObject({ skipped: true, recurringDone: true });
+  });
+
+  it('sem as saltadas: o mesmo objeto se não houver nenhuma', () => {
+    const e = { transactions: [out, set] };
+    expect(semSaltados(e)).toBe(e);
+    expect(semSaltados({ transactions: saltarEsteMes([out, set], out) }).transactions.map((m) => m.id)).toEqual([70]);
+  });
+
+  it('a saltada não conta para «da última vez» nem para a estimativa, mas a previsão continua a série', () => {
+    const v = (x: Movimento, extra: Partial<Movimento> = {}): Movimento => ({ ...x, recurring: 'sem', ...extra });
+    const l = [v(set, { amount: -40 }), v(out, { amount: -90, skipped: true })];
+    expect(valoresDaSerie(l, { ...l[1]!, id: 99, date: '2026-11-05' })).toEqual([40]);
+    expect(recorrentesPrevistos(l, new Date(2026, 9, 21), '2026-11-30').map((m) => [m.date, m.amount])).toEqual([['2026-11-05', -40]]);
   });
 });
 

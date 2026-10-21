@@ -14,12 +14,14 @@ export interface Movimento {
   date: string;
   movementType?: TipoMovimento;
   account?: string;
-  /** `true`, ou "sem" para recorrentes ainda sem valor definido. */
+  /** `true`/"com" (valor fixo), ou "sem" (valor variável: cada cópia nasce sem valor). */
   recurring?: boolean | string;
   /** Periodicidade em meses (1, 2, 3 ou 12): a app cria a cópia seguinte sozinha (só na app nova). */
   recurringEvery?: number;
   /** A cópia seguinte deste recorrente já foi criada. */
   recurringDone?: boolean;
+  /** Cópia de um recorrente saltada («só este mês»): escondida e sem efeito, mas a série continua (v2.18.0). */
+  skipped?: boolean;
   note?: string;
   pet?: string;
   /** `false` nos movimentos importados de extratos: não mexem no saldo. */

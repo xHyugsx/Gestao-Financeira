@@ -68,7 +68,7 @@ export function saldoDaConta(conta: Conta | undefined, todos: Movimento[], hoje:
   const mes = anoMes(hoje);
   const alvo = ate ? anoMes(ate) : mes;
   const limite = alvo > mes ? `${alvo}-31` : dia(hoje);
-  const movimentos = todos.filter((m) => !m.date || m.date <= limite);
+  const movimentos = todos.filter((m) => !m.skipped && (!m.date || m.date <= limite));
   const id = conta?.id;
   let atual = conta?.balance ?? 0;
   let doMes: number;

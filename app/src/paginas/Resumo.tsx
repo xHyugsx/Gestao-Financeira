@@ -40,9 +40,11 @@ interface Props {
   mudarPeriodo: (p: PeriodoResumo) => void;
   mudarEstado: (f: (e: Estado) => Estado) => void;
   abrirMovimento?: (m: Movimento) => void;
+  /** Todos os movimentos, com as cópias saltadas (os recorrentes precisam delas para as datas da série). */
+  todos?: Movimento[];
 }
 
-export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mudarPeriodo, mudarEstado, abrirMovimento = () => {} }: Props) {
+export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mudarPeriodo, mudarEstado, abrirMovimento = () => {}, todos = estado.transactions }: Props) {
   const [revista, setRevista] = useState(false);
   const eur = (v: number) => formatarEuros(v, ocultos);
   const movimentos = estado.transactions;
@@ -59,7 +61,7 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
   ];
   const anuais = estado.annualExpenses as DespesaAnual[];
   // Mês futuro: a previsão conta também os recorrentes que a app ainda vai criar até ao fim desse mês
-  const previstos = anoMes(mes) > anoMes(hoje) ? recorrentesPrevistos(movimentos, hoje, `${anoMes(mes)}-31`) : [];
+  const previstos = anoMes(mes) > anoMes(hoje) ? recorrentesPrevistos(todos, hoje, `${anoMes(mes)}-31`) : [];
   const comPrevistos = previstos.length ? [...movimentos, ...previstos] : movimentos;
   const pagamentosPrevistos = previstos.filter((m) => m.movementType !== 'income' && m.affectsBalance !== false);
 
@@ -122,7 +124,7 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
   );
 
   const recorrentes = () => {
-    const r = recorrentesDoMes(movimentos, mes, hoje);
+    const r = recorrentesDoMes(todos, mes, hoje);
     const total = r.pago + r.falta;
     const ROTULO = { pago: 'Pago', 'por pagar': 'Por pagar', atrasado: 'Atrasado', 'por confirmar': 'Por confirmar', agendado: 'Agendado' } as const;
     return (

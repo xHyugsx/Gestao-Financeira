@@ -1,6 +1,7 @@
 // Recorrentes e subscrições (Resumo › Recorrentes): o que já se pagou e o que falta pagar no mês, e o custo anual.
 // Uma «série» junta os movimentos recorrentes com o mesmo título (despesas ou transferências para a Revolut).
 // Séries de valor variável: usam a média dos últimos 3 valores (estimativa) enquanto o valor do mês não é confirmado.
+// Cópias saltadas («só este mês»): contam para as datas da série, mas não aparecem nem entram nos valores.
 import { anoMes, dia, type Movimento } from '../dados';
 import { estimativa, PERIODICIDADES, porConfirmar, serieDe, somarMeses, valorRecorrente as valorDe } from '../movimentos/recorrentes';
 
@@ -50,15 +51,16 @@ export function recorrentesDoMes(movimentos: Movimento[], mes: Date, hoje = new 
     // Série terminada: o pagamento seguinte devia ter sido há mais de um mês (face a hoje)
     const seguinte = somarMeses(ultimo.date, cada);
     if (anoMes(new Date(`${seguinte}T12:00:00`)) < anoMes(new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1))) continue;
-    const variavel = ultimo.recurring === 'sem', estimado = estimativa(l.map(valorDe));
-    const valorPrevisto = variavel ? estimado : valorDe(ultimo);
+    const feitos = l.filter((m) => !m.skipped), ref = feitos[feitos.length - 1] ?? ultimo;
+    const variavel = ultimo.recurring === 'sem', estimado = estimativa(feitos.map(valorDe));
+    const valorPrevisto = variavel ? estimado : valorDe(ref);
     anual += valorPrevisto * (12 / cada);
-    const anterior = l.length > 1 ? valorDe(l[l.length - 2]!) : 0;
-    const subiu = !variavel && anterior > 0 && valorDe(ultimo) > anterior * 1.01 ? ((valorDe(ultimo) - anterior) / anterior) * 100 : null;
+    const anterior = feitos.length > 1 ? valorDe(feitos[feitos.length - 2]!) : 0;
+    const subiu = !variavel && anterior > 0 && valorDe(ref) > anterior * 1.01 ? ((valorDe(ref) - anterior) / anterior) * 100 : null;
     const doMes = l.filter((m) => m.date.startsWith(alvo));
-    const base = { titulo: ultimo.title.trim(), cada, periodicidade: rotulo(cada), subiu, movimento: ultimo };
+    const base = { titulo: ref.title.trim(), cada, periodicidade: rotulo(cada), subiu, movimento: ref };
     if (doMes.length) {
-      for (const m of doMes) {
+      for (const m of doMes.filter((x) => !x.skipped)) {
         const d = Number(m.date.slice(8, 10));
         // Data futura: ainda não saiu do saldo (agendado); valor 0 numa série variável: falta confirmar
         const semValor = porConfirmar(m), estado = m.date > hojeDia ? 'agendado' : semValor ? 'por confirmar' : 'pago';

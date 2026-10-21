@@ -37,5 +37,10 @@ describe('frase do dia', () => {
       .toBe('Falta confirmar o valor de Luz e Água: toca no movimento e escreve o valor deste mês.');
     expect(fraseDoDia({ transactions: [v('2026-08-05', 'Luz'), m('2026-10-07', 'X', -5, 'Lazer')] }, HOJE)).not.toMatch(/confirmar/);
   });
+
+  it('cópias saltadas não pedem para confirmar o valor', () => {
+    const v = { ...m('2026-10-05', 'Luz', 0, 'Casa'), movementType: 'expense' as const, recurring: 'sem' as const, skipped: true };
+    expect(fraseDoDia({ transactions: [v] }, HOJE) ?? '').not.toMatch(/confirmar/);
+  });
 });
 

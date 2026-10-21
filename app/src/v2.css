@@ -150,3 +150,7 @@
 
 /* Resumo de um mês futuro: nota dos recorrentes previstos incluídos na previsão */
 .ffprevistos { margin: -.3rem 0 .4rem; text-align: center; font-size: .72rem; color: var(--muted-foreground); }
+
+/* Apagar a última cópia de uma série recorrente */
+.ffapagar-opcoes { display: grid; gap: .45rem; margin: 0; padding-left: 1.1rem; font-size: .82rem; color: var(--muted-foreground); }
+.ffapagar-opcoes strong { color: var(--foreground); }
