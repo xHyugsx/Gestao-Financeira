@@ -107,3 +107,26 @@ export function EditarMovimento({ movimento: m, fechar, estado, aoGuardar, aoEli
     </Dialogo>
   );
 }
+
+/** Apagar a cópia mais recente de uma série recorrente: só este mês (a série continua) ou parar a série. */
+export function ApagarRecorrente({ movimento: m, fechar, saltar, parar }: {
+  movimento: Movimento | null; fechar: () => void; saltar: (m: Movimento) => void; parar: (m: Movimento) => void;
+}) {
+  return (
+    <Dialogo
+      aberto={m !== null} aoMudar={(a) => { if (!a) fechar(); }} className="movement-dialog ffapagar-serie" titulo="Apagar movimento recorrente"
+      descricao={m ? `«${m.title.trim()}» é o último da série: é dele que sai a cópia seguinte.` : ''}
+    >
+      <ul className="ffapagar-opcoes">
+        <li><strong>Só este mês:</strong> desaparece das listas e do saldo; a série continua no próximo.</li>
+        <li><strong>Parar a série:</strong> é apagado e deixa de haver cópias.</li>
+      </ul>
+      {m ? (
+        <div className="dialog-actions">
+          <Botao type="button" variante="destrutivo" onClick={() => parar(m)}><Icone nome="trash-2" />Parar a série</Botao>
+          <Botao type="button" onClick={() => saltar(m)}>Só este mês</Botao>
+        </div>
+      ) : null}
+    </Dialogo>
+  );
+}

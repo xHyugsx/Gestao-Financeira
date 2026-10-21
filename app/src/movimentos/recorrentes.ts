@@ -39,7 +39,7 @@ export function gerarRecorrentes(movimentos: Movimento[], hoje: Date, novoId: ()
       const data = somarMeses(m.date, m.recurringEvery as number);
       if (data > limite) continue;
       const copia: Movimento = { ...m, id: novoId(), date: data, detail: detalheCom(m.detail, data) };
-      delete copia.recurringDone; delete copia.importKey; delete copia.importBatch; delete copia.mergeBatch;
+      delete copia.recurringDone; delete copia.skipped; delete copia.importKey; delete copia.importBatch; delete copia.mergeBatch;
       if (m.recurring === 'sem') { copia.amount = 0; if (m.revolut) copia.transferValue = 0; }
       lista = [copia, ...lista.map((x) => (x === m ? { ...x, recurringDone: true } : x))];
       criados++;
@@ -48,6 +48,20 @@ export function gerarRecorrentes(movimentos: Movimento[], hoje: Date, novoId: ()
     }
   }
   return criados ? lista : null;
+}
+
+/** É o movimento que cria a cópia seguinte da série (apagá-lo pára a série). */
+export const criaCopias = repete;
+
+/**
+ * «Só este mês»: a cópia fica marcada como saltada em vez de apagada. Continua a ser ela a criar a cópia seguinte,
+ * mas desaparece das listas, dos totais e dos saldos.
+ */
+export const saltarEsteMes = (lista: Movimento[], m: Movimento) => lista.map((x) => (x.id === m.id ? { ...x, skipped: true } : x));
+
+/** Os dados sem as cópias saltadas (o que as páginas mostram e contam); devolve o mesmo objeto se não houver nenhuma. */
+export function semSaltados<T extends { transactions: Movimento[] }>(e: T): T {
+  return e.transactions.some((m) => m.skipped) ? { ...e, transactions: e.transactions.filter((m) => !m.skipped) } : e;
 }
 
 /** Valor de um recorrente (nas transferências para a Revolut, o valor transferido). */
@@ -63,7 +77,7 @@ export const serieDe = (m: Movimento) => `${m.revolut ? 'r' : 'e'}|${simplificar
 export function valoresDaSerie(movimentos: Movimento[], m: Movimento): number[] {
   const k = serieDe(m);
   return movimentos
-    .filter((x) => x.id !== m.id && x.recurring && (x.movementType === 'expense' || x.revolut) && valorRecorrente(x) > 0
+    .filter((x) => x.id !== m.id && x.recurring && !x.skipped && (x.movementType === 'expense' || x.revolut) && valorRecorrente(x) > 0
       && (x.date || '') <= (m.date || '9999') && serieDe(x) === k)
     .sort((a, b) => (a.date || '').localeCompare(b.date || ''))
     .map(valorRecorrente);
@@ -88,7 +102,7 @@ export function recorrentesPrevistos(movimentos: Movimento[], hoje: Date, ate: s
   const desde = dia(hoje), previstos: Movimento[] = [];
   for (const g of movimentos) {
     if (!repete(g) || !g.date) continue;
-    const valor = g.recurring === 'sem' ? estimativa([...valoresDaSerie(movimentos, g), valorRecorrente(g)]) : valorRecorrente(g);
+    const valor = g.recurring === 'sem' ? estimativa([...valoresDaSerie(movimentos, g), g.skipped ? 0 : valorRecorrente(g)]) : valorRecorrente(g);
     if (!valor) continue;
     for (let d = somarMeses(g.date, g.recurringEvery!); d <= ate; d = somarMeses(d, g.recurringEvery!)) {
       if (d <= desde) continue;

@@ -259,4 +259,9 @@ describe('movimentos agendados (data futura) só contam no saldo a partir do dia
   it('movimentos antigos sem data continuam a contar', () => {
     expect(saldoDaConta(p, [mov({ amount: -5, date: undefined as never })], hoje).atual).toBe(995);
   });
+
+  it('cópias saltadas («só este mês») não contam no saldo', () => {
+    expect(saldoDaConta(p, [...ms, mov({ id: 9, amount: -70, date: '2026-10-15', skipped: true })], hoje).atual).toBe(950);
+  });
 });
+

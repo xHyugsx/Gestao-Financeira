@@ -17,7 +17,8 @@ const euros = (v: number) => `${Math.round(v).toLocaleString('pt-PT')}\u00a0€`
  * Enquanto houver recorrentes de valor variável por confirmar (este mês ou no anterior), a frase lembra-os.
  */
 export function fraseDoDia(estado: Pick<Estado, 'transactions'>, hoje = new Date()): string | null {
-  const l = estado.transactions, d = hoje.getDate();
+  // Cópias saltadas («só este mês») não contam; os recorrentes recebem a lista toda (precisam delas para as datas)
+  const l = estado.transactions.filter((m) => !m.skipped), d = hoje.getDate();
   const desdeMesAnterior = dia(inicioDoMes(hoje, -1));
   const pendentes = [...new Set(l.filter((m) => porConfirmar(m) && m.date >= desdeMesAnterior && m.date <= dia(hoje)).map((m) => m.title.trim()))];
   if (pendentes.length) {
@@ -56,7 +57,7 @@ export function fraseDoDia(estado: Pick<Estado, 'transactions'>, hoje = new Date
   const poupado = fechoDoMes(l, hoje);
   if (poupado.poupanca + poupado.investimentos > 0) frases.push(`Este mês já puseste ${euros(poupado.poupanca + poupado.investimentos)} de parte 💪`);
 
-  const rec = recorrentesDoMes(l, hoje, hoje), porPagar = rec.lista.filter((r) => r.estado !== 'pago');
+  const rec = recorrentesDoMes(estado.transactions, hoje, hoje), porPagar = rec.lista.filter((r) => r.estado !== 'pago');
   if (porPagar.length) {
     frases.push(`${porPagar.length === 1 ? 'Falta pagar 1 recorrente' : `Faltam pagar ${porPagar.length} recorrentes`} este mês${rec.falta ? ` (≈ ${euros(rec.falta)})` : ''}.`);
   }
