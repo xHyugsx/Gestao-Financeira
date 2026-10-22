@@ -13,3 +13,7 @@ export const PAGINAS: readonly { id: string; label: string; icone: NomeIcone }[]
 
 /** Páginas que abrem pelo painel «Mais». */
 export const PAGINAS_MAIS = ['categorias', 'resumo', 'combustivel', 'veterinario'];
+/** Cor do ícone de cada página no painel «Mais». */
+export const COR_MAIS: Record<string, string> = {
+  categorias: 'oklch(67% .26 322)', resumo: 'oklch(73% .15 220)', combustivel: 'oklch(74% .17 60)', veterinario: 'oklch(72% .16 158)',
+};
