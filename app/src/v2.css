@@ -236,3 +236,35 @@
   .ffseg-pilula { transition: none; }
   .transaction-list > article, .calendar-grid > * { animation: none; }
 }
+
+/* Painel «Mais»: as páginas entram em cascata, ícones com cor própria e arrastar para baixo fecha */
+.ffmore { padding-top: 1.15rem; touch-action: none; }
+.ffmore-pega { position: absolute; top: .4rem; left: 50%; width: 2.4rem; height: 4px; margin-left: -1.2rem; border-radius: 4px; background: rgba(255, 255, 255, .22); }
+.ffmore-it { animation: ffmore-it-entrar .36s cubic-bezier(.22, 1, .36, 1) backwards; }
+.ffmore-it:nth-of-type(2) { animation-delay: 45ms; }
+.ffmore-it:nth-of-type(3) { animation-delay: 90ms; }
+.ffmore-it:nth-of-type(4) { animation-delay: 135ms; }
+@keyframes ffmore-it-entrar { from { opacity: 0; transform: translateY(14px) scale(.9); } }
+.ffmore-ic { display: grid; place-items: center; width: 2.1rem; height: 2.1rem; border-radius: .7rem; font-style: normal; color: var(--c, var(--primary)); background: color-mix(in oklab, var(--c, var(--primary)) 16%, transparent); }
+.ffmore-it.on .ffmore-ic { box-shadow: 0 0 0 1.5px color-mix(in oklab, var(--c, var(--primary)) 60%, transparent); }
+.ffmore-ov.is-out .ffmore.ffarrastado { animation: none; }
+
+/* Botão «+»: ao tocar encolhe, o «+» roda e sai uma onda */
+body .add-button.ffplus::after { transition: transform .45s cubic-bezier(.34, 1.56, .64, 1); }
+body .add-button.ffplus:active::after { transform: rotate(90deg); }
+.ffplus-onda { position: absolute; inset: 0; border-radius: 50%; border: 2px solid #00f0ff; pointer-events: none; animation: ffplus-onda .6s cubic-bezier(.22, 1, .36, 1) forwards; }
+@keyframes ffplus-onda { from { opacity: .8; transform: scale(1); } to { opacity: 0; transform: scale(1.75); } }
+html[data-tema="aurora"] .ffplus-onda { border-color: #34d399; }
+html[data-tema="por-do-sol"] .ffplus-onda { border-color: #fb923c; }
+html[data-tema="dourado"] .ffplus-onda { border-color: #d4af37; }
+
+/* A linha do movimento acabado de gravar brilha por instantes */
+.transaction-row.ffrealce { position: relative; }
+.ffrealce::after { content: ""; position: absolute; inset: -1px; border-radius: inherit; pointer-events: none; box-shadow: 0 0 0 1.5px var(--cosmic-blue), 0 0 1.1rem color-mix(in oklab, var(--cosmic-blue) 55%, transparent); animation: ffrealce 1.8s ease forwards; }
+@keyframes ffrealce { 0% { opacity: 0; } 15%, 60% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .ffmore-it, .ffplus-onda { animation: none; }
+  .ffplus-onda { display: none; }
+  body .add-button.ffplus::after { transition: none; }
+  .ffrealce::after { animation: none; opacity: 0; }
+}

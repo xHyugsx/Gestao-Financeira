@@ -43,7 +43,7 @@ import { Icone } from '../ui/Icone';
 import { useAnimacaoNumeros } from './animacaoNumeros';
 import { aplicarTema, temaDe } from '../ui/temas';
 import { saudacao, svgDoCeu } from './ceu';
-import { PAGINAS, PAGINAS_MAIS } from './paginas';
+import { COR_MAIS, PAGINAS, PAGINAS_MAIS } from './paginas';
 
 type Direcao = 'left' | 'right';
 
@@ -84,6 +84,7 @@ export function App() {
   const [desvioMes, setDesvioMes] = useState(0);
   const [agora, setAgora] = useState(() => new Date());
   const [mais, setMais] = useState<boolean | 'out'>(false);
+  const [onda, setOnda] = useState(0);
   const [bloqueada, setBloqueada] = useState(() => !!estado.pinHash);
   const [lista, setLista] = useState<ListaMovimentos>({ expandida: false, pesquisa: '', conta: 'all' });
   const [aviso, setAviso] = useState('');
@@ -140,11 +141,21 @@ export function App() {
 
   const tirarFoco = () => { if (document.activeElement instanceof HTMLElement) document.activeElement.blur(); };
   const mudarMovimentos = (f: (l: Movimento[]) => Movimento[]) => setEstado((s) => ({ ...s, transactions: f(s.transactions) }));
-  const gravarNovo = (m: Movimento) => { mudarMovimentos((l) => [m, ...l]); vibrar(30); tirarFoco(); setNovoAberto(false); setDuplicado(null); };
+  // a linha do movimento acabado de gravar brilha por instantes (depois de a janela fechar)
+  const realcar = (id: Movimento['id']) => setTimeout(() => {
+    document.querySelectorAll<HTMLElement>(`.page-current article[data-id="${CSS.escape(String(id))}"]`).forEach((el) => {
+      el.classList.remove('ffrealce');
+      void el.offsetWidth;
+      el.classList.add('ffrealce');
+      setTimeout(() => el.classList.remove('ffrealce'), 1900);
+    });
+  }, 220);
+  const gravarNovo = (m: Movimento) => { mudarMovimentos((l) => [m, ...l]); vibrar(30); tirarFoco(); setNovoAberto(false); setDuplicado(null); realcar(m.id); };
   const substituirCopia = (copia: Movimento, m: Movimento) => {
     const nova = preencherCopia(copia, m);
     mudarMovimentos((l) => l.map((x) => (x.id === copia.id ? nova : x))); vibrar(30); tirarFoco(); setNovoAberto(false); setDuplicado(null);
     salarioNaTabela(copia, nova);
+    realcar(copia.id);
   };
   // Salário (receita no dia do salário) confirmado ou corrigido à mão: a tabela de Salários acompanha («Rendimento mensal»)
   const salarioNaTabela = (antes: Movimento | undefined, depois: Movimento) => {
@@ -159,10 +170,11 @@ export function App() {
     if (porConfirmar(copia)) { substituirCopia(copia, m); setAviso(`Valor de «${copia.title.trim()}» confirmado (estava por confirmar).`); return; }
     setNovoAberto(false); setDuplicado({ novo: m, copia });
   };
-  const guardarRegisto = (m: Movimento) => { mudarMovimentos((l) => [m, ...l]); vibrar(30); tirarFoco(); setAbastecimento(false); setDespesaVet(false); };
+  const guardarRegisto = (m: Movimento) => { mudarMovimentos((l) => [m, ...l]); vibrar(30); tirarFoco(); setAbastecimento(false); setDespesaVet(false); realcar(m.id); };
   const guardarEdicao = (m: Movimento) => {
     salarioNaTabela(estadoAtual.current.transactions.find((x) => x.id === m.id), m);
     mudarMovimentos((l) => recorrenciaNaSerie(l.map((x) => (x.id === m.id ? m : x)), l.find((x) => x.id === m.id), m)); vibrar(30); tirarFoco(); setAEditar(null);
+    realcar(m.id);
   };
   const [aApagarSerie, setAApagarSerie] = useState<Movimento | null>(null);
   const apagar = (m: Movimento) => { mudarMovimentos((l) => l.filter((x) => x.id !== m.id)); vibrar([40, 60, 40]); setAEditar(null); setAApagarSerie(null); };
@@ -230,6 +242,28 @@ export function App() {
     setTimeout(() => { setPagina(para); setTransicao(null); setArrasto(0); moldura?.scrollTo({ top: 0 }); }, 340);
   }, [pagina, transicao]);
 
+  // painel «Mais»: arrastar para baixo fecha
+  const arrastoMais = useRef<{ y: number; dy: number } | null>(null);
+  const tocarMais = {
+    onTouchStart: (e: TouchEvent<HTMLDivElement>) => { arrastoMais.current = { y: e.touches[0]!.clientY, dy: 0 }; },
+    onTouchMove: (e: TouchEvent<HTMLDivElement>) => {
+      const a = arrastoMais.current;
+      if (!a) return;
+      a.dy = Math.max(0, e.touches[0]!.clientY - a.y);
+      const el = e.currentTarget;
+      el.style.transition = 'none';
+      el.style.transform = `translateY(${a.dy}px)`;
+      el.style.opacity = String(1 - Math.min(0.5, a.dy / 300));
+    },
+    onTouchEnd: (e: TouchEvent<HTMLDivElement>) => {
+      const a = arrastoMais.current, el = e.currentTarget;
+      arrastoMais.current = null;
+      if (!a || !a.dy) return;
+      el.style.transition = 'transform .22s cubic-bezier(.22, 1, .36, 1), opacity .22s';
+      if (a.dy > 60) { el.classList.add('ffarrastado'); el.style.transform = 'translateY(120%)'; el.style.opacity = '0'; fecharMais(); }
+      else { el.style.transform = ''; el.style.opacity = ''; }
+    },
+  };
   const fecharMais = useCallback(() => {
     setMais((m) => (m ? 'out' : m));
     setTimeout(() => setMais((m) => (m === 'out' ? false : m)), 200);
@@ -671,6 +705,7 @@ export function App() {
         tamanho="icone" className="add-button ffplus"
         aria-label={pagina === 'veterinario' ? 'Adicionar despesa veterinária' : pagina === 'combustivel' ? 'Adicionar abastecimento' : 'Adicionar movimento'}
         onClick={() => {
+          setOnda((n) => n + 1);
           if (pagina === 'veterinario') { setDespesaVet(true); return; }
           if (pagina === 'combustivel') { setAbastecimento(true); return; }
           setEscolhas((e) => ({ ...e, recorrente: false, tipoValor: 'com', periodicidade: 1, diaSalario: false, revolut: false }));
@@ -678,6 +713,7 @@ export function App() {
         }}
       >
         <Icone nome="plus" />
+        {onda ? <span key={onda} className="ffplus-onda" aria-hidden="true" /> : null}
       </Botao>
       <button
         type="button" className="jarvis-fab ffjv-fab" aria-label="Abrir Jarvis"
@@ -728,10 +764,14 @@ export function App() {
       </nav>
       {mais ? (
         <div className={`ffmore-ov${mais === 'out' ? ' is-out' : ''}`} onClick={(e) => { if (e.target === e.currentTarget) fecharMais(); }}>
-          <div className="ffmore" role="menu" aria-label="Mais páginas">
+          <div className="ffmore" role="menu" aria-label="Mais páginas" {...tocarMais} onTouchCancel={tocarMais.onTouchEnd}>
+            <span className="ffmore-pega" aria-hidden="true" />
             {PAGINAS.filter((p) => PAGINAS_MAIS.includes(p.id)).map((p) => (
-              <button key={p.id} type="button" role="menuitem" className={`ffmore-it${pagina === p.id ? ' on' : ''}`} onClick={() => { fecharMais(); irPara(p.id); }}>
-                <Icone nome={p.icone} /><span>{p.label}</span>
+              <button
+                key={p.id} type="button" role="menuitem" className={`ffmore-it${pagina === p.id ? ' on' : ''}`} style={{ '--c': COR_MAIS[p.id] } as React.CSSProperties}
+                onClick={() => { fecharMais(); irPara(p.id); }}
+              >
+                <i className="ffmore-ic"><Icone nome={p.icone} /></i><span>{p.label}</span>
               </button>
             ))}
           </div>

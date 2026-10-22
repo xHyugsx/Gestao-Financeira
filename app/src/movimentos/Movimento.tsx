@@ -17,7 +17,7 @@ export function ArtigoMovimento({ movimento: m, aoAbrir, children }: { movimento
   const abrir = () => aoAbrir(m);
   return (
     <article
-      role="button" tabIndex={0} aria-label={`Editar ${m.title}`} className="transaction-row transaction-row-clickable"
+      role="button" tabIndex={0} aria-label={`Editar ${m.title}`} className="transaction-row transaction-row-clickable" data-id={String(m.id)}
       onClick={abrir} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrir(); } }}
     >
       {children}
