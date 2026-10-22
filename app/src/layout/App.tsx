@@ -13,7 +13,7 @@ import { useDados } from '../estado/useDados';
 import { aspetosCategorias } from '../movimentos/categorias';
 import { ApagarRecorrente, EditarMovimento } from '../movimentos/EditarMovimento';
 import { aplicarJuncao, novoLote, prepararJuncao, semJuncao, ultimaJuncao } from '../movimentos/juntar';
-import { criaCopias, gerarRecorrentes, saltarEsteMes, semSaltados, tipoNaSerie } from '../movimentos/recorrentes';
+import { criaCopias, gerarRecorrentes, recorrenciaNaSerie, saltarEsteMes, semSaltados } from '../movimentos/recorrentes';
 import { tipoVisual } from '../movimentos/regras';
 import { regrasPessoais } from '../importacao/config';
 import { lerFicheiro } from '../importacao/leitura';
@@ -141,7 +141,7 @@ export function App() {
   const guardarNovo = (m: Movimento) => { mudarMovimentos((l) => [m, ...l]); vibrar(30); tirarFoco(); setNovoAberto(false); };
   const guardarRegisto = (m: Movimento) => { mudarMovimentos((l) => [m, ...l]); vibrar(30); tirarFoco(); setAbastecimento(false); setDespesaVet(false); };
   const guardarEdicao = (m: Movimento) => {
-    mudarMovimentos((l) => tipoNaSerie(l.map((x) => (x.id === m.id ? m : x)), l.find((x) => x.id === m.id), m)); vibrar(30); tirarFoco(); setAEditar(null);
+    mudarMovimentos((l) => recorrenciaNaSerie(l.map((x) => (x.id === m.id ? m : x)), l.find((x) => x.id === m.id), m)); vibrar(30); tirarFoco(); setAEditar(null);
   };
   const [aApagarSerie, setAApagarSerie] = useState<Movimento | null>(null);
   const apagar = (m: Movimento) => { mudarMovimentos((l) => l.filter((x) => x.id !== m.id)); vibrar([40, 60, 40]); setAEditar(null); setAApagarSerie(null); };

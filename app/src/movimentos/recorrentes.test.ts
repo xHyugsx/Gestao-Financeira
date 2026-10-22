@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { estadoInicial, type Movimento, saldoDaConta } from '../dados';
 import { alfabetica, corNova, TONS } from './cores';
 import {
-  criaCopias, estimativa, gerarRecorrentes, porConfirmar, recorrentesPrevistos, saltarEsteMes, semSaltados, somarMeses, tipoNaSerie, valoresDaSerie,
+  criaCopias, estimativa, gerarRecorrentes, porConfirmar, recorrentesPrevistos, recorrenciaNaSerie, saltarEsteMes, semSaltados, somarMeses, valoresDaSerie,
 } from './recorrentes';
 
 const renda: Movimento = { id: 1, title: 'Renda', detail: '5 julho · Habitação', amount: -600, date: '2026-07-05', movementType: 'expense', recurring: 'com', recurringEvery: 1 };
@@ -91,10 +91,10 @@ describe('recorrentes de valor variável', () => {
     const l = [luz(3, '2026-09-05', -43, { recurring: 'com' }), luz(2, '2026-08-05', -46, { recurring: 'com', recurringDone: true }),
       luz(9, '2026-09-08', -10, { title: 'Água', recurring: 'com' })];
     const antes = l[1]!, depois = { ...antes, recurring: 'sem' };
-    const r = tipoNaSerie(l.map((x) => (x.id === 2 ? depois : x)), antes, depois);
+    const r = recorrenciaNaSerie(l.map((x) => (x.id === 2 ? depois : x)), antes, depois);
     expect(r.map((x) => [x.id, x.recurring])).toEqual([[3, 'sem'], [2, 'sem'], [9, 'com']]);
-    expect(tipoNaSerie(l, antes, { ...antes, amount: -50 })).toBe(l);
-    const fixo = tipoNaSerie(r, r[1]!, { ...r[1]!, recurring: 'com' });
+    expect(recorrenciaNaSerie(l, antes, { ...antes, amount: -50 })).toBe(l);
+    const fixo = recorrenciaNaSerie(r, r[1]!, { ...r[1]!, recurring: 'com' });
     expect(fixo.map((x) => x.recurring)).toEqual(['com', 'sem', 'com']);
   });
 });
@@ -162,6 +162,43 @@ describe('saltar só este mês', () => {
     const l = [v(set, { amount: -40 }), v(out, { amount: -90, skipped: true })];
     expect(valoresDaSerie(l, { ...l[1]!, id: 99, date: '2026-11-05' })).toEqual([40]);
     expect(recorrentesPrevistos(l, new Date(2026, 9, 21), '2026-11-30').map((m) => [m.date, m.amount])).toEqual([['2026-11-05', -40]]);
+  });
+});
+
+describe('recorrentes registados à mão ou agendados não ficam a dobrar', () => {
+  const ago: Movimento = { ...renda, id: 80, date: '2026-08-25', detail: '25 agosto · Habitação' };
+  const manual: Movimento = { id: 81, title: 'renda ', detail: '27 setembro · Habitação', amount: -600, date: '2026-09-27', movementType: 'expense' };
+
+  it('não cria a cópia; o movimento registado à mão passa a criar a seguinte', () => {
+    const l = gerarRecorrentes([ago, manual], new Date(2026, 8, 28), id)!;
+    expect(l).toHaveLength(2);
+    expect(l.find((m) => m.id === 80)).toMatchObject({ recurringDone: true });
+    expect(l.find((m) => m.id === 81)).toMatchObject({ recurring: 'com', recurringEvery: 1 });
+    const out = gerarRecorrentes(l, new Date(2026, 9, 27), id)!;
+    expect(out.map((m) => m.date).sort()).toEqual(['2026-08-25', '2026-09-27', '2026-10-27']);
+  });
+
+  it('agendado no mês: a previsão não o conta duas vezes e a cópia não é criada no dia', () => {
+    const agendado = { ...manual, date: '2026-10-30', detail: '30 outubro · Habitação' };
+    const hoje = new Date(2026, 9, 21);
+    const set = { ...ago, date: '2026-09-25' };
+    expect(recorrentesPrevistos([set, agendado], hoje, '2026-11-30').map((m) => m.date)).toEqual(['2026-11-25']);
+    expect(gerarRecorrentes([set, agendado], new Date(2026, 9, 25), id)!).toHaveLength(2);
+  });
+
+  it('não conta os importados (sem efeito no saldo), outras séries nem receitas com o mesmo título', () => {
+    const outros: Movimento[] = [{ ...manual, affectsBalance: false, importKey: 'k' }, { ...manual, id: 82, title: 'Água' }, { ...manual, id: 83, amount: 600, movementType: 'income' }];
+    expect(gerarRecorrentes([ago, ...outros], new Date(2026, 8, 28), id)!).toHaveLength(5);
+  });
+
+  it('mudar a periodicidade num movimento antigo aplica-se ao que cria as cópias', () => {
+    const atual = { ...ago, id: 90, date: '2026-09-25' }, antigo = { ...ago, recurringDone: true };
+    const depois = { ...antigo, recurringEvery: 3 };
+    const r = recorrenciaNaSerie([atual, depois], antigo, depois);
+    expect(r.map((m) => [m.id, m.recurringEvery])).toEqual([[90, 3], [80, 3]]);
+    const semAuto = { ...antigo, recurringEvery: undefined };
+    expect(recorrenciaNaSerie([atual, semAuto], antigo, semAuto)[0]!.recurringEvery).toBeUndefined();
+    expect(recorrenciaNaSerie([atual, { ...antigo, recurring: undefined }], antigo, { ...antigo, recurring: undefined })[0]).toBe(atual);
   });
 });
 
