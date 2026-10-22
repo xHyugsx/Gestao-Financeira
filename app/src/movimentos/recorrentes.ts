@@ -150,7 +150,8 @@ export function recorrentesPrevistos(movimentos: Movimento[], hoje: Date, ate: s
       // Já registado (à mão ou agendado) nesse mês: conta pelo movimento, não pela previsão
       if (d <= desde || jaRegistado(movimentos, g, d)) continue;
       const efeito = g.revolut ? { transferValue: valor } : g.movementType === 'transfer' ? {} : { amount: g.movementType === 'income' ? valor : -valor };
-      previstos.push({ ...g, ...efeito, id: `previsto-${g.id}-${d}`, date: d, detail: detalheCom(g.detail, d), recurringDone: true });
+      // A cópia prevista nunca herda a marca de saltada (só o mês saltado fica de fora)
+      previstos.push({ ...g, ...efeito, id: `previsto-${g.id}-${d}`, date: d, detail: detalheCom(g.detail, d), recurringDone: true, skipped: undefined });
     }
   }
   return previstos;

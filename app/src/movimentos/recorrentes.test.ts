@@ -270,3 +270,12 @@ describe('salário confirmado à mão atualiza a tabela de Salários', () => {
   });
 });
 
+describe('previsão a partir de um mês saltado', () => {
+  it('a cópia prevista não fica saltada (conta no saldo previsto)', () => {
+    const g: Movimento = { ...renda, id: 77, date: '2026-09-10', amount: -12, recurringEvery: 1, skipped: true };
+    const p = recorrentesPrevistos([g], new Date(2026, 8, 28), '2026-10-31');
+    expect(p.map((m) => [m.date, m.amount, m.skipped])).toEqual([['2026-10-10', -12, undefined]]);
+    expect(saldoDaConta({ id: 'principal', name: 'Principal', balance: 100 }, [g, ...p], new Date(2026, 8, 28), new Date(2026, 9, 1)).atual).toBe(88);
+  });
+});
+

@@ -63,7 +63,7 @@ export function LinhaMovimento({ movimento: m, contas, aspetos, ocultos, aoAbrir
           : <span className={`transaction-icon transaction-icon-${String(m.kind)}`}><Icone nome={iconePorTipo(m.kind)} /></span>}
         <TextoMovimento movimento={m} contas={contas} />
       </div>
-      <strong className={m.movementType === 'transfer' ? 'amount-transfer' : m.amount > 0 ? 'amount-positive' : 'amount-negative'}>
+      <strong className={porConfirmar(m) ? 'amount-transfer' : m.movementType === 'transfer' ? 'amount-transfer' : m.amount > 0 ? 'amount-positive' : 'amount-negative'}>
         {valor(m, ocultos)}
       </strong>
     </ArtigoMovimento>

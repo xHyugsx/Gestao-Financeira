@@ -63,7 +63,8 @@ export function recorrentesDoMes(movimentos: Movimento[], mes: Date, hoje = new 
       for (const m of doMes) {
         const d = Number(m.date.slice(8, 10));
         // Saltado («só este mês»): aparece para se poder repor, mas não conta nos totais
-        if (m.skipped) { lista.push({ ...base, valor: valorDe(m), estimado: false, dia: d, estado: 'saltado', movimento: m }); continue; }
+        // (se o mês já tiver outro movimento da série, não aparece: «Repor» deixava-o a dobrar)
+        if (m.skipped) { if (!doMes.some((x) => !x.skipped)) lista.push({ ...base, valor: valorDe(m), estimado: false, dia: d, estado: 'saltado', movimento: m }); continue; }
         // Data futura: ainda não saiu do saldo (agendado); valor 0 numa série variável: falta confirmar
         const semValor = porConfirmar(m), estado = m.date > hojeDia ? 'agendado' : semValor ? 'por confirmar' : 'pago';
         lista.push({ ...base, valor: semValor ? estimado : valorDe(m), estimado: semValor, dia: d, estado, movimento: m });
