@@ -48,5 +48,10 @@ describe('frase do dia', () => {
     expect(fraseDoDia({ transactions: [], annualExpenses }, HOJE)).toBe('Este mês há uma despesa anual por pagar: IUC (≈ 150\u00a0€).');
     expect(fraseDoDia({ transactions: [], annualExpenses: [{ ...annualExpenses[0]!, year: 2027 }] }, HOJE)).not.toMatch(/anual/);
   });
+
+  it('meses saltados não contam como recorrentes por pagar', () => {
+    const r = (date: string, extra: Partial<Movimento>) => ({ ...m(date, 'Streaming', -12, 'Lazer'), recurring: 'com' as const, recurringEvery: 1, ...extra });
+    expect(fraseDoDia({ transactions: [r('2026-09-10', { recurringDone: true }), r('2026-10-10', { skipped: true })] }, HOJE) ?? '').not.toMatch(/Falta pagar/);
+  });
 });
 

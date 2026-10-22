@@ -72,5 +72,11 @@ describe('recorrentes e subscrições', () => {
     expect(out.anual).toBe(7200);
     expect(recorrentesDoMes(l, new Date(2026, 10, 1), HOJE).lista.map((i) => [i.estado, i.valor])).toEqual([['por pagar', 600]]);
   });
+
+  it('mês saltado com outro movimento da série nesse mês não aparece (sem «Repor» a dobrar)', () => {
+    const l = [r('2026-09-01', 'Renda', -600, { recurringEvery: 1, recurringDone: true }), r('2026-10-01', 'Renda', -600, { recurringEvery: 1, skipped: true }),
+      r('2026-10-03', 'Renda', -600)];
+    expect(recorrentesDoMes(l, new Date(2026, 9, 1), HOJE).lista.map((i) => i.estado)).toEqual(['pago']);
+  });
 });
 

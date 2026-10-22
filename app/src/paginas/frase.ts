@@ -65,7 +65,7 @@ export function fraseDoDia(estado: Pick<Estado, 'transactions'> & Partial<Pick<E
   const poupado = fechoDoMes(l, hoje);
   if (poupado.poupanca + poupado.investimentos > 0) frases.push(`Este mês já puseste ${euros(poupado.poupanca + poupado.investimentos)} de parte 💪`);
 
-  const rec = recorrentesDoMes(estado.transactions, hoje, hoje), porPagar = rec.lista.filter((r) => r.estado !== 'pago');
+  const rec = recorrentesDoMes(estado.transactions, hoje, hoje), porPagar = rec.lista.filter((r) => r.estado !== 'pago' && r.estado !== 'saltado');
   if (porPagar.length) {
     frases.push(`${porPagar.length === 1 ? 'Falta pagar 1 recorrente' : `Faltam pagar ${porPagar.length} recorrentes`} este mês${rec.falta ? ` (≈ ${euros(rec.falta)})` : ''}.`);
   }
