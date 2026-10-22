@@ -73,7 +73,7 @@ export function NovoMovimento({ aberto, aoMudar, estado, escolhas: e, mudarEscol
   };
 
   return (
-    <Dialogo aberto={aberto} aoMudar={aoMudar} className="movement-dialog" titulo="Novo movimento" descricao="Registe uma despesa, receita ou transferência.">
+    <Dialogo folha aberto={aberto} aoMudar={aoMudar} className="movement-dialog" titulo="Novo movimento" descricao="Registe uma despesa, receita ou transferência.">
       <Segmentado valor={e.tipo} rotulo="Tipo de movimento" opcoes={TIPOS} aoMudar={(tipo) => mudar({ tipo })} />
       <form className="movement-form" onSubmit={guardar}>
         <label>Descrição<input

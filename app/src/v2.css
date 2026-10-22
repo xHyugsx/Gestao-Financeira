@@ -268,3 +268,19 @@ html[data-tema="dourado"] .ffplus-onda { border-color: #d4af37; }
   body .add-button.ffplus::after { transition: none; }
   .ffrealce::after { animation: none; opacity: 0; }
 }
+
+/* Janelas de registo (novo/editar movimento, abastecimento, despesa veterinária): folha que sobe do fundo */
+.fffolha {
+  position: fixed; z-index: 50; left: 0; right: 0; bottom: var(--kb, 0px); margin: 0 auto; display: grid; gap: 1rem;
+  width: 100%; max-width: 32rem; max-height: calc(92svh - var(--kb, 0px)); overflow-y: auto; overscroll-behavior: contain;
+  padding: 0 1.25rem calc(1.25rem + env(safe-area-inset-bottom, 0px)); border-style: solid; border-width: 1px 1px 0;
+  box-shadow: 0 -1rem 2.5rem rgba(0, 0, 0, .55); animation: fffolha-entrar .4s cubic-bezier(.22, 1, .36, 1);
+}
+.fffolha.movement-dialog { width: 100%; border-radius: 1.4rem 1.4rem 0 0; }
+.fffolha[data-state="closed"] { animation: fffolha-sair .24s cubic-bezier(.4, 0, 1, 1) forwards; }
+@keyframes fffolha-entrar { from { transform: translateY(100%); } }
+@keyframes fffolha-sair { to { transform: translateY(100%); } }
+.fffolha-pega { display: grid; place-items: center; height: 1.6rem; margin: 0 -1.25rem -.6rem; cursor: grab; touch-action: none; }
+.fffolha-pega i { width: 2.6rem; height: 4px; border-radius: 4px; background: rgba(255, 255, 255, .25); }
+.fffolha-pega + div { touch-action: pan-x; }
+@media (prefers-reduced-motion: reduce) { .fffolha, .fffolha[data-state="closed"] { animation: none; } }

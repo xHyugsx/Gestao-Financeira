@@ -1,5 +1,5 @@
 import * as Radix from '@radix-ui/react-dialog';
-import type { ReactNode } from 'react';
+import { type ReactNode, type TouchEvent, useEffect, useRef, useState } from 'react';
 import { Icone } from './Icone';
 
 // Janela modal igual à da app atual (Radix Dialog com as classes do padrão shadcn/ui).
@@ -13,16 +13,57 @@ interface Props {
   titulo: string;
   descricao: string;
   className?: string;
+  /** Folha que sobe do fundo do ecrã (janelas de registo), com pega para arrastar para baixo e fechar. */
+  folha?: boolean;
   children: ReactNode;
 }
 
-export function Dialogo({ aberto, aoMudar, titulo, descricao, className, children }: Props) {
+/** Altura do teclado do telemóvel (a folha fica por cima dele). */
+function useTeclado(ativo: boolean) {
+  const [altura, setAltura] = useState(0);
+  useEffect(() => {
+    const v = window.visualViewport;
+    if (!ativo || !v) { setAltura(0); return; }
+    const f = () => setAltura(Math.max(0, Math.round(window.innerHeight - v.height - v.offsetTop)));
+    f();
+    v.addEventListener('resize', f); v.addEventListener('scroll', f);
+    return () => { v.removeEventListener('resize', f); v.removeEventListener('scroll', f); };
+  }, [ativo]);
+  return altura;
+}
+
+export function Dialogo({ aberto, aoMudar, titulo, descricao, className, folha, children }: Props) {
+  const teclado = useTeclado(!!folha && aberto);
+  const arrasto = useRef<{ y: number; dy: number } | null>(null);
+  // arrastar a pega (ou o título) para baixo fecha a folha; um arrasto curto volta ao sítio
+  const tocar = folha ? {
+    onTouchStart: (e: TouchEvent<HTMLDivElement>) => { arrasto.current = { y: e.touches[0]!.clientY, dy: 0 }; },
+    onTouchMove: (e: TouchEvent<HTMLDivElement>) => {
+      const a = arrasto.current, el = e.currentTarget.closest<HTMLElement>('.fffolha');
+      if (!a || !el) return;
+      a.dy = Math.max(0, e.touches[0]!.clientY - a.y);
+      el.style.transition = 'none';
+      el.style.transform = `translateY(${a.dy}px)`;
+    },
+    onTouchEnd: (e: TouchEvent<HTMLDivElement>) => {
+      const a = arrasto.current, el = e.currentTarget.closest<HTMLElement>('.fffolha');
+      arrasto.current = null;
+      if (!a || !a.dy || !el) return;
+      if (a.dy > 90) { aoMudar(false); return; }
+      el.style.transition = 'transform .25s cubic-bezier(.22, 1, .36, 1)';
+      el.style.transform = '';
+    },
+  } : {};
   return (
     <Radix.Root open={aberto} onOpenChange={aoMudar}>
       <Radix.Portal>
         <Radix.Overlay className={FUNDO} />
-        <Radix.Content className={[CONTEUDO, className].filter(Boolean).join(' ')}>
-          <div className="flex flex-col space-y-1.5 text-center sm:text-left">
+        <Radix.Content
+          className={[folha ? 'fffolha' : CONTEUDO, className].filter(Boolean).join(' ')}
+          style={folha ? ({ '--kb': `${teclado}px` } as React.CSSProperties) : undefined}
+        >
+          {folha ? <div className="fffolha-pega" aria-hidden="true" {...tocar} onTouchCancel={tocar.onTouchEnd}><i /></div> : null}
+          <div className="flex flex-col space-y-1.5 text-center sm:text-left" {...tocar}>
             <Radix.Title className="text-lg font-semibold leading-none tracking-tight">{titulo}</Radix.Title>
             <Radix.Description className="text-sm text-muted-foreground">{descricao}</Radix.Description>
           </div>
