@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { estadoInicial, type Movimento, saldoDaConta } from '../dados';
 import { alfabetica, corNova, TONS } from './cores';
 import {
-  criaCopias, dataSeguinte, estimativa, gerarRecorrentes, porConfirmar, recorrentesPrevistos, recorrenciaNaSerie, saltarEsteMes, semSaltados, somarMeses, valoresDaSerie,
+  criaCopias, dataSeguinte, estimativa, gerarRecorrentes, porConfirmar, recorrentesPrevistos, recorrenciaNaSerie, reporMes, saltarEsteMes, semSaltados, somarMeses, valoresDaSerie,
 } from './recorrentes';
 
 const renda: Movimento = { id: 1, title: 'Renda', detail: '5 julho · Habitação', amount: -600, date: '2026-07-05', movementType: 'expense', recurring: 'com', recurringEvery: 1 };
@@ -149,6 +149,11 @@ describe('saltar só este mês', () => {
     expect(novembro[0]).toMatchObject({ date: '2026-11-05', amount: -600 });
     expect(novembro[0]!.skipped).toBeUndefined();
     expect(novembro.find((m) => m.id === 71)).toMatchObject({ skipped: true, recurringDone: true });
+  });
+
+  it('repor um mês saltado tira a marca', () => {
+    const l = saltarEsteMes([out, set], out);
+    expect('skipped' in reporMes(l, l[0]!)[0]!).toBe(false);
   });
 
   it('sem as saltadas: o mesmo objeto se não houver nenhuma', () => {

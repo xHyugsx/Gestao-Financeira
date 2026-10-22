@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { anoMes, type Conta, type Estado, gastos, inicioDoMes, MESES, type Movimento, saldoDaConta, type Salarios } from '../dados';
 import { ArtigoMovimento } from '../movimentos/Movimento';
-import { recorrentesPrevistos, valorRecorrente } from '../movimentos/recorrentes';
+import { reporMes, valorRecorrente } from '../movimentos/recorrentes';
 import { lerValor } from '../movimentos/regras';
 import { Botao } from '../ui/Botao';
 import { formatarEuros, formatarPercentagem } from '../ui/formatos';
@@ -9,7 +9,8 @@ import { Icone } from '../ui/Icone';
 import { Segmentado } from '../ui/Segmentado';
 import { AnoEmRevista } from './AnoEmRevista';
 import { categoriasDoMes, doMes, fechoDoMes, percentagem, receitas, variacao } from './calculos';
-import { anuaisPrevistas, type DespesaAnual, despesasAnuais, estadoAnual, movimentoDoPagamento, renovar, totalProximos12 } from './anuais';
+import { type DespesaAnual, despesasAnuais, estadoAnual, movimentoDoPagamento, renovar, totalProximos12 } from './anuais';
+import { previsaoDoMes } from './previsao';
 import { recorrentesDoMes } from './subscricoes';
 
 export type SeccaoResumo = 'resumo' | 'recorrentes' | 'anuais' | 'fecho' | 'salarios';
@@ -59,10 +60,7 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
   ];
   const anuais = despesasAnuais(estado.annualExpenses);
   // Mês futuro: a previsão conta também os recorrentes que a app ainda vai criar e as despesas anuais por pagar
-  const futuro = anoMes(mes) > anoMes(hoje), limite = `${anoMes(mes)}-31`;
-  const previstos = futuro ? recorrentesPrevistos(todos, hoje, limite) : [];
-  const anuaisFuturas = futuro ? anuaisPrevistas(anuais, hoje, limite) : [];
-  const comPrevistos = previstos.length || anuaisFuturas.length ? [...movimentos, ...previstos, ...anuaisFuturas] : movimentos;
+  const { recorrentes: previstos, anuais: anuaisFuturas, movimentos: comPrevistos } = previsaoDoMes(todos, estado.annualExpenses, hoje, mes);
   const pagamentosPrevistos = previstos.filter((m) => m.movementType !== 'income' && m.affectsBalance !== false);
   const nRec = pagamentosPrevistos.length, nAnuais = anuaisFuturas.length;
   const textoPrevistos = [nRec ? (nRec === 1 ? '1 recorrente' : `${nRec} recorrentes`) : '', nAnuais ? (nAnuais === 1 ? '1 despesa anual' : `${nAnuais} despesas anuais`) : '']
@@ -131,7 +129,7 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
   const recorrentes = () => {
     const r = recorrentesDoMes(todos, mes, hoje);
     const total = r.pago + r.falta;
-    const ROTULO = { pago: 'Pago', 'por pagar': 'Por pagar', atrasado: 'Atrasado', 'por confirmar': 'Por confirmar', agendado: 'Agendado' } as const;
+    const ROTULO = { pago: 'Pago', 'por pagar': 'Por pagar', atrasado: 'Atrasado', 'por confirmar': 'Por confirmar', agendado: 'Agendado', saltado: 'Saltado' } as const;
     return (
       <>
         <div className="view-heading"><p className="eyebrow">{MESES[mes.getMonth()]}</p><h2>Recorrentes e subscrições</h2></div>
@@ -142,7 +140,19 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
         {total > 0 ? <div className="ffrec-barra" aria-hidden="true"><b style={{ transform: `scaleX(${r.pago / total})` }} /></div> : null}
         <section className="transactions-panel">
           <div className="transaction-list">
-            {r.lista.length ? r.lista.map((i) => (
+            {r.lista.length ? r.lista.map((i) => (i.estado === 'saltado' ? (
+              // Mês saltado («só este mês»): não abre o movimento; «Repor» volta a pô-lo nas contas
+              <article key={`${i.titulo}-${i.movimento.id}`} className="transaction-row ffrec-saltado">
+                <div className="transaction-main">
+                  <span className="transaction-icon ffrec-ic-saltado"><Icone nome="calendar-clock" /></span>
+                  <div className="min-w-0"><h3>{i.titulo}</h3><p>Dia {i.dia} · {i.periodicidade}</p></div>
+                </div>
+                <div className="ffrec-dir">
+                  <Botao type="button" tamanho="pequeno" variante="ghost" onClick={() => mudarEstado((s) => ({ ...s, transactions: reporMes(s.transactions, i.movimento) }))}>Repor</Botao>
+                  <small className="ffrec-saltado-rotulo">Saltado</small>
+                </div>
+              </article>
+            ) : (
               <ArtigoMovimento key={`${i.titulo}-${i.movimento.id}`} movimento={i.movimento} aoAbrir={abrirMovimento}>
                 <div className="transaction-main">
                   <span className={`transaction-icon ffrec-ic-${i.estado.replace(' ', '-')}`}><Icone nome={i.estado === 'pago' ? 'receipt' : 'calendar-clock'} /></span>
@@ -156,7 +166,7 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
                   <small className={`ffrec-${i.estado.replace(' ', '-')}`}>{ROTULO[i.estado]}</small>
                 </div>
               </ArtigoMovimento>
-            )) : <div className="vet-empty">Sem recorrentes neste mês. Marque um movimento como «Recorrente» para aparecer aqui.</div>}
+            ))) : <div className="vet-empty">Sem recorrentes neste mês. Marque um movimento como «Recorrente» para aparecer aqui.</div>}
           </div>
         </section>
         {r.anual > 0 ? (

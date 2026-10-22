@@ -26,7 +26,27 @@ async def t_so_este_mes(app):
     verificar(await p.locator(LINHA).count() == 1, 'a cópia saltada devia desaparecer da lista')
     verificar((await app.saldos()).get('Principal') == '970,00 €', 'a cópia saltada não conta no saldo')
     await p.click('.segmented button:text-is("Recorrentes")'); await p.wait_for_timeout(500)
-    verificar(await p.locator('.page-current .transaction-list article h3').count() == 0, 'setembro saltado não devia aparecer nos Recorrentes')
+    verificar(await p.locator('.page-current .ffrec-saltado').count() == 1, 'setembro saltado aparece como «Saltado» nos Recorrentes')
+    resumo = await p.evaluate("[...document.querySelectorAll('.page-current .summary-grid article strong')].map(e=>e.textContent.replace(/\\u00a0/g,' '))")
+    verificar(resumo[:2] == ['0,00 €', '0,00 €'], f'o mês saltado não conta em pago / falta: {resumo}')
+    # «Repor» volta a pô-lo nas contas
+    await p.click('.page-current .ffrec-saltado button:has-text("Repor")'); await p.wait_for_timeout(500)
+    ms = {m['id']: m for m in await app.movimentos()}
+    verificar('skipped' not in ms[2], f'repor tira a marca de saltado: {ms[2]}')
+    verificar((await app.saldos()).get('Principal') == '940,00 €', 'reposto, volta a contar no saldo')
+    verificar(not app.erros, f'erros: {app.erros}')
+
+
+async def t_jarvis_apagar_ultima_copia(app):
+    await app.page.emulate_media(reduced_motion='reduce')
+    await app.abrir(DADOS)
+    p = app.page
+    r = await app.jarvis('apagar ginásio')
+    verificar('último da série recorrente' in r, r)
+    verificar(await p.locator('.ffjv-act button:has-text("Só este mês")').count() == 1, 'faltam os botões «Só este mês / Parar a série»')
+    await p.click('.ffjv-act button:has-text("Só este mês")'); await p.wait_for_timeout(900)
+    ms = {m['id']: m for m in await app.movimentos()}
+    verificar(ms[2].get('skipped') is True and len(ms) == 2, f'pelo Jarvis, «Só este mês» salta a cópia: {ms}')
     verificar(not app.erros, f'erros: {app.erros}')
 
 

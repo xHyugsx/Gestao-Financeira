@@ -21,6 +21,7 @@ import { abrirRevisao, type ApiImportacao, desfazerImportacao, haImportacaoParaD
 import { Jarvis, type Mensagem, mensagensGuardadas } from '../jarvis/Jarvis';
 import { type ContextoJarvis, MotorJarvis } from '../jarvis/motor';
 import { lerDocumento, textoDoPdf } from '../jarvis/recibos';
+import { previsaoDoMes } from '../paginas/previsao';
 import { pessoasDosSalarios } from '../paginas/Resumo';
 import { animais, animaisDe, definirAnimais } from '../veterinario/animais';
 import { feito as lembreteFeito, info as infoLembrete, ordenados as lembretesOrdenados } from '../veterinario/lembretes';
@@ -358,6 +359,10 @@ export function App() {
   const contextoJarvis = (): ContextoJarvis => ({
     estado: semSaltados(estadoAtual.current), mes, agora, eur: (v) => formatarEuros(v, ocultos),
     saldoAtual: (c) => saldoDaConta(c, estadoAtual.current.transactions, new Date()).atual,
+    saldoNoFim: (c, m) => {
+      const e = estadoAtual.current, hoje = new Date();
+      return saldoDaConta(c, previsaoDoMes(e.transactions, e.annualExpenses, hoje, m).movimentos, hoje, m).atual;
+    },
     mudarMovimentos, mudarContas: (f) => setEstado((s) => ({ ...s, accounts: f(s.accounts) })),
     definirSalario: apiImportacao.definirSalario, vibrar, criarBackup: descarregarBackup,
     vet: { todos: todosLembretes, ordenados: lembretesOrdenados, feito: lembreteFeito, info: infoLembrete },

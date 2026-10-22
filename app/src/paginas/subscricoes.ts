@@ -5,7 +5,7 @@
 import { anoMes, dia, type Movimento } from '../dados';
 import { dataSeguinte, estimativa, PERIODICIDADES, porConfirmar, serieDe, valorRecorrente as valorDe } from '../movimentos/recorrentes';
 
-export type EstadoRecorrente = 'pago' | 'por pagar' | 'atrasado' | 'por confirmar' | 'agendado';
+export type EstadoRecorrente = 'pago' | 'por pagar' | 'atrasado' | 'por confirmar' | 'agendado' | 'saltado';
 
 export interface Recorrente {
   titulo: string;
@@ -60,8 +60,10 @@ export function recorrentesDoMes(movimentos: Movimento[], mes: Date, hoje = new 
     const doMes = l.filter((m) => m.date.startsWith(alvo));
     const base = { titulo: ref.title.trim(), cada, periodicidade: rotulo(cada), subiu, movimento: ref };
     if (doMes.length) {
-      for (const m of doMes.filter((x) => !x.skipped)) {
+      for (const m of doMes) {
         const d = Number(m.date.slice(8, 10));
+        // Saltado («só este mês»): aparece para se poder repor, mas não conta nos totais
+        if (m.skipped) { lista.push({ ...base, valor: valorDe(m), estimado: false, dia: d, estado: 'saltado', movimento: m }); continue; }
         // Data futura: ainda não saiu do saldo (agendado); valor 0 numa série variável: falta confirmar
         const semValor = porConfirmar(m), estado = m.date > hojeDia ? 'agendado' : semValor ? 'por confirmar' : 'pago';
         lista.push({ ...base, valor: semValor ? estimado : valorDe(m), estimado: semValor, dia: d, estado, movimento: m });

@@ -3,6 +3,7 @@
 import { anoMes, type Conta, type Estado, MESES, type Movimento, salariosDoMes } from '../dados';
 import { CATEGORIAS_POR_OMISSAO } from '../dados/esquema';
 import { categoriaDespesa, categoriaReceita } from '../movimentos/categorias';
+import { criaCopias, saltarEsteMes } from '../movimentos/recorrentes';
 import { tipoVisual } from '../movimentos/regras';
 import { categoriasDoMes, eCombustivel, percentagem, variacao } from '../paginas/calculos';
 import { animais, deAnimal } from '../veterinario/animais';
@@ -14,6 +15,8 @@ export type Pendente =
   | { type: 'vet-done'; payload: { id: string | number } }
   | { type: 'edit-tx'; payload: { id: number | string; patch: Partial<Movimento> } }
   | { type: 'remove-tx'; payload: Movimento }
+  /** Apagar a cópia mais recente de uma série recorrente: «Só este mês» ou «Parar a série». */
+  | { type: 'remove-serie'; payload: Movimento }
   | PendenteRecibo;
 
 interface Sujeito { t: 'cat' | 'loja'; name: string; key?: string }
@@ -26,6 +29,8 @@ export interface ContextoJarvis {
   agora: Date;
   eur: (v: number) => string;
   saldoAtual: (c: Conta) => number;
+  /** Saldo no fim de um mês: passado (o que havia nesse dia) ou futuro (previsão com recorrentes e despesas anuais). */
+  saldoNoFim?: (c: Conta, mes: Date) => number;
   mudarMovimentos: (f: (l: Movimento[]) => Movimento[]) => void;
   definirSalario: (ano: string, pessoa: string, mes: number, valor: number) => void;
   mudarContas: (f: (l: Conta[]) => Conta[]) => void;
@@ -53,6 +58,21 @@ export class MotorJarvis {
   /** Resposta a uma mensagem (já corrigida). */
   responder(q: string, c: ContextoJarvis): string {
     const n = semAcentos(q), f = c.estado.transactions, A = c.eur, hc = MESES;
+    if (this.pendente?.type === 'remove-serie') {
+      const m = this.pendente.payload;
+      if (/\b(so este mes|saltar|salta)\b/.test(n)) {
+        this.pendente = null;
+        c.mudarMovimentos((ls) => saltarEsteMes(ls, m)); c.vibrar(30);
+        return `${m.title.trim()} saltado só este mês — a série continua no próximo. ⏭️`;
+      }
+      if (/\b(parar?|para a serie|apaga\w*|elimin\w*|remov\w*)\b/.test(n)) {
+        this.pendente = null;
+        c.mudarMovimentos((ls) => ls.filter((x) => x.id !== m.id)); c.vibrar([40, 60, 40]);
+        return `${m.title.trim()} apagado e a série parada (deixa de haver cópias). 🗑️`;
+      }
+      if (/\b(cancelar?|n[aã]o)\b/.test(n)) { this.pendente = null; return 'Ok, não fiz essa alteração.'; }
+      return 'Escolhe «Só este mês», «Parar a série» ou «Cancelar».';
+    }
     if (this.pendente) {
       if (/\b(confirmar?|confirmo|\bsim\b)\b/.test(n)) {
         const pd = this.pendente;
@@ -102,9 +122,17 @@ export class MotorJarvis {
       const km = q.match(/(?:remov\w*|apag\w*|elimin\w*|anul\w*)\s+(?:a\s+)?(?:última|ultima)?\s*(?:despesa|receita|movimento|gasto)?\s*(?:de|do|da)?\s*(.+)/i);
       const kw = km && km[1] && semAcentos(km[1]).trim();
       const tipoOk = (t: Movimento) => (!wantInc || t.movementType === 'income') && (!wantExp || t.movementType === 'expense');
-      let tgt = kw && kw.length > 1 ? f.find((t) => semAcentos(t.title).includes(kw) && tipoOk(t)) : undefined;
-      if (!tgt) tgt = f.find((t) => t.movementType !== 'transfer' && tipoOk(t));
+      // O mais recente primeiro («apagar a última…»)
+      const recentes = [...f].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+      let tgt = kw && kw.length > 1 ? recentes.find((t) => semAcentos(t.title).includes(kw) && tipoOk(t)) : undefined;
+      if (!tgt) tgt = recentes.find((t) => t.movementType !== 'transfer' && tipoOk(t));
       if (!tgt) return 'Não encontrei nenhum movimento correspondente.';
+      const quando = new Date(`${tgt.date}T12:00:00`).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' });
+      if (criaCopias(tgt)) {
+        // É dele que sai a cópia seguinte: apagar parava a série sem aviso
+        this.pendente = { type: 'remove-serie', payload: tgt };
+        return `${tgt.title.trim()} (${quando}) é o último da série recorrente: é dele que sai a cópia seguinte. Queres «Só este mês» (a série continua) ou «Parar a série»?`;
+      }
       this.pendente = { type: 'remove-tx', payload: tgt };
       return `Vou remover: ${tgt.title} ${A(tgt.amount)} (${new Date(`${tgt.date}T12:00:00`).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}). Confirmas que queres apagar?`;
     }
@@ -119,7 +147,7 @@ export class MotorJarvis {
       c.vibrar([20, 40, 20]);
       return 'Movimento atualizado. ✏️';
     }
-    if (pd.type === 'remove-tx') { c.mudarMovimentos((ls) => ls.filter((x) => x.id !== pd.payload.id)); c.vibrar([40, 60, 40]); return 'Movimento removido. 🗑️'; }
+    if (pd.type === 'remove-tx' || pd.type === 'remove-serie') { c.mudarMovimentos((ls) => ls.filter((x) => x.id !== pd.payload.id)); c.vibrar([40, 60, 40]); return 'Movimento removido. 🗑️'; }
     if (pd.type === 'slip') {
       const { per, year: y, month: mo, net, tk, accId, key, preencher } = pd.payload, out: string[] = [];
       if (net != null) { c.definirSalario(y, per, mo, net); out.push(`Salário de ${MESES[mo]} de ${per}: ${A(net)}`); }
@@ -204,7 +232,9 @@ export class MotorJarvis {
     const ffD = (() => {
       const m = n.match(new RegExp(`\\b(${ffMo.join('|')})\\b(?:\\s+(?:de\\s+)?(20\\d{2}))?`));
       if (m) {
-        const mi = ffMo.indexOf(m[1]!), y = m[2] ? +m[2] : mi > ffNow.getMonth() ? ffNow.getFullYear() - 1 : ffNow.getFullYear();
+        // Sem ano: o mês já passado; no saldo, o mais próximo (novembro em setembro = previsão deste ano)
+        const mi = ffMo.indexOf(m[1]!), Y = ffNow.getFullYear(), dif = mi - ffNow.getMonth();
+        const y = m[2] ? +m[2] : /saldo|previs/.test(n) ? (dif > 6 ? Y - 1 : dif < -6 ? Y + 1 : Y) : dif > 0 ? Y - 1 : Y;
         return new Date(y, mi, 1);
       }
       if (/mes (passado|anterior)|ultimo mes/.test(n)) return new Date(ffNow.getFullYear(), ffNow.getMonth() - 1, 1);
@@ -416,7 +446,12 @@ export class MotorJarvis {
         return r ? `Rendimento de ${L} (salários de ${Lp}): ${A(r)}${rp ? `, ${r >= rp ? '+' : '−'}${pctAbs(variacao(r, rp))} face ao mês anterior` : ''}.` : `Não há salários registados em ${Lp}.`;
       }
       if (ik === 'rec') return `Receitas registadas em ${L}: ${A(rc)}.`;
-      if (ik === 'sld') return `O saldo das contas é sempre o atual, não depende do mês — ${saldos()}.`;
+      if (ik === 'sld') {
+        const atual = anoMes(ffNow), alvo = anoMes(ffD);
+        if (alvo === atual || !c.saldoNoFim) return `Saldos hoje — ${saldos()}.`;
+        const lista = c.estado.accounts.map((a) => `${a.name}: ${A(c.saldoNoFim!(a, ffD))}`).join(' · ');
+        return alvo > atual ? `Previsão do saldo no fim de ${L} (com os recorrentes e as despesas anuais previstos) — ${lista}.` : `Saldo no fim de ${L} — ${lista}.`;
+      }
       if (ik === 'gas') return g ? `Em ${L} gastaste ${A(g)}${gp ? `, ${g > gp ? 'mais' : 'menos'} ${pctAbs(variacao(g, gp))} do que em ${Lp}` : ''}.` : `Não há gastos registados em ${L}.`;
       return g || rc || un(Dp) ? `Resumo de ${L}: gastos ${A(g)} · receitas ${A(rc)} · rendimento ${A(un(Dp))}.` : `Não há movimentos registados em ${L}.`;
     }

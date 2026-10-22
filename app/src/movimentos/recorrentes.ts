@@ -89,6 +89,13 @@ export const criaCopias = repete;
  */
 export const saltarEsteMes = (lista: Movimento[], m: Movimento) => lista.map((x) => (x.id === m.id ? { ...x, skipped: true } : x));
 
+/** Repor um mês saltado: a cópia volta a contar nas listas, nos totais e no saldo. */
+export const reporMes = (lista: Movimento[], m: Movimento) => lista.map((x) => {
+  if (x.id !== m.id) return x;
+  const { skipped: _saltado, ...resto } = x;
+  return resto;
+});
+
 /** Os dados sem as cópias saltadas (o que as páginas mostram e contam); devolve o mesmo objeto se não houver nenhuma. */
 export function semSaltados<T extends { transactions: Movimento[] }>(e: T): T {
   return e.transactions.some((m) => m.skipped) ? { ...e, transactions: e.transactions.filter((m) => !m.skipped) } : e;
