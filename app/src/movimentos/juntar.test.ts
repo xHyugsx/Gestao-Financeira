@@ -46,4 +46,12 @@ describe('juntar movimentos de outro telemóvel', () => {
     expect(semJuncao(l, b).map((x) => x.id)).toEqual([1, 2, 3, 10]);
     expect(ultimaJuncao(locais)).toBe('');
   });
+
+  it('os saltados daqui não contam como já existentes; os saltados do outro telemóvel não entram', () => {
+    const saltado: Movimento = { id: 1, title: 'Renda', detail: '1 outubro · Habitação', amount: -600, date: '2026-10-01', movementType: 'expense', skipped: true };
+    const real = { id: 99, title: 'Renda', detail: '1 outubro · Habitação', amount: -600, date: '2026-10-01', movementType: 'expense' };
+    expect(prepararJuncao([saltado], [real]).novos.map((x) => x.id)).toEqual([99]);
+    expect(prepararJuncao([], [{ ...real, id: 98, skipped: true }]).novos).toEqual([]);
+  });
 });
+

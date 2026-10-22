@@ -6,7 +6,8 @@ import { formatarEuros } from '../ui/formatos';
 import { Icone } from '../ui/Icone';
 import { categoriaDoDetalhe } from './categorias';
 import { pessoasDaFamilia } from './pessoas';
-import { DIA_DO_SALARIO, PERIODICIDADES, porConfirmar, valoresDaSerie } from './recorrentes';
+import { DIA_DO_SALARIO, PERIODICIDADES, porConfirmar, valorRecorrente, valoresDaSerie } from './recorrentes';
+import { diaEMes } from './regras';
 import { categoriasParaEditar, movimentoEditado } from './regras';
 
 interface Props {
@@ -126,6 +127,30 @@ export function ApagarRecorrente({ movimento: m, fechar, saltar, parar }: {
         <div className="dialog-actions">
           <Botao type="button" variante="destrutivo" onClick={() => parar(m)}><Icone nome="trash-2" />Parar a série</Botao>
           <Botao type="button" onClick={() => saltar(m)}>Só este mês</Botao>
+        </div>
+      ) : null}
+    </Dialogo>
+  );
+}
+
+/** Movimento novo de uma série que já tem cópia nesse mês: substituir a cópia ou registar os dois. */
+export function DuplicadoRecorrente({ par, fechar, substituir, registar }: {
+  par: { novo: Movimento; copia: Movimento } | null; fechar: () => void; substituir: () => void; registar: () => void;
+}) {
+  const c = par?.copia;
+  return (
+    <Dialogo
+      aberto={par !== null} aoMudar={(a) => { if (!a) fechar(); }} className="movement-dialog ffapagar-serie" titulo="Este recorrente já está registado"
+      descricao={c ? `«${c.title.trim()}» de ${diaEMes(c.date)} (${formatarEuros(valorRecorrente(c), false)}) foi criado automaticamente.` : ''}
+    >
+      <ul className="ffapagar-opcoes">
+        <li><strong>Substituir:</strong> fica só um, com o que escreveste.</li>
+        <li><strong>Registar na mesma:</strong> ficam os dois (por exemplo, um pagamento a mais).</li>
+      </ul>
+      {par ? (
+        <div className="dialog-actions">
+          <Botao type="button" variante="ghost" onClick={registar}>Registar na mesma</Botao>
+          <Botao type="button" onClick={substituir}>Substituir</Botao>
         </div>
       ) : null}
     </Dialogo>

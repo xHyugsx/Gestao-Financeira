@@ -156,6 +156,25 @@ export function recorrentesPrevistos(movimentos: Movimento[], hoje: Date, ate: s
   return previstos;
 }
 
+/**
+ * Cópia de uma série já existente no mês de um movimento novo (com efeito no saldo): registá-lo à mão deixava-o a
+ * dobrar, ou a cópia por confirmar ficava esquecida.
+ */
+export function copiaNoMes(lista: Movimento[], novo: Movimento): Movimento | undefined {
+  const mes = novo.date?.slice(0, 7), k = serieDe(novo);
+  if (!mes) return undefined;
+  return lista.find((x) => x.id !== novo.id && x.recurring && !x.skipped && x.affectsBalance !== false && x.movementType === novo.movementType
+    && !!x.date && x.date.startsWith(mes) && serieDe(x) === k);
+}
+
+/** O que se escreveu no movimento novo passa para a cópia que já existia (que continua na série). */
+export function preencherCopia(copia: Movimento, novo: Movimento): Movimento {
+  return {
+    ...copia, amount: novo.amount, ...(novo.revolut ? { transferValue: novo.transferValue } : {}), date: novo.date, detail: novo.detail, kind: novo.kind,
+    account: novo.account, person: novo.person, note: novo.note ?? copia.note, affectsBalance: novo.affectsBalance,
+  };
+}
+
 /** Estimativa de um valor variável: média dos últimos 3 valores (0 se ainda não houver nenhum). */
 export function estimativa(valores: number[]): number {
   const u = valores.filter((v) => v > 0).slice(-3);
