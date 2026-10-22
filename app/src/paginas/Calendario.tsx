@@ -58,8 +58,8 @@ export function Calendario({ estado, mes, ocultos, diaEscolhido, escolherDia, as
             return (
               <Botao
                 key={d} type="button" variante="ghost" onClick={() => escolherDia(d)}
-                className={`${diaEscolhido === d ? 'calendar-day calendar-day-active' : 'calendar-day'}${fimDeSemana ? ' ffcal-we' : ''}${hoje === `${anoMes(mes)}-${String(d).padStart(2, '0')}` ? ' ffcal-today' : ''}${calor.nivel[d] ? ` ffcal-q${calor.nivel[d]}` : calor.semGastos.includes(d) ? ' ffcal-zero' : ''}`}
-                aria-label={calor.gasto[d] ? `${d}: gasto ${formatarEuros(calor.gasto[d]!, ocultos)}` : calor.semGastos.includes(d) ? `${d}: sem despesas` : undefined}
+                className={`${diaEscolhido === d ? 'calendar-day calendar-day-active' : 'calendar-day'}${fimDeSemana ? ' ffcal-we' : ''}${hoje === `${anoMes(mes)}-${String(d).padStart(2, '0')}` ? ' ffcal-today' : ''}${calor.nivel[d] ? ` ffcal-q${calor.nivel[d]}` : calor.previsto[d] ? ' ffcal-futuro' : calor.semGastos.includes(d) ? ' ffcal-zero' : ''}`}
+                aria-label={calor.gasto[d] ? `${d}: gasto ${formatarEuros(calor.gasto[d]!, ocultos)}` : calor.previsto[d] ? `${d}: agendado ${formatarEuros(calor.previsto[d]!, ocultos)}` : calor.semGastos.includes(d) ? `${d}: sem despesas` : undefined}
               >
                 <span>{d}</span>
                 {pontos.length ? <span className="ffdots" aria-hidden="true">{pontos.map((c) => <i key={c} className={`ffd-${c}`} />)}</span> : null}
@@ -75,6 +75,7 @@ export function Calendario({ estado, mes, ocultos, diaEscolhido, escolherDia, as
         <div className="ffcal-calor" aria-label="Gasto por dia">
           <span>Menos</span>{[1, 2, 3, 4].map((n) => <i key={n} className={`ffcal-q${n}`} />)}<span>Mais</span>
           <span className="ffcal-zero-leg"><i className="ffcal-zero" />Sem despesas</span>
+          {calor.previsto.some(Boolean) ? <span className="ffcal-zero-leg"><i className="ffcal-futuro" />Agendado</span> : null}
         </div>
         {calor.maisCaro !== null || calor.semGastos.length ? (
           <p className="ffcal-resumo">

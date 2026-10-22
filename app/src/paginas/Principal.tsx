@@ -1,6 +1,7 @@
-import { anoMes, type Estado, type Movimento, rendimentoDoMes } from '../dados';
+import { agendado, anoMes, type Estado, type Movimento, rendimentoDoMes } from '../dados';
 import { aspetosCategorias, simplificar } from '../movimentos/categorias';
 import { LinhaMovimento } from '../movimentos/Movimento';
+import { diaEMes } from '../movimentos/regras';
 import { Botao } from '../ui/Botao';
 import { formatarEuros, formatarPercentagem, MOEDA } from '../ui/formatos';
 import { Icone } from '../ui/Icone';
@@ -41,9 +42,14 @@ export function Principal({ estado, mes, ocultos, lista, mudarLista, vibrar, abr
     || (contaFiltro === 'principal' ? !m.account || m.account === 'principal'
       : contaFiltro === 'revolut' ? m.account === 'revolut' || m.revolut?.holder === 'Conjunta'
         : m.account === contaFiltro);
-  // Mais recentes primeiro (no mesmo dia, o último registado primeiro); a app atual mostrava pela ordem de registo
+  // Mais recentes primeiro (no mesmo dia, o último registado primeiro); a app atual mostrava pela ordem de registo.
+  // Os agendados (data futura) ficam num grupo à parte, do mais próximo para o mais distante, para não taparem os recentes.
   const porData = [...movimentos].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-  const visiveis = lista.expandida ? porData.filter((m) => passaPesquisa(m) && passaConta(m)) : porData.slice(0, 3);
+  const base = lista.expandida ? porData.filter((m) => passaPesquisa(m) && passaConta(m)) : porData;
+  const agendados = base.filter((m) => agendado(m, hoje)).reverse();
+  const ateHoje = base.filter((m) => !agendado(m, hoje));
+  const visiveis = lista.expandida ? ateHoje : ateHoje.slice(0, 3);
+  const linha = (m: Movimento) => <LinhaMovimento key={m.id} movimento={m} contas={contas} aspetos={aspetos} ocultos={ocultos} aoAbrir={abrirMovimento} />;
   const aspetos = aspetosCategorias(estado, mes);
 
   return (
@@ -91,17 +97,27 @@ export function Principal({ estado, mes, ocultos, lista, mudarLista, vibrar, abr
             ))}
           </div>
         ) : null}
-        {lista.expandida && (termo || contaFiltro !== 'all') && !visiveis.length ? (
+        {lista.expandida && (termo || contaFiltro !== 'all') && !visiveis.length && !agendados.length ? (
           <p className="tx-search-empty">{termo ? `Sem resultados para «${lista.pesquisa.trim()}».` : 'Sem movimentos nesta conta.'}</p>
         ) : (
-          <div className="transaction-list">
-            {visiveis.map((m) => (
-              <LinhaMovimento
-                key={m.id} movimento={m} contas={contas} aspetos={aspetos} ocultos={ocultos}
-                aoAbrir={abrirMovimento}
-              />
-            ))}
-          </div>
+          <>
+            {lista.expandida && agendados.length ? (
+              <>
+                <h3 className="ffgrupo">Agendados</h3>
+                <div className="transaction-list ffagendados">{agendados.map(linha)}</div>
+                {visiveis.length ? <h3 className="ffgrupo">Até hoje</h3> : null}
+              </>
+            ) : null}
+            <div className="transaction-list">{visiveis.map(linha)}</div>
+            {!lista.expandida && agendados.length ? (
+              <button type="button" className="ffagendados-resumo" onClick={() => mudarLista({ expandida: true, pesquisa: '', conta: 'all' })}>
+                <Icone nome="calendar-clock" />
+                <span>
+                  {agendados.length === 1 ? '1 agendado' : `${agendados.length} agendados`} · próximo: {agendados[0]!.title.trim()}, {diaEMes(agendados[0]!.date)}
+                </span>
+              </button>
+            ) : null}
+          </>
         )}
       </section>
     </main>
