@@ -100,6 +100,10 @@ describe('editar movimento', () => {
     expect(movimentoEditado({ ...base, recurring: 'sem' }, campos({ title: 'X', amount: '1', recurring: 'on', tipoValor: 'com' }))!.recurring).toBe('com');
     expect(movimentoEditado({ ...base, recurring: true }, campos({ title: 'X', amount: '1', recurring: 'on', tipoValor: 'com' }))!.recurring).toBe(true);
     expect(movimentoEditado({ ...base, recurring: 'sem', amount: 0 }, campos({ title: 'X', amount: '', recurring: 'on', tipoValor: 'sem' }))!.amount).toBe(-0);
+    expect(movimentoEditado(base, campos({ title: 'X', amount: '1', recurring: 'on', recurringEvery: 'salario' }))).toMatchObject({ recurringEvery: 1, recurringDay: 'salario' });
+    expect(movimentoEditado({ ...base, recurring: 'com', recurringEvery: 1, recurringDay: 'salario' }, campos({ title: 'X', amount: '1', recurring: 'on', recurringEvery: '1' }))!.recurringDay).toBeUndefined();
+    expect(novoMovimento(campos({ title: 'Salário', amount: '1500', date: '2026-09-28' }), ctx({ tipo: 'income', recorrente: true, tipoValor: 'sem', periodicidade: 1, diaSalario: true })))
+      .toMatchObject({ recurring: 'sem', recurringEvery: 1, recurringDay: 'salario' });
     expect(antigo.recurringEvery).toBeUndefined();
   });
 });

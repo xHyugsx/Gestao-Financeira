@@ -33,6 +33,8 @@ export interface ContextoNovo {
   tipoValor: string;
   /** Meses entre repetições (só nos recorrentes). */
   periodicidade?: number;
+  /** Cópias no dia do salário (3.º dia útil a contar do fim do mês) em vez do mesmo dia. */
+  diaSalario?: boolean;
   revolut: boolean;
   hoje: Date;
   id: number;
@@ -53,7 +55,10 @@ export function novoMovimento(campos: FormData, c: ContextoNovo): Movimento | Er
     return ['amount', 'Valor inválido. Use, por exemplo, 621,18 ou 1.234,56.'];
   }
   const afetaSaldo = campos.get('affectsBalance') === 'on';
-  const extras = { ...(c.recorrente ? { recurring: c.tipoValor, recurringEvery: c.periodicidade || 1 } : {}), ...(nota ? { note: nota } : {}) };
+  const extras = {
+    ...(c.recorrente ? { recurring: c.tipoValor, recurringEvery: c.periodicidade || 1, ...(c.diaSalario ? { recurringDay: 'salario' } : {}) } : {}),
+    ...(nota ? { note: nota } : {}),
+  };
   if (c.revolut) {
     const revolut = { holder: String(campos.get('revolutHolder') || 'Conjunta'), purpose: String(campos.get('revolutPurpose') || 'Carregamento') };
     return {
@@ -84,12 +89,13 @@ export function movimentoEditado(m: Movimento, campos: FormData): Movimento | nu
   // Recorrente (só na app nova): desmarcar pára a série; a periodicidade liga a criação automática
   const recorrencia: Partial<Movimento> = {};
   if (campos.has('recurringEvery') || campos.get('recurring') === 'on') {
-    const cada = Number(campos.get('recurringEvery') || 0);
+    const periodo = String(campos.get('recurringEvery') || ''), noSalario = periodo === 'salario';
+    const cada = noSalario ? 1 : Number(periodo || 0);
     // Tipo de valor: "sem" = valor variável; ao passar a fixo, um `true` antigo (1.9.x) fica como estava
     const tipo = campos.get('tipoValor');
     const recurring = tipo === 'sem' ? 'sem' : tipo === 'com' && m.recurring === 'sem' ? 'com' : m.recurring || 'com';
-    Object.assign(recorrencia, { recurring, recurringEvery: cada > 0 ? cada : undefined });
-  } else if (m.recurring) Object.assign(recorrencia, { recurring: undefined, recurringEvery: undefined, recurringDone: undefined });
+    Object.assign(recorrencia, { recurring, recurringEvery: cada > 0 ? cada : undefined, recurringDay: noSalario ? 'salario' : undefined });
+  } else if (m.recurring) Object.assign(recorrencia, { recurring: undefined, recurringEvery: undefined, recurringDone: undefined, recurringDay: undefined });
   return {
     ...m, ...recorrencia, title: titulo, amount: m.movementType === 'expense' ? -valor : m.movementType === 'income' ? valor : m.amount, date: data,
     note: nota || undefined, ...(m.revolut ? { transferValue: valor } : {}),

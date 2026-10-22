@@ -24,3 +24,13 @@ export function dataPorOmissao(detail: unknown): string {
   const d = Number.parseInt(String(detail), 10) || 1;
   return `2026-09-${String(d).padStart(2, '0')}`;
 }
+
+/** Dia do salário (vencimento): 3.º dia útil a contar do fim do mês de `mes`. */
+export function diaDeVencimento(mes: Date): number | null {
+  let contados = 0;
+  for (let d = new Date(mes.getFullYear(), mes.getMonth() + 1, 0).getDate(); d > 0; d--) {
+    const semana = new Date(mes.getFullYear(), mes.getMonth(), d).getDay();
+    if (semana !== 0 && semana !== 6 && ++contados === 3) return d;
+  }
+  return null;
+}

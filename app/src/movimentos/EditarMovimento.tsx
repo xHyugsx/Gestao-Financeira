@@ -6,7 +6,7 @@ import { formatarEuros } from '../ui/formatos';
 import { Icone } from '../ui/Icone';
 import { categoriaDoDetalhe } from './categorias';
 import { pessoasDaFamilia } from './pessoas';
-import { PERIODICIDADES, porConfirmar, valoresDaSerie } from './recorrentes';
+import { DIA_DO_SALARIO, PERIODICIDADES, porConfirmar, valoresDaSerie } from './recorrentes';
 import { categoriasParaEditar, movimentoEditado } from './regras';
 
 interface Props {
@@ -76,9 +76,10 @@ function Formulario({ m, estado, aoGuardar, aoEliminar }: { m: Movimento } & Pic
         <label className="checkbox-row"><input name="recurring" type="checkbox" checked={recorrente} onChange={(x) => setRecorrente(x.target.checked)} /> Recorrente</label>
         {recorrente ? (
           <label>Periodicidade
-            <select name="recurringEvery" defaultValue={m.recurringEvery ? String(m.recurringEvery) : ''}>
+            <select name="recurringEvery" defaultValue={m.recurringDay === DIA_DO_SALARIO.valor ? DIA_DO_SALARIO.valor : m.recurringEvery ? String(m.recurringEvery) : ''}>
               <option value="">Não criar automaticamente</option>
               {PERIODICIDADES.map((p) => <option key={p.meses} value={p.meses}>{p.rotulo}</option>)}
+              <option value={DIA_DO_SALARIO.valor}>{DIA_DO_SALARIO.rotulo}</option>
             </select>
           </label>
         ) : null}

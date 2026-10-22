@@ -3,7 +3,7 @@
 // Séries de valor variável: usam a média dos últimos 3 valores (estimativa) enquanto o valor do mês não é confirmado.
 // Cópias saltadas («só este mês»): contam para as datas da série, mas não aparecem nem entram nos valores.
 import { anoMes, dia, type Movimento } from '../dados';
-import { estimativa, PERIODICIDADES, porConfirmar, serieDe, somarMeses, valorRecorrente as valorDe } from '../movimentos/recorrentes';
+import { dataSeguinte, estimativa, PERIODICIDADES, porConfirmar, serieDe, valorRecorrente as valorDe } from '../movimentos/recorrentes';
 
 export type EstadoRecorrente = 'pago' | 'por pagar' | 'atrasado' | 'por confirmar' | 'agendado';
 
@@ -49,7 +49,7 @@ export function recorrentesDoMes(movimentos: Movimento[], mes: Date, hoje = new 
     l.sort((a, b) => a.date.localeCompare(b.date) || (+a.id || 0) - (+b.id || 0));
     const ultimo = l[l.length - 1]!, cada = ultimo.recurringEvery && ultimo.recurringEvery > 0 ? ultimo.recurringEvery : 1;
     // Série terminada: o pagamento seguinte devia ter sido há mais de um mês (face a hoje)
-    const seguinte = somarMeses(ultimo.date, cada);
+    const seguinte = dataSeguinte(ultimo, ultimo.date, cada);
     if (anoMes(new Date(`${seguinte}T12:00:00`)) < anoMes(new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1))) continue;
     const feitos = l.filter((m) => !m.skipped), ref = feitos[feitos.length - 1] ?? ultimo;
     const variavel = ultimo.recurring === 'sem', estimado = estimativa(feitos.map(valorDe));
@@ -71,7 +71,7 @@ export function recorrentesDoMes(movimentos: Movimento[], mes: Date, hoje = new 
     if (alvo < atual) continue;  // meses passados: só o que foi pago
     // Próximo pagamento a partir do último: cai neste mês?
     let previsto = seguinte;
-    while (previsto.slice(0, 7) < alvo) previsto = somarMeses(previsto, cada);
+    while (previsto.slice(0, 7) < alvo) previsto = dataSeguinte(ultimo, previsto, cada);
     if (previsto.slice(0, 7) !== alvo && !(alvo === atual && seguinte < `${alvo}-01`)) continue;
     const data = previsto.slice(0, 7) === alvo ? previsto : seguinte;
     lista.push({ ...base, valor: valorPrevisto, estimado: variavel, dia: Number(data.slice(8, 10)), estado: data < hojeDia && alvo === atual ? 'atrasado' : 'por pagar' });

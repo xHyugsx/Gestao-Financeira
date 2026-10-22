@@ -29,7 +29,7 @@ async def t_recorrente_com_periodicidade_cria_as_copias(app):
     caixa = p.locator('[role=dialog] label.checkbox-row', has_text='Recorrente')
     verificar((await caixa.inner_text()).strip() == 'Recorrente', f'rótulo: {await caixa.inner_text()!r}')
     await caixa.locator('input').check(); await p.wait_for_timeout(200)
-    verificar(await opcoes(app, '[role=dialog] select[name=recurringEvery]') == ['Mensal', 'Bimestral', 'Trimestral', 'Anual'], 'periodicidades')
+    verificar(await opcoes(app, '[role=dialog] select[name=recurringEvery]') == ['Mensal', 'Bimestral', 'Trimestral', 'Anual', 'Mensal · dia do salário'], 'periodicidades')
     await p.select_option('[role=dialog] select[name=recurringEvery]', '1')
     await p.click('[role=dialog] button[type=submit]'); await p.wait_for_timeout(800)
     datas = sorted(m['date'] for m in (await dados(app))['transactions'])

@@ -1,4 +1,4 @@
-import { anoMes, dia, type Estado, MESES, type Movimento } from '../dados';
+import { anoMes, dia, diaDeVencimento, type Estado, MESES, type Movimento } from '../dados';
 import type { aspetosCategorias } from '../movimentos/categorias';
 import { LinhaMovimento } from '../movimentos/Movimento';
 import { Botao } from '../ui/Botao';
@@ -16,15 +16,6 @@ function tipoDoPonto(m: Movimento): string {
   return (m.movementType || (m.amount < 0 ? 'expense' : 'income')) === 'income' ? 'in' : 'out';
 }
 
-/** Dia de vencimento: 3.º dia útil a contar do fim do mês. */
-function diaDeVencimento(mes: Date): number | null {
-  let contados = 0;
-  for (let d = diasDoMes(mes); d > 0; d--) {
-    const semana = new Date(mes.getFullYear(), mes.getMonth(), d).getDay();
-    if (semana !== 0 && semana !== 6 && ++contados === 3) return d;
-  }
-  return null;
-}
 
 interface Props {
   estado: Estado;
