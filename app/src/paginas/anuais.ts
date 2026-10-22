@@ -2,6 +2,8 @@
 // Só contam as dos próximos 12 meses; quando o mês chega ficam «por pagar» e, ao registar o pagamento (ou renovar),
 // passam para o ano seguinte. Entram na previsão do saldo dos meses futuros enquanto não forem pagas.
 import { anoMes, dia, type Movimento } from '../dados';
+import { simplificar } from '../movimentos/categorias';
+import { porConfirmar } from '../movimentos/recorrentes';
 import { categoriaSugerida } from '../movimentos/sugestoes';
 import { diaEMes, tipoVisual } from '../movimentos/regras';
 
@@ -35,6 +37,29 @@ export function renovar(e: DespesaAnual, hoje: Date): DespesaAnual {
   let year = e.year + 1;
   while (`${year}-${String(e.month).padStart(2, '0')}` < anoMes(hoje)) year++;
   return { ...e, year };
+}
+
+const chaveTitulo = (t: string) => simplificar(t).replace(/\s+/g, ' ').trim();
+
+/**
+ * Despesas anuais pagas «por fora» (registadas pelo «+» ou importadas): uma despesa com o mesmo título entre o mês
+ * anterior ao previsto e hoje conta como pagamento e passa a despesa para o ano seguinte. Devolve a lista nova, ou `null`.
+ */
+export function renovarPagas(lista: unknown[], movimentos: Movimento[], hoje: Date): unknown[] | null {
+  const hojeDia = dia(hoje);
+  let mudou = false;
+  const nova = lista.map((x) => {
+    const [e] = despesasAnuais([x]);
+    if (!e) return x;
+    const desde = `${anoMes(new Date(e.year, e.month - 2, 1))}-01`, k = chaveTitulo(e.name);
+    if (desde > hojeDia) return x;
+    const paga = movimentos.some((m) => m.movementType === 'expense' && !m.skipped && !porConfirmar(m) && !!m.date && m.date >= desde && m.date <= hojeDia
+      && chaveTitulo(m.title) === k);
+    if (!paga) return x;
+    mudou = true;
+    return renovar(e, hoje);
+  });
+  return mudou ? nova : null;
 }
 
 /** Movimento do pagamento (hoje, com a categoria usada da última vez para o mesmo título), para abrir e acertar. */

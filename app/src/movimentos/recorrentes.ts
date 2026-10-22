@@ -175,6 +175,17 @@ export function preencherCopia(copia: Movimento, novo: Movimento): Movimento {
   };
 }
 
+/**
+ * Receita do salário (periodicidade «dia do salário») com valor novo ou alterado: o valor a pôr na tabela de Salários
+ * desse mês, para o «Rendimento mensal» acompanhar. A pessoa vem do nome no título (com uma só pessoa, é essa).
+ */
+export function salarioDaReceita(antes: Movimento | undefined, depois: Movimento, pessoas: string[]): { ano: string; pessoa: string; mes: number; valor: number } | null {
+  if (depois.movementType !== 'income' || depois.recurringDay !== DIA_DO_SALARIO.valor || !(depois.amount > 0) || !depois.date) return null;
+  if (antes && antes.amount === depois.amount && antes.date === depois.date) return null;
+  const t = simplificar(depois.title), pessoa = pessoas.find((p) => p && t.includes(simplificar(p))) ?? (pessoas.length === 1 ? pessoas[0] : undefined);
+  return pessoa ? { ano: depois.date.slice(0, 4), pessoa, mes: Number(depois.date.slice(5, 7)) - 1, valor: depois.amount } : null;
+}
+
 /** Estimativa de um valor variável: média dos últimos 3 valores (0 se ainda não houver nenhum). */
 export function estimativa(valores: number[]): number {
   const u = valores.filter((v) => v > 0).slice(-3);

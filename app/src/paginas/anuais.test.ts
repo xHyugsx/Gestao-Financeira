@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Movimento } from '../dados';
-import { anuaisPrevistas, despesasAnuais, estadoAnual, movimentoDoPagamento, renovar, totalProximos12 } from './anuais';
+import { anuaisPrevistas, despesasAnuais, estadoAnual, movimentoDoPagamento, renovar, renovarPagas, totalProximos12 } from './anuais';
 
 const a = (id: number, name: string, value: number, month: number, year: number) => ({ id, name, value, month, year });
 const HOJE = new Date(2026, 9, 21, 12);  // 21 de outubro de 2026
@@ -34,4 +34,13 @@ describe('despesas anuais', () => {
   it('ignora entradas inválidas', () => {
     expect(despesasAnuais([a(1, 'Ok', 10, 1, 2027), { id: 2, name: 'Sem valor', value: 0, month: 1, year: 2027 }, null, { name: 'x' }]).map((e) => e.id)).toEqual([1]);
   });
+
+  it('paga «por fora»: despesa com o mesmo título desde o mês anterior ao previsto renova para o ano seguinte', () => {
+    const mov = (title: string, date: string): Movimento => ({ id: date, title, detail: 'x', amount: -150, date, movementType: 'expense' });
+    const r = renovarPagas(l, [mov('iuc ', '2026-03-10'), mov('Seguro casa', '2026-10-02'), mov('Seguro carro', '2026-10-02')], HOJE) as typeof l;
+    expect(r.map((e) => [e.name, e.year])).toEqual([['IUC', 2027], ['Seguro casa', 2027], ['Seguro carro', 2027], ['Inspeção', 2027], ['Revisão', 2028]]);
+    expect(renovarPagas(l, [mov('IUC', '2025-03-10'), mov('Seguro casa (parte)', '2026-10-02')], HOJE)).toBeNull();
+    expect(renovarPagas(l, [{ ...mov('Seguro casa', '2026-10-02'), amount: 0, recurring: 'sem' }], HOJE)).toBeNull();
+  });
 });
+
