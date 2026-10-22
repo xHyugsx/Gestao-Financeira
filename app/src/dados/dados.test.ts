@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
-  acertarSaldo, agendado, aplicarBackup, chave, type Conta, criarBackup, dataPorOmissao, estadoInicial, gravarDados, hashPin, lerBackup, lerDados,
+  acertarSaldo, agendado, aplicarBackup, diaDeVencimento, feriados, chave, type Conta, criarBackup, dataPorOmissao, estadoInicial, gravarDados, hashPin, lerBackup, lerDados,
   limiteSaldoBaixo, type Movimento, normalizar, paraGravar, pinValido, PREFIXO_V2, rendimentoDoMes,
   salariosDoMes, saldoDaConta,
 } from './index';
@@ -262,6 +262,19 @@ describe('movimentos agendados (data futura) só contam no saldo a partir do dia
 
   it('cópias saltadas («só este mês») não contam no saldo', () => {
     expect(saldoDaConta(p, [...ms, mov({ id: 9, amount: -70, date: '2026-10-15', skipped: true })], hoje).atual).toBe(950);
+  });
+});
+
+describe('dia do salário com feriados nacionais', () => {
+  it('feriados de data fixa, Sexta-feira Santa e Corpo de Deus', () => {
+    const f = feriados(2026);
+    expect(['2026-01-01', '2026-04-25', '2026-12-08', '2026-04-03', '2026-06-04'].every((d) => f.has(d))).toBe(true);
+    expect(f.has('2026-04-05')).toBe(false);
+  });
+
+  it('o 3.º dia útil a contar do fim do mês salta feriados', () => {
+    expect(diaDeVencimento(new Date(2026, 9, 1))).toBe(28);
+    expect(diaDeVencimento(new Date(2024, 2, 1))).toBe(26);  // 29/03/2024 foi Sexta-feira Santa
   });
 });
 
