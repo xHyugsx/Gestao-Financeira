@@ -4,6 +4,7 @@ import { dia, type Estado, inicioDoMes, MESES, type Movimento } from '../dados';
 import { categoriaDespesa } from '../movimentos/categorias';
 import { porConfirmar } from '../movimentos/recorrentes';
 import { diasDoMes, doMes, fechoDoMes, textoDe } from './calculos';
+import { despesasAnuais, estadoAnual } from './anuais';
 import { recorrentesDoMes } from './subscricoes';
 
 const soma = (l: Movimento[]) => l.reduce((s, m) => s + Math.abs(m.amount), 0);
@@ -14,9 +15,10 @@ const euros = (v: number) => `${Math.round(v).toLocaleString('pt-PT')}\u00a0€`
 /**
  * Frase do dia: uma observação sobre os gastos, escolhida pelo dia do ano entre as que se aplicam.
  * Só olha para o mês atual; devolve `null` se não houver nada a dizer.
- * Enquanto houver recorrentes de valor variável por confirmar (este mês ou no anterior), a frase lembra-os.
+ * Enquanto houver recorrentes de valor variável por confirmar (este mês ou no anterior), a frase lembra-os; depois,
+ * as despesas anuais previstas para este mês que ainda não foram pagas.
  */
-export function fraseDoDia(estado: Pick<Estado, 'transactions'>, hoje = new Date()): string | null {
+export function fraseDoDia(estado: Pick<Estado, 'transactions'> & Partial<Pick<Estado, 'annualExpenses'>>, hoje = new Date()): string | null {
   // Cópias saltadas («só este mês») não contam; os recorrentes recebem a lista toda (precisam delas para as datas)
   const l = estado.transactions.filter((m) => !m.skipped), d = hoje.getDate();
   const desdeMesAnterior = dia(inicioDoMes(hoje, -1));
@@ -24,6 +26,12 @@ export function fraseDoDia(estado: Pick<Estado, 'transactions'>, hoje = new Date
   if (pendentes.length) {
     const nomes = pendentes.length > 1 ? `${pendentes.slice(0, -1).join(', ')} e ${pendentes.at(-1)}` : pendentes[0];
     return `Falta confirmar o valor de ${nomes}: toca no movimento e escreve o valor deste mês.`;
+  }
+  const anuais = despesasAnuais(estado.annualExpenses ?? []).filter((e) => estadoAnual(e, hoje) === 'por pagar');
+  if (anuais.length) {
+    const nomes = anuais.map((e) => e.name.trim()), lista = nomes.length > 1 ? `${nomes.slice(0, -1).join(', ')} e ${nomes.at(-1)}` : nomes[0];
+    const total = anuais.reduce((s, e) => s + e.value, 0);
+    return `${anuais.length === 1 ? 'Este mês há uma despesa anual por pagar' : `Este mês há ${anuais.length} despesas anuais por pagar`}: ${lista} (≈ ${euros(total)}).`;
   }
   const gastoAte = (mes: Date, ate: number) => soma(consumo(doMes(l, mes)).filter((m) => Number(m.date.slice(8, 10)) <= ate));
   const frases: string[] = [];

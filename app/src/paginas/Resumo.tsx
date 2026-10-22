@@ -9,13 +9,11 @@ import { Icone } from '../ui/Icone';
 import { Segmentado } from '../ui/Segmentado';
 import { AnoEmRevista } from './AnoEmRevista';
 import { categoriasDoMes, doMes, fechoDoMes, percentagem, receitas, variacao } from './calculos';
+import { anuaisPrevistas, type DespesaAnual, despesasAnuais, estadoAnual, movimentoDoPagamento, renovar, totalProximos12 } from './anuais';
 import { recorrentesDoMes } from './subscricoes';
 
 export type SeccaoResumo = 'resumo' | 'recorrentes' | 'anuais' | 'fecho' | 'salarios';
 export type PeriodoResumo = 'mes' | 'trimestre' | 'ano';
-
-/** Despesa anual prevista (lista "Despesas anuais"). */
-interface DespesaAnual { id: number; name: string; value: number; month: number; year: number }
 
 const CONTAS_POR_OMISSAO: [Conta, Conta] = [{ id: 'principal', name: 'Principal', balance: 0 }, { id: 'revolut', name: 'Revolut Conjunta', balance: 0 }];
 const anoMesInput = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -59,11 +57,17 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
     estado.accounts.find((c) => c.id === 'revolut') ?? CONTAS_POR_OMISSAO[1],
     ...estado.accounts.filter((c) => c.id !== 'principal' && c.id !== 'revolut'),
   ];
-  const anuais = estado.annualExpenses as DespesaAnual[];
-  // Mês futuro: a previsão conta também os recorrentes que a app ainda vai criar até ao fim desse mês
-  const previstos = anoMes(mes) > anoMes(hoje) ? recorrentesPrevistos(todos, hoje, `${anoMes(mes)}-31`) : [];
-  const comPrevistos = previstos.length ? [...movimentos, ...previstos] : movimentos;
+  const anuais = despesasAnuais(estado.annualExpenses);
+  // Mês futuro: a previsão conta também os recorrentes que a app ainda vai criar e as despesas anuais por pagar
+  const futuro = anoMes(mes) > anoMes(hoje), limite = `${anoMes(mes)}-31`;
+  const previstos = futuro ? recorrentesPrevistos(todos, hoje, limite) : [];
+  const anuaisFuturas = futuro ? anuaisPrevistas(anuais, hoje, limite) : [];
+  const comPrevistos = previstos.length || anuaisFuturas.length ? [...movimentos, ...previstos, ...anuaisFuturas] : movimentos;
   const pagamentosPrevistos = previstos.filter((m) => m.movementType !== 'income' && m.affectsBalance !== false);
+  const nRec = pagamentosPrevistos.length, nAnuais = anuaisFuturas.length;
+  const textoPrevistos = [nRec ? (nRec === 1 ? '1 recorrente' : `${nRec} recorrentes`) : '', nAnuais ? (nAnuais === 1 ? '1 despesa anual' : `${nAnuais} despesas anuais`) : '']
+    .filter(Boolean).join(' e ') + (nRec && nAnuais ? ' previstos' : nAnuais ? (nAnuais === 1 ? ' prevista' : ' previstas') : nRec === 1 ? ' previsto' : ' previstos');
+  const totalPrevisto = pagamentosPrevistos.reduce((s, m) => s + valorRecorrente(m), 0) + anuaisFuturas.reduce((s, m) => s + Math.abs(m.amount), 0);
 
   const resumo = () => (
     <>
@@ -94,11 +98,8 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
           return <article key={c.id}><span>{c.name}</span><strong className={v < 0 ? 'amount-negative' : 'amount-positive'}>{eur(v)}</strong></article>;
         })}
       </section>
-      {pagamentosPrevistos.length ? (
-        <p className="ffprevistos">
-          Inclui {pagamentosPrevistos.length === 1 ? '1 recorrente previsto' : `${pagamentosPrevistos.length} recorrentes previstos`} até ao fim de {MESES[mes.getMonth()]}
-          {' '}(≈ {eur(pagamentosPrevistos.reduce((s, m) => s + valorRecorrente(m), 0))}).
-        </p>
+      {nRec || nAnuais ? (
+        <p className="ffprevistos">Inclui {textoPrevistos} até ao fim de {MESES[mes.getMonth()]} (≈ {eur(totalPrevisto)}).</p>
       ) : null}
       {gastoAnterior > 0 ? (
         <section className={evolucao <= 0 ? 'insight-card insight-good' : 'insight-card'}>
@@ -164,32 +165,53 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
     );
   };
 
-  const despesasAnuais = () => {
-    const total = anuais.reduce((s, e) => s + e.value, 0);
+  const ROTULO_ANUAL = { prevista: 'Prevista', 'por pagar': 'Por pagar', 'em atraso': 'Em atraso' } as const;
+  const mudarAnuais = (f: (l: DespesaAnual[]) => DespesaAnual[]) => mudarEstado((s) => ({ ...s, annualExpenses: f(s.annualExpenses as DespesaAnual[]) }));
+  const renovarAnual = (e: DespesaAnual) => mudarAnuais((l) => l.map((x) => (x.id === e.id ? renovar(x, hoje) : x)));
+  const pagarAnual = (e: DespesaAnual) => {
+    // Regista o pagamento (hoje), passa a despesa para o ano seguinte e abre o movimento para acertar valor, categoria ou conta
+    const m = movimentoDoPagamento(e, movimentos, hoje, Date.now());
+    mudarEstado((s) => ({ ...s, transactions: [m, ...s.transactions], annualExpenses: (s.annualExpenses as DespesaAnual[]).map((x) => (x.id === e.id ? renovar(x, hoje) : x)) }));
+    abrirMovimento(m);
+  };
+  const despesasAnuaisSeccao = () => {
+    const total = totalProximos12(anuais, hoje);
     const ordenadas = [...anuais].sort((a, b) => a.year - b.year || a.month - b.month);
     return (
       <>
         <div className="view-heading"><p className="eyebrow">Não mensais</p><h2>Despesas anuais</h2></div>
         <section className="summary-grid">
-          <article><span>Total previsto (12 meses)</span><strong className="amount-negative">{eur(total)}</strong></article>
+          <article><span>Próximos 12 meses</span><strong className="amount-negative">{eur(total)}</strong></article>
           <article><span>Reserva mensal sugerida</span><strong className="summary-blue">{eur(total / 12)}</strong></article>
         </section>
         <section className="transactions-panel">
           <div className="transaction-list">
-            {ordenadas.length ? ordenadas.map((e) => (
-              <article key={e.id} className="transaction-row">
-                <div className="transaction-main">
-                  <span className="transaction-icon transaction-icon-car"><Icone nome="calendar-clock" aria-hidden="true" /></span>
-                  <div className="min-w-0"><h3>{e.name}</h3><p>Previsto: {MESES[e.month - 1]} {e.year}</p></div>
-                </div>
-                <div className="flex items-center gap-1">
-                  <strong className="amount-negative">−{eur(e.value)}</strong>
-                  <Botao variante="ghost" tamanho="icone" aria-label={`Eliminar ${e.name}`} onClick={() => mudarEstado((s) => ({ ...s, annualExpenses: (s.annualExpenses as DespesaAnual[]).filter((x) => x.id !== e.id) }))}>
-                    <Icone nome="trash-2" />
-                  </Botao>
-                </div>
-              </article>
-            )) : <div className="vet-empty">Sem despesas anuais registadas.</div>}
+            {ordenadas.length ? ordenadas.map((e) => {
+              const estadoE = estadoAnual(e, hoje), cls = estadoE.replace(' ', '-');
+              return (
+                <article key={e.id} className={`transaction-row ffanual-${cls}`}>
+                  <div className="transaction-main">
+                    <span className="transaction-icon transaction-icon-car"><Icone nome="calendar-clock" aria-hidden="true" /></span>
+                    <div className="min-w-0">
+                      <h3>{e.name}</h3>
+                      <p>Previsto: {MESES[e.month - 1]} {e.year}{estadoE !== 'prevista' ? <span className={`tx-acc ffanual-estado ffanual-estado-${cls}`}>{ROTULO_ANUAL[estadoE]}</span> : null}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <strong className="amount-negative">−{eur(e.value)}</strong>
+                    <Botao variante="ghost" tamanho="icone" aria-label={`Eliminar ${e.name}`} onClick={() => mudarAnuais((l) => l.filter((x) => x.id !== e.id))}>
+                      <Icone nome="trash-2" />
+                    </Botao>
+                  </div>
+                  {estadoE !== 'prevista' ? (
+                    <div className="ffanual-acoes">
+                      <Botao type="button" tamanho="pequeno" onClick={() => pagarAnual(e)}>Registar pagamento</Botao>
+                      <Botao type="button" tamanho="pequeno" variante="ghost" onClick={() => renovarAnual(e)}>Renovar sem registar</Botao>
+                    </div>
+                  ) : null}
+                </article>
+              );
+            }) : <div className="vet-empty">Sem despesas anuais registadas.</div>}
           </div>
         </section>
         <form
@@ -301,7 +323,7 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
       <AnoEmRevista estado={estado} ano={mes.getFullYear()} ocultos={ocultos} aberto={revista} fechar={() => setRevista(false)} />
       {seccao === 'resumo' ? resumo() : null}
       {seccao === 'recorrentes' ? recorrentes() : null}
-      {seccao === 'anuais' ? despesasAnuais() : null}
+      {seccao === 'anuais' ? despesasAnuaisSeccao() : null}
       {seccao === 'fecho' ? fecho() : null}
       {seccao === 'salarios' ? salarios() : null}
     </main>
