@@ -48,3 +48,16 @@ async def t_periodicidade_dia_do_salario_no_formulario(app):
     verificar(await p.input_value('[role=dialog] select[name=recurringEvery]') == 'salario', 'a periodicidade devia mostrar «Mensal · dia do salário»')
     verificar('Mensal · dia do salário' in (await p.text_content('[role=dialog] select[name=recurringEvery]') or ''), 'falta a opção no formulário')
     verificar(not app.erros, f'erros: {app.erros}')
+
+
+
+async def t_salario_confirmado_a_mao_atualiza_a_tabela(app):
+    await app.page.emulate_media(reduced_motion='reduce')
+    await app.abrir(DADOS)
+    p = app.page
+    await p.locator('.page-current article[aria-label="Editar Salário Rui"]').first.click(); await p.wait_for_timeout(500)
+    verificar(await p.input_value('[role=dialog] input[name=date]') == '2026-09-28', 'devia abrir a receita de setembro (por confirmar)')
+    await p.fill('[role=dialog] input[name=amount]', '1450'); await p.click('[role=dialog] button[type=submit]'); await p.wait_for_timeout(700)
+    d = json.loads(await p.evaluate("P=>localStorage.getItem(P+'v3')", PREFIXO))
+    verificar(d['salaries']['2026']['Rui'][8] == 1450, f'tabela de Salários de setembro: {d["salaries"]}')
+    verificar(not app.erros, f'erros: {app.erros}')

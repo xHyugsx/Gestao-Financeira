@@ -47,3 +47,16 @@ async def t_anuais_na_previsao(app):
     nota = (await p.text_content('.page-current .ffprevistos') or '').replace(' ', ' ')
     verificar('2 despesas anuais previstas até ao fim de novembro (≈ 720,00 €)' in nota, f'nota: {nota}')
     verificar(not app.erros, f'erros: {app.erros}')
+
+
+
+async def t_anual_paga_por_fora(app):
+    await app.page.emulate_media(reduced_motion='reduce')
+    await app.abrir(DADOS)
+    p = app.page
+    await p.click('[aria-label="Adicionar movimento"]'); await p.wait_for_timeout(500)
+    await p.fill('.movement-dialog input[name=title]', 'Seguro casa'); await p.fill('.movement-dialog input[name=amount]', '310')
+    await p.click('.movement-dialog button[type=submit]'); await p.wait_for_timeout(800)
+    anuais = await p.evaluate("P=>JSON.parse(localStorage.getItem(P+'v3')).annualExpenses.map(e=>[e.name,e.year])", 'financas-familiar:')
+    verificar(['Seguro casa', 2027] in anuais, f'pago pelo «+», o seguro da casa devia passar para 2027: {anuais}')
+    verificar(not app.erros, f'erros: {app.erros}')

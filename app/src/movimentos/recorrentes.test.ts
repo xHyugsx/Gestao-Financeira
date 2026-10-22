@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { estadoInicial, type Movimento, saldoDaConta } from '../dados';
 import { alfabetica, corNova, TONS } from './cores';
 import {
-  copiaNoMes, criaCopias, dataSeguinte, estimativa, gerarRecorrentes, porConfirmar, preencherCopia, recorrentesPrevistos, recorrenciaNaSerie, reporMes, saltarEsteMes, semSaltados, somarMeses, valoresDaSerie,
+  copiaNoMes, criaCopias, dataSeguinte, estimativa, gerarRecorrentes, porConfirmar, preencherCopia, recorrentesPrevistos, recorrenciaNaSerie, reporMes, salarioDaReceita, saltarEsteMes, semSaltados, somarMeses, valoresDaSerie,
 } from './recorrentes';
 
 const renda: Movimento = { id: 1, title: 'Renda', detail: '5 julho · Habitação', amount: -600, date: '2026-07-05', movementType: 'expense', recurring: 'com', recurringEvery: 1 };
@@ -251,6 +251,22 @@ describe('movimento novo de uma série que já tem cópia no mês', () => {
 
   it('preencher: a cópia fica com o valor, a data e a nota do novo e continua na série', () => {
     expect(preencherCopia(copia, novo)).toMatchObject({ id: 60, amount: -620, date: '2026-10-06', note: 'com atraso', recurring: 'com', recurringEvery: 1 });
+  });
+});
+
+describe('salário confirmado à mão atualiza a tabela de Salários', () => {
+  const sal: Movimento = { id: 1, title: 'Salário Rui', detail: 'x', amount: 0, date: '2026-10-28', movementType: 'income', recurring: 'sem', recurringEvery: 1, recurringDay: 'salario' };
+
+  it('valor novo ou alterado → salários desse mês da pessoa do título (ou da única pessoa)', () => {
+    expect(salarioDaReceita(sal, { ...sal, amount: 1450 }, ['Ana', 'Rui'])).toEqual({ ano: '2026', pessoa: 'Rui', mes: 9, valor: 1450 });
+    expect(salarioDaReceita(sal, { ...sal, title: 'Ordenado', amount: 1450 }, ['Rui'])).toMatchObject({ pessoa: 'Rui' });
+  });
+
+  it('nada a fazer: sem valor, sem alteração, pessoa desconhecida ou não é o dia do salário', () => {
+    expect(salarioDaReceita(sal, sal, ['Rui'])).toBeNull();
+    expect(salarioDaReceita({ ...sal, amount: 1450 }, { ...sal, amount: 1450 }, ['Rui'])).toBeNull();
+    expect(salarioDaReceita(sal, { ...sal, title: 'Ordenado', amount: 1450 }, ['Ana', 'Rui'])).toBeNull();
+    expect(salarioDaReceita(sal, { ...sal, amount: 1450, recurringDay: undefined }, ['Rui'])).toBeNull();
   });
 });
 

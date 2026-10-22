@@ -13,7 +13,8 @@ import { useDados } from '../estado/useDados';
 import { aspetosCategorias } from '../movimentos/categorias';
 import { ApagarRecorrente, DuplicadoRecorrente, EditarMovimento } from '../movimentos/EditarMovimento';
 import { aplicarJuncao, novoLote, prepararJuncao, semJuncao, ultimaJuncao } from '../movimentos/juntar';
-import { copiaNoMes, criaCopias, gerarRecorrentes, porConfirmar, preencherCopia, recorrenciaNaSerie, saltarEsteMes, semSaltados } from '../movimentos/recorrentes';
+import { copiaNoMes, criaCopias, gerarRecorrentes, porConfirmar, preencherCopia, recorrenciaNaSerie, salarioDaReceita, saltarEsteMes, semSaltados } from '../movimentos/recorrentes';
+import { renovarPagas } from '../paginas/anuais';
 import { tipoVisual } from '../movimentos/regras';
 import { regrasPessoais } from '../importacao/config';
 import { lerFicheiro } from '../importacao/leitura';
@@ -141,7 +142,14 @@ export function App() {
   const mudarMovimentos = (f: (l: Movimento[]) => Movimento[]) => setEstado((s) => ({ ...s, transactions: f(s.transactions) }));
   const gravarNovo = (m: Movimento) => { mudarMovimentos((l) => [m, ...l]); vibrar(30); tirarFoco(); setNovoAberto(false); setDuplicado(null); };
   const substituirCopia = (copia: Movimento, m: Movimento) => {
-    mudarMovimentos((l) => l.map((x) => (x.id === copia.id ? preencherCopia(copia, m) : x))); vibrar(30); tirarFoco(); setNovoAberto(false); setDuplicado(null);
+    const nova = preencherCopia(copia, m);
+    mudarMovimentos((l) => l.map((x) => (x.id === copia.id ? nova : x))); vibrar(30); tirarFoco(); setNovoAberto(false); setDuplicado(null);
+    salarioNaTabela(copia, nova);
+  };
+  // Salário (receita no dia do salário) confirmado ou corrigido à mão: a tabela de Salários acompanha («Rendimento mensal»)
+  const salarioNaTabela = (antes: Movimento | undefined, depois: Movimento) => {
+    const s = salarioDaReceita(antes, depois, pessoasDosSalarios(estadoAtual.current.salaries, estadoAtual.current.profile.members));
+    if (s) apiImportacao.definirSalario(s.ano, s.pessoa, s.mes, s.valor);
   };
   // Se a série já tem cópia nesse mês: por confirmar, fica preenchida; com valor, pergunta (senão ficava a dobrar)
   const [duplicado, setDuplicado] = useState<{ novo: Movimento; copia: Movimento } | null>(null);
@@ -153,6 +161,7 @@ export function App() {
   };
   const guardarRegisto = (m: Movimento) => { mudarMovimentos((l) => [m, ...l]); vibrar(30); tirarFoco(); setAbastecimento(false); setDespesaVet(false); };
   const guardarEdicao = (m: Movimento) => {
+    salarioNaTabela(estadoAtual.current.transactions.find((x) => x.id === m.id), m);
     mudarMovimentos((l) => recorrenciaNaSerie(l.map((x) => (x.id === m.id ? m : x)), l.find((x) => x.id === m.id), m)); vibrar(30); tirarFoco(); setAEditar(null);
   };
   const [aApagarSerie, setAApagarSerie] = useState<Movimento | null>(null);
@@ -476,6 +485,10 @@ export function App() {
   const hojeTexto = dia(agora);
   useEffect(() => {
     setEstado((s) => { const l = gerarRecorrentes(s.transactions, new Date()); return l ? { ...s, transactions: l } : s; });
+  }, [hojeTexto, estado.transactions, setEstado]);
+  // Despesas anuais pagas «por fora» (movimento com o mesmo título no mês previsto): passam para o ano seguinte
+  useEffect(() => {
+    setEstado((s) => { const l = renovarPagas(s.annualExpenses, s.transactions, new Date()); return l ? { ...s, annualExpenses: l } : s; });
   }, [hojeTexto, estado.transactions, setEstado]);
 
   // Ocultar valores ao sair da app (Aparência › "autoHide")
