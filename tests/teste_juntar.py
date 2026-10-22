@@ -3,7 +3,7 @@ import datetime, json, pathlib, tempfile
 from correr import verificar, PREFIXO
 from teste_protecao import definicoes, movimentos
 
-HOJE = datetime.date.today()
+HOJE = datetime.date(2026, 9, 28)  # a mesma data do relógio do navegador nos testes (correr.py › DATA_FIXA)
 DIA = HOJE.isoformat()
 MOV = lambda i, t, v, **x: {'id': i, 'title': t, 'amount': v, 'date': DIA, 'detail': f'{HOJE.day} setembro · Alimentação', 'movementType': 'expense', **x}
 CONTAS = [{'id': 'principal', 'name': 'Principal', 'balance': 500}, {'id': 'revolut', 'name': 'Revolut Conjunta', 'balance': 100}]
