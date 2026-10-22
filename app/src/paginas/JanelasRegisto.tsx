@@ -53,7 +53,7 @@ const submeter = (criar: (f: FormData, hoje: Date) => Movimento | null, aoGuarda
 
 export function NovoAbastecimento({ aberto, aoMudar, aoGuardar }: PropsJanela) {
   return (
-    <Dialogo aberto={aberto} aoMudar={aoMudar} className="movement-dialog" titulo="Novo abastecimento" descricao="Registe um gasto de combustível.">
+    <Dialogo folha aberto={aberto} aoMudar={aoMudar} className="movement-dialog" titulo="Novo abastecimento" descricao="Registe um gasto de combustível.">
       <form className="movement-form" onSubmit={submeter(novoAbastecimento, aoGuardar)}>
         <div className="form-grid">
           <label>Data<input name="date" type="date" defaultValue={dia(new Date())} required /></label>
@@ -68,7 +68,7 @@ export function NovoAbastecimento({ aberto, aoMudar, aoGuardar }: PropsJanela) {
 
 export function NovaDespesaVet({ aberto, aoMudar, aoGuardar, animal }: PropsJanela & { animal: string | null }) {
   return (
-    <Dialogo aberto={aberto} aoMudar={aoMudar} className="movement-dialog" titulo="Nova despesa veterinária" descricao="Registe uma consulta, medicação ou outro cuidado.">
+    <Dialogo folha aberto={aberto} aoMudar={aoMudar} className="movement-dialog" titulo="Nova despesa veterinária" descricao="Registe uma consulta, medicação ou outro cuidado.">
       <form className="movement-form" onSubmit={submeter(novaDespesaVet, aoGuardar)}>
         <div className="form-grid">
           <label>

@@ -104,7 +104,7 @@ function Formulario({ m, estado, aoGuardar, aoEliminar }: { m: Movimento } & Pic
 
 export function EditarMovimento({ movimento: m, fechar, estado, aoGuardar, aoEliminar }: Props) {
   return (
-    <Dialogo aberto={m !== null} aoMudar={(a) => { if (!a) fechar(); }} className="movement-dialog" titulo="Editar movimento" descricao="Altere os dados ou elimine este movimento.">
+    <Dialogo folha aberto={m !== null} aoMudar={(a) => { if (!a) fechar(); }} className="movement-dialog" titulo="Editar movimento" descricao="Altere os dados ou elimine este movimento.">
       {m ? <Formulario key={m.id} m={m} estado={estado} aoGuardar={aoGuardar} aoEliminar={aoEliminar} /> : null}
     </Dialogo>
   );
