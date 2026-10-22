@@ -1,12 +1,14 @@
 // Leitura de recibos de vencimento e de ficheiros com salários (anexos do Jarvis) — mesmas regras da app atual.
 // Diferença intencional: as pessoas vêm dos salários registados (ou do perfil) e as entidades patronais das
 // regras pessoais da importação, em vez de nomes fixos no código.
-import { type Conta, MESES, type Salarios } from '../dados';
+import { type Conta, MESES, type Movimento, type Salarios } from '../dados';
 import type { RegraPessoal } from '../importacao/classificacao';
+import { simplificar } from '../movimentos/categorias';
+import { porConfirmar } from '../movimentos/recorrentes';
 import { semAcentos, valores, valorNoTexto } from './texto';
 
 export type PendenteRecibo =
-  | { type: 'slip'; payload: { per: string; year: string; month: number; net: number | null; tk: number | null; accId: string | null; key: string } }
+  | { type: 'slip'; payload: { per: string; year: string; month: number; net: number | null; tk: number | null; accId: string | null; key: string; preencher?: { id: number | string; valor: number } } }
   | { type: 'salaries'; payload: { year: string; month: number; valores: Record<string, number> } };
 
 export interface ContextoRecibo {
@@ -16,6 +18,8 @@ export interface ContextoRecibo {
   salarios: Salarios;
   agora: Date;
   eur: (v: number) => string;
+  /** Movimentos (para preencher a receita do salário que está «por confirmar» nesse mês). */
+  movimentos?: Movimento[];
 }
 
 export interface Leitura { texto: string; pendente?: PendenteRecibo }
@@ -39,6 +43,16 @@ function mesDoRecibo(all: string, agora: Date) {
   if (m4) return { month: +m4[1]! - 1, year: m4[2]! };
   const mi = mn.findIndex((x) => new RegExp(`\\b${x}\\b`).test(all));
   return { month: mi >= 0 ? mi : agora.getMonth(), year: String(agora.getFullYear()) };
+}
+
+/**
+ * Receita recorrente de valor variável ainda por confirmar no mês do recibo: a que tem o nome da pessoa no título ou,
+ * se não houver nenhuma assim, a única por confirmar nesse mês.
+ */
+export function salarioPorConfirmar(movimentos: Movimento[], pessoa: string, ano: string, mes: number): Movimento | null {
+  const prefixo = `${ano}-${String(mes + 1).padStart(2, '0')}`, nome = simplificar(pessoa);
+  const l = movimentos.filter((m) => m.movementType === 'income' && porConfirmar(m) && !m.skipped && m.date?.startsWith(prefixo));
+  return l.find((m) => nome && simplificar(m.title).includes(nome)) ?? (l.length === 1 ? l[0]! : null);
 }
 
 const listaOu = (l: string[]) => (l.length > 1 ? `${l.slice(0, -1).join(', ')} ou ${l[l.length - 1]}` : l[0] ?? '');
@@ -88,10 +102,15 @@ export function lerRecibo(txt: string, c: ContextoRecibo): Leitura | null {
       : tkDone ? `• Ticket Refeição de ${MESES[mo]} já foi adicionado à ${acc.name} — não volto a somar.` : `• Ticket Refeição: ${A(tk)} → conta ${acc.name}`);
   }
   const doTk = tk != null && !!acc && !tkDone;
-  if (same && !doTk) return { texto: `${out.join('\n')}\nNada a alterar.` };
+  const receita = salarioPorConfirmar(c.movimentos ?? [], per, y, mo);
+  if (receita) out.push(`• Receita «${receita.title.trim()}» de ${MESES[mo]}, por confirmar → ${A(net)}`);
+  if (same && !doTk && !receita) return { texto: `${out.join('\n')}\nNada a alterar.` };
   return {
     texto: `${out.join('\n')}\nConfirmas o registo?`,
-    pendente: { type: 'slip', payload: { per, year: y, month: mo, net: same ? null : net, tk: doTk ? tk : null, accId: doTk ? acc!.id : null, key } },
+    pendente: {
+      type: 'slip',
+      payload: { per, year: y, month: mo, net: same ? null : net, tk: doTk ? tk : null, accId: doTk ? acc!.id : null, key, ...(receita ? { preencher: { id: receita.id, valor: net } } : {}) },
+    },
   };
 }
 

@@ -18,6 +18,8 @@ export interface Movimento {
   recurring?: boolean | string;
   /** Periodicidade em meses (1, 2, 3 ou 12): a app cria a cópia seguinte sozinha (só na app nova). */
   recurringEvery?: number;
+  /** "salario": as cópias caem no dia do salário (3.º dia útil a contar do fim do mês) em vez do mesmo dia (v2.21.0). */
+  recurringDay?: string;
   /** A cópia seguinte deste recorrente já foi criada. */
   recurringDone?: boolean;
   /** Cópia de um recorrente saltada («só este mês»): escondida e sem efeito, mas a série continua (v2.18.0). */

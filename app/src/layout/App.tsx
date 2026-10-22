@@ -86,7 +86,7 @@ export function App() {
   const [lista, setLista] = useState<ListaMovimentos>({ expandida: false, pesquisa: '', conta: 'all' });
   const [aviso, setAviso] = useState('');
   const [novoAberto, setNovoAberto] = useState(false);
-  const [escolhas, setEscolhas] = useState<EscolhasNovo>({ tipo: 'expense', categoria: 'Alimentação', recorrente: false, tipoValor: 'com', periodicidade: 1, revolut: false });
+  const [escolhas, setEscolhas] = useState<EscolhasNovo>({ tipo: 'expense', categoria: 'Alimentação', recorrente: false, tipoValor: 'com', periodicidade: 1, diaSalario: false, revolut: false });
   const [aEditar, setAEditar] = useState<Movimento | null>(null);
   const [menu, setMenu] = useState<PosicaoMenu | null>(null);
   const [folha, setFolha] = useState<'list' | 'direct' | null>(null);
@@ -373,7 +373,10 @@ export function App() {
   };
   const lerDoc = (txt: string) => {
     const e = estadoAtual.current;
-    const l = lerDocumento(txt, { pessoas: pessoas(), regras: regrasPessoais(e), contas: e.accounts, salarios: e.salaries, agora: new Date(), eur: (v) => formatarEuros(v, ocultos) });
+    const l = lerDocumento(txt, {
+      pessoas: pessoas(), regras: regrasPessoais(e), contas: e.accounts, salarios: e.salaries, agora: new Date(), eur: (v) => formatarEuros(v, ocultos),
+      movimentos: semSaltados(e).transactions,
+    });
     motor.pendente = l.pendente ?? motor.pendente;
     return l.texto;
   };
@@ -434,7 +437,7 @@ export function App() {
     url.searchParams.delete('acao');
     window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
     if (acao === 'despesa') {
-      setEscolhas((e) => ({ ...e, tipo: 'expense', recorrente: false, tipoValor: 'com', periodicidade: 1, revolut: false }));
+      setEscolhas((e) => ({ ...e, tipo: 'expense', recorrente: false, tipoValor: 'com', periodicidade: 1, diaSalario: false, revolut: false }));
       setNovoAberto(true);
     } else if (acao === 'jarvis') setJarvis(true);
   }, [bloqueada]);
@@ -627,7 +630,7 @@ export function App() {
         onClick={() => {
           if (pagina === 'veterinario') { setDespesaVet(true); return; }
           if (pagina === 'combustivel') { setAbastecimento(true); return; }
-          setEscolhas((e) => ({ ...e, recorrente: false, tipoValor: 'com', periodicidade: 1, revolut: false }));
+          setEscolhas((e) => ({ ...e, recorrente: false, tipoValor: 'com', periodicidade: 1, diaSalario: false, revolut: false }));
           setNovoAberto(true);
         }}
       >

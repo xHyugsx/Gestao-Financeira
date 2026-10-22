@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { estadoInicial, type Movimento, saldoDaConta } from '../dados';
 import { alfabetica, corNova, TONS } from './cores';
 import {
-  criaCopias, estimativa, gerarRecorrentes, porConfirmar, recorrentesPrevistos, recorrenciaNaSerie, saltarEsteMes, semSaltados, somarMeses, valoresDaSerie,
+  criaCopias, dataSeguinte, estimativa, gerarRecorrentes, porConfirmar, recorrentesPrevistos, recorrenciaNaSerie, saltarEsteMes, semSaltados, somarMeses, valoresDaSerie,
 } from './recorrentes';
 
 const renda: Movimento = { id: 1, title: 'Renda', detail: '5 julho · Habitação', amount: -600, date: '2026-07-05', movementType: 'expense', recurring: 'com', recurringEvery: 1 };
@@ -199,6 +199,36 @@ describe('recorrentes registados à mão ou agendados não ficam a dobrar', () =
     const semAuto = { ...antigo, recurringEvery: undefined };
     expect(recorrenciaNaSerie([atual, semAuto], antigo, semAuto)[0]!.recurringEvery).toBeUndefined();
     expect(recorrenciaNaSerie([atual, { ...antigo, recurring: undefined }], antigo, { ...antigo, recurring: undefined })[0]).toBe(atual);
+  });
+});
+
+describe('salário: dia do salário e valor variável nas receitas', () => {
+  const sal = (id: number, date: string, amount: number, extra: Partial<Movimento> = {}): Movimento =>
+    ({ id, title: 'Salário', detail: 'x · Salário', amount, date, movementType: 'income', recurring: 'sem', recurringEvery: 1, recurringDay: 'salario', ...extra });
+
+  it('dia do salário: 3.º dia útil a contar do fim do mês', () => {
+    expect(dataSeguinte(sal(1, '2026-09-28', 1500), '2026-09-28', 1)).toBe('2026-10-28');
+    expect(dataSeguinte(sal(1, '2026-10-28', 1500), '2026-10-28', 1)).toBe('2026-11-26');
+    expect(dataSeguinte({ ...renda, date: '2026-10-28' }, '2026-10-28', 1)).toBe('2026-11-28');
+  });
+
+  it('a cópia nasce no dia do salário, por confirmar', () => {
+    const l = gerarRecorrentes([sal(1, '2026-09-28', 1500)], new Date(2026, 9, 28), id)!;
+    expect(l[0]).toMatchObject({ date: '2026-10-28', amount: 0, movementType: 'income', recurringDay: 'salario' });
+    expect(porConfirmar(l[0]!)).toBe(true);
+    expect(gerarRecorrentes([sal(1, '2026-09-28', 1500)], new Date(2026, 9, 27), id)).toBeNull();
+  });
+
+  it('estimativa e previsão também nas receitas (média dos últimos 3, a somar)', () => {
+    const l = [sal(1, '2026-07-29', 1400, { recurringDone: true }), sal(2, '2026-08-27', 1500, { recurringDone: true }), sal(3, '2026-09-28', 1600)];
+    expect(valoresDaSerie(l, { ...l[2]!, id: 9, date: '2026-10-28' })).toEqual([1400, 1500, 1600]);
+    expect(recorrentesPrevistos(l, new Date(2026, 9, 21), '2026-11-30').map((m) => [m.date, m.amount])).toEqual([['2026-10-28', 1500], ['2026-11-26', 1500]]);
+  });
+
+  it('mudar para o dia do salário num movimento antigo aplica-se à série', () => {
+    const atual = sal(5, '2026-09-28', 1600, { recurringDay: undefined }), antigo = sal(4, '2026-08-27', 1500, { recurringDay: undefined, recurringDone: true });
+    const depois = { ...antigo, recurringDay: 'salario' };
+    expect(recorrenciaNaSerie([atual, depois], antigo, depois)[0]).toMatchObject({ recurringDay: 'salario', recurringEvery: 1 });
   });
 });
 

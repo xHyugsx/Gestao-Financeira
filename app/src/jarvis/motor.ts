@@ -121,8 +121,13 @@ export class MotorJarvis {
     }
     if (pd.type === 'remove-tx') { c.mudarMovimentos((ls) => ls.filter((x) => x.id !== pd.payload.id)); c.vibrar([40, 60, 40]); return 'Movimento removido. 🗑️'; }
     if (pd.type === 'slip') {
-      const { per, year: y, month: mo, net, tk, accId, key } = pd.payload, out: string[] = [];
+      const { per, year: y, month: mo, net, tk, accId, key, preencher } = pd.payload, out: string[] = [];
       if (net != null) { c.definirSalario(y, per, mo, net); out.push(`Salário de ${MESES[mo]} de ${per}: ${A(net)}`); }
+      if (preencher) {
+        // Receita do salário que estava «por confirmar»: passa a ter o líquido do recibo (e a contar no saldo)
+        c.mudarMovimentos((ls) => ls.map((x) => (x.id === preencher.id ? { ...x, amount: Math.abs(preencher.valor) } : x)));
+        out.push(`receita confirmada: ${A(preencher.valor)}`);
+      }
       if (tk != null) {
         const ym = anoMes(new Date());
         c.mudarContas((as) => as.map((a) => (a.id === accId

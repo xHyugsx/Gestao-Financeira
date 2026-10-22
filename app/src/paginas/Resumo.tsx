@@ -68,6 +68,7 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
   const textoPrevistos = [nRec ? (nRec === 1 ? '1 recorrente' : `${nRec} recorrentes`) : '', nAnuais ? (nAnuais === 1 ? '1 despesa anual' : `${nAnuais} despesas anuais`) : '']
     .filter(Boolean).join(' e ') + (nRec && nAnuais ? ' previstos' : nAnuais ? (nAnuais === 1 ? ' prevista' : ' previstas') : nRec === 1 ? ' previsto' : ' previstos');
   const totalPrevisto = pagamentosPrevistos.reduce((s, m) => s + valorRecorrente(m), 0) + anuaisFuturas.reduce((s, m) => s + Math.abs(m.amount), 0);
+  const receitasPrevistas = previstos.filter((m) => m.movementType === 'income' && m.affectsBalance !== false);
 
   const resumo = () => (
     <>
@@ -98,8 +99,11 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
           return <article key={c.id}><span>{c.name}</span><strong className={v < 0 ? 'amount-negative' : 'amount-positive'}>{eur(v)}</strong></article>;
         })}
       </section>
-      {nRec || nAnuais ? (
-        <p className="ffprevistos">Inclui {textoPrevistos} até ao fim de {MESES[mes.getMonth()]} (≈ {eur(totalPrevisto)}).</p>
+      {nRec || nAnuais || receitasPrevistas.length ? (
+        <p className="ffprevistos">
+          {nRec || nAnuais ? `Inclui ${textoPrevistos} até ao fim de ${MESES[mes.getMonth()]} (≈ ${eur(totalPrevisto)}).` : ''}
+          {receitasPrevistas.length ? `${nRec || nAnuais ? ' ' : ''}${nRec || nAnuais ? 'E' : 'Inclui'} ${receitasPrevistas.length === 1 ? '1 receita recorrente prevista' : `${receitasPrevistas.length} receitas recorrentes previstas`} (≈ +${eur(receitasPrevistas.reduce((s, m) => s + valorRecorrente(m), 0))}).` : ''}
+        </p>
       ) : null}
       {gastoAnterior > 0 ? (
         <section className={evolucao <= 0 ? 'insight-card insight-good' : 'insight-card'}>

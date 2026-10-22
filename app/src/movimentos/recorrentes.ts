@@ -1,13 +1,16 @@
 // Movimentos recorrentes com periodicidade: a app cria sozinha a cópia seguinte quando chega a data.
 // Campos novos (só na app nova): `recurringEvery` (meses) e `recurringDone` (a cópia seguinte já foi criada).
 // Valor variável (`recurring: "sem"`): cada cópia nasce sem valor (não mexe no saldo) até se confirmar o valor do mês.
-import { dia, type Movimento } from '../dados';
+import { anoMes, dia, diaDeVencimento, type Movimento } from '../dados';
 import { simplificar } from './categorias';
 import { diaEMes } from './regras';
 
 export const PERIODICIDADES = [
   { meses: 1, rotulo: 'Mensal' }, { meses: 2, rotulo: 'Bimestral' }, { meses: 3, rotulo: 'Trimestral' }, { meses: 12, rotulo: 'Anual' },
 ] as const;
+
+/** Opção de periodicidade «dia do salário» (valor guardado em `recurringDay`). */
+export const DIA_DO_SALARIO = { valor: 'salario', rotulo: 'Mensal · dia do salário' } as const;
 
 /** Mesma data `meses` depois (dia limitado ao último dia do mês: 31 jan + 1 mês = 28/29 fev). */
 export function somarMeses(data: string, meses: number): string {
@@ -21,6 +24,13 @@ export function somarMeses(data: string, meses: number): string {
 function detalheCom(detail: string, data: string): string {
   const i = detail.indexOf(' · ');
   return i < 0 ? detail : `${diaEMes(data)}${detail.slice(i)}`;
+}
+
+/** Data da cópia seguinte: `meses` depois, no mesmo dia, ou no dia do salário desse mês (`recurringDay: "salario"`). */
+export function dataSeguinte(m: Movimento, data: string, meses: number): string {
+  if (m.recurringDay !== DIA_DO_SALARIO.valor) return somarMeses(data, meses);
+  const alvo = new Date(Number(data.slice(0, 4)), Number(data.slice(5, 7)) - 1 + meses, 1);
+  return `${anoMes(alvo)}-${String(diaDeVencimento(alvo) ?? 1).padStart(2, '0')}`;
 }
 
 const repete = (m: Movimento) => !!m.recurring && typeof m.recurringEvery === 'number' && m.recurringEvery > 0 && !m.recurringDone;
@@ -48,7 +58,7 @@ export function gerarRecorrentes(movimentos: Movimento[], hoje: Date, novoId: ()
     procurar = false;
     for (const m of lista) {
       if (!repete(m) || !m.date) continue;
-      const data = somarMeses(m.date, m.recurringEvery as number);
+      const data = dataSeguinte(m, m.date, m.recurringEvery as number);
       if (data > limite) continue;
       const existente = jaRegistado(lista, m, data);
       if (existente) {
@@ -97,7 +107,7 @@ export const serieDe = (m: Movimento) => `${m.revolut ? 'r' : 'e'}|${simplificar
 export function valoresDaSerie(movimentos: Movimento[], m: Movimento): number[] {
   const k = serieDe(m);
   return movimentos
-    .filter((x) => x.id !== m.id && x.recurring && !x.skipped && (x.movementType === 'expense' || x.revolut) && valorRecorrente(x) > 0
+    .filter((x) => x.id !== m.id && x.recurring && !x.skipped && (x.movementType || '') === (m.movementType || '') && valorRecorrente(x) > 0
       && (x.date || '') <= (m.date || '9999') && serieDe(x) === k)
     .sort((a, b) => (a.date || '').localeCompare(b.date || ''))
     .map(valorRecorrente);
@@ -111,11 +121,12 @@ export function valoresDaSerie(movimentos: Movimento[], m: Movimento): number[] 
 export function recorrenciaNaSerie(lista: Movimento[], antes: Movimento | undefined, depois: Movimento): Movimento[] {
   if (!antes || !depois.recurring) return lista;
   const variavel = (m: Movimento) => m.recurring === 'sem';
-  const mudaTipo = variavel(antes) !== variavel(depois), mudaCada = (antes.recurringEvery || 0) !== (depois.recurringEvery || 0);
+  const mudaTipo = variavel(antes) !== variavel(depois);
+  const mudaCada = (antes.recurringEvery || 0) !== (depois.recurringEvery || 0) || (antes.recurringDay || '') !== (depois.recurringDay || '');
   if (!mudaTipo && !mudaCada) return lista;
   const k = serieDe(antes);
   return lista.map((x) => (x.id === depois.id || !repete(x) || serieDe(x) !== k ? x
-    : { ...x, ...(mudaTipo ? { recurring: depois.recurring } : {}), ...(mudaCada ? { recurringEvery: depois.recurringEvery } : {}) }));
+    : { ...x, ...(mudaTipo ? { recurring: depois.recurring } : {}), ...(mudaCada ? { recurringEvery: depois.recurringEvery, recurringDay: depois.recurringDay } : {}) }));
 }
 
 /**
@@ -128,7 +139,7 @@ export function recorrentesPrevistos(movimentos: Movimento[], hoje: Date, ate: s
     if (!repete(g) || !g.date) continue;
     const valor = g.recurring === 'sem' ? estimativa([...valoresDaSerie(movimentos, g), g.skipped ? 0 : valorRecorrente(g)]) : valorRecorrente(g);
     if (!valor) continue;
-    for (let d = somarMeses(g.date, g.recurringEvery!); d <= ate; d = somarMeses(d, g.recurringEvery!)) {
+    for (let d = dataSeguinte(g, g.date, g.recurringEvery!); d <= ate; d = dataSeguinte(g, d, g.recurringEvery!)) {
       // Já registado (à mão ou agendado) nesse mês: conta pelo movimento, não pela previsão
       if (d <= desde || jaRegistado(movimentos, g, d)) continue;
       const efeito = g.revolut ? { transferValue: valor } : g.movementType === 'transfer' ? {} : { amount: g.movementType === 'income' ? valor : -valor };

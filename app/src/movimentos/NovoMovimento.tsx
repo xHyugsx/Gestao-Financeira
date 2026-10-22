@@ -6,7 +6,7 @@ import { Icone } from '../ui/Icone';
 import { Segmentado } from '../ui/Segmentado';
 import type { aspetosCategorias } from './categorias';
 import { alfabetica } from './cores';
-import { PERIODICIDADES } from './recorrentes';
+import { DIA_DO_SALARIO, PERIODICIDADES } from './recorrentes';
 import { novoMovimento } from './regras';
 import { pessoasDaFamilia, ultimaPessoa } from './pessoas';
 import { categoriaSugerida, titulosAnteriores } from './sugestoes';
@@ -19,6 +19,8 @@ export interface EscolhasNovo {
   tipoValor: string;
   /** Meses entre repetições (Mensal = 1, Bimestral = 2, Trimestral = 3, Anual = 12). */
   periodicidade: number;
+  /** Cópias no dia do salário (3.º dia útil a contar do fim do mês). */
+  diaSalario?: boolean;
   revolut: boolean;
 }
 
@@ -134,8 +136,12 @@ export function NovoMovimento({ aberto, aoMudar, estado, escolhas: e, mudarEscol
           <label className="checkbox-row"><input type="checkbox" checked={e.recorrente} onChange={(x) => mudar({ recorrente: x.target.checked })} /> Recorrente</label>
           {e.recorrente ? (
             <label className="ffv2-extra">Periodicidade
-              <select name="recurringEvery" value={e.periodicidade} onChange={(x) => mudar({ periodicidade: Number(x.target.value) })}>
+              <select
+                name="recurringEvery" value={e.diaSalario ? DIA_DO_SALARIO.valor : e.periodicidade}
+                onChange={(x) => mudar(x.target.value === DIA_DO_SALARIO.valor ? { periodicidade: 1, diaSalario: true } : { periodicidade: Number(x.target.value), diaSalario: false })}
+              >
                 {PERIODICIDADES.map((p) => <option key={p.meses} value={p.meses}>{p.rotulo}</option>)}
+                <option value={DIA_DO_SALARIO.valor}>{DIA_DO_SALARIO.rotulo}</option>
               </select>
             </label>
           ) : null}
