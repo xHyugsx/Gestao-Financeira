@@ -64,10 +64,10 @@ describe('recorrentes e subscrições', () => {
     expect(x.falta).toBe(600);
   });
 
-  it('mês saltado não aparece nem conta; o mês seguinte continua «por pagar»', () => {
+  it('mês saltado aparece como «saltado» (para repor) mas não conta; o mês seguinte continua «por pagar»', () => {
     const l = [r('2026-09-01', 'Renda', -600, { recurringEvery: 1, recurringDone: true }), r('2026-10-01', 'Renda', -600, { recurringEvery: 1, skipped: true })];
     const out = recorrentesDoMes(l, new Date(2026, 9, 1), HOJE);
-    expect(out.lista).toEqual([]);
+    expect(out.lista.map((i) => [i.titulo, i.estado])).toEqual([['Renda', 'saltado']]);
     expect(out.pago + out.falta).toBe(0);
     expect(out.anual).toBe(7200);
     expect(recorrentesDoMes(l, new Date(2026, 10, 1), HOJE).lista.map((i) => [i.estado, i.valor])).toEqual([['por pagar', 600]]);

@@ -127,7 +127,12 @@ export function Jarvis({ aberto, fechar, motor, contexto, vocabulario, lerAnexo,
             )))}
           {pendente && !aEscrever ? (
             <div className="ffjv-act" role="group" aria-label="Responder ao Jarvis">
-              <button type="button" className="ok" onClick={() => enviar('Confirmar')}>✓ Confirmar</button>
+              {pendente.type === 'remove-serie' ? (
+                <>
+                  <button type="button" className="ok" onClick={() => enviar('Só este mês')}>⏭ Só este mês</button>
+                  <button type="button" className="no" onClick={() => enviar('Parar a série')}>🗑 Parar a série</button>
+                </>
+              ) : <button type="button" className="ok" onClick={() => enviar('Confirmar')}>✓ Confirmar</button>}
               <button type="button" className="no" onClick={() => enviar('Cancelar')}>✕ Cancelar</button>
             </div>
           ) : null}

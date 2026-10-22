@@ -20,3 +20,11 @@ async def t_previsao_com_recorrentes(app):
     verificar((await app.saldos()).get('Principal') == '-800,00 €', 'previsão de novembro: rendas de outubro e novembro')
     verificar(len(await app.movimentos()) == 1, 'a previsão não pode gravar movimentos')
     verificar(not app.erros, f'erros: {app.erros}')
+
+
+async def t_jarvis_saldo_noutros_meses(app):
+    await app.abrir(DADOS)
+    r = (await app.jarvis('saldo em novembro')).replace('\u00a0', ' ')
+    verificar('Previsão do saldo no fim de novembro' in r and 'Principal: -800,00 €' in r, r)
+    r = (await app.jarvis('saldo em agosto')).replace('\u00a0', ' ')
+    verificar('Saldo no fim de agosto' in r and 'Principal: 1000,00 €' in r, r)
