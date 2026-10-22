@@ -61,3 +61,17 @@ async def t_salario_confirmado_a_mao_atualiza_a_tabela(app):
     d = json.loads(await p.evaluate("P=>localStorage.getItem(P+'v3')", PREFIXO))
     verificar(d['salaries']['2026']['Rui'][8] == 1450, f'tabela de Salários de setembro: {d["salaries"]}')
     verificar(not app.erros, f'erros: {app.erros}')
+
+
+
+async def t_salario_corrigido_pelo_jarvis_atualiza_a_tabela(app):
+    await app.page.emulate_media(reduced_motion='reduce')
+    await app.abrir(DADOS)
+    p = app.page
+    r = await app.jarvis('muda o salário rui para 1450 €')
+    verificar('Confirmas' in r, r)
+    await p.click('.ffjv-act .ok'); await p.wait_for_timeout(900)
+    d = json.loads(await p.evaluate("P=>localStorage.getItem(P+'v3')", PREFIXO))
+    sal = sorted(d['transactions'], key=lambda m: m['date'])[-1]
+    verificar(sal['amount'] == 1450 and d['salaries']['2026']['Rui'][8] == 1450, f'Jarvis: receita {sal} · salários {d["salaries"]}')
+    verificar(not app.erros, f'erros: {app.erros}')

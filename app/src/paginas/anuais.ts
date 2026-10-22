@@ -44,6 +44,8 @@ const chaveTitulo = (t: string) => simplificar(t).replace(/\s+/g, ' ').trim();
 /**
  * Despesas anuais pagas «por fora» (registadas pelo «+» ou importadas): uma despesa com o mesmo título entre o mês
  * anterior ao previsto e hoje conta como pagamento e passa a despesa para o ano seguinte. Devolve a lista nova, ou `null`.
+ * Para não confundir com uma despesa mensal com o mesmo nome: não conta um recorrente com periodicidade inferior a um
+ * ano, nem um valor fora de metade a dobro do previsto.
  */
 export function renovarPagas(lista: unknown[], movimentos: Movimento[], hoje: Date): unknown[] | null {
   const hojeDia = dia(hoje);
@@ -54,7 +56,8 @@ export function renovarPagas(lista: unknown[], movimentos: Movimento[], hoje: Da
     const desde = `${anoMes(new Date(e.year, e.month - 2, 1))}-01`, k = chaveTitulo(e.name);
     if (desde > hojeDia) return x;
     const paga = movimentos.some((m) => m.movementType === 'expense' && !m.skipped && !porConfirmar(m) && !!m.date && m.date >= desde && m.date <= hojeDia
-      && chaveTitulo(m.title) === k);
+      && chaveTitulo(m.title) === k && !(m.recurring && (m.recurringEvery ?? 0) > 0 && (m.recurringEvery ?? 0) < 12)
+      && Math.abs(m.amount) >= e.value / 2 && Math.abs(m.amount) <= e.value * 2);
     if (!paga) return x;
     mudou = true;
     return renovar(e, hoje);

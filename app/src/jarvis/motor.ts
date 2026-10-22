@@ -31,6 +31,8 @@ export interface ContextoJarvis {
   saldoAtual: (c: Conta) => number;
   /** Saldo no fim de um mês: passado (o que havia nesse dia) ou futuro (previsão com recorrentes e despesas anuais). */
   saldoNoFim?: (c: Conta, mes: Date) => number;
+  /** Movimento alterado pelo Jarvis (ex.: o salário passa para a tabela de Salários). */
+  movimentoEditado?: (antes: Movimento, depois: Movimento) => void;
   mudarMovimentos: (f: (l: Movimento[]) => Movimento[]) => void;
   definirSalario: (ano: string, pessoa: string, mes: number, valor: number) => void;
   mudarContas: (f: (l: Conta[]) => Conta[]) => void;
@@ -141,6 +143,8 @@ export class MotorJarvis {
     const A = c.eur;
     if (pd.type === 'vet-done') { c.vet.feito(pd.payload.id); return 'Lembrete marcado como feito. ✅'; }
     if (pd.type === 'edit-tx') {
+      const antes = c.estado.transactions.find((x) => x.id === pd.payload.id);
+      if (antes) c.movimentoEditado?.(antes, { ...antes, ...pd.payload.patch });
       c.mudarMovimentos((ls) => ls.map((x) => (x.id === pd.payload.id ? { ...x, ...pd.payload.patch } : x)));
       c.vibrar([20, 40, 20]);
       return 'Movimento atualizado. ✏️';
