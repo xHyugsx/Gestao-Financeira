@@ -4,7 +4,7 @@ from correr import verificar
 R = lambda i, d, **x: {'id': i, 'title': 'Ginásio', 'amount': -30, 'date': d, 'detail': 'x · Saúde', 'movementType': 'expense',
                        'recurring': 'com', 'recurringEvery': 1, **x}
 DADOS = {'accounts': [{'id': 'principal', 'name': 'Principal', 'balance': 1000}, {'id': 'revolut', 'name': 'Revolut Conjunta', 'balance': 0}],
-         'transactions': [R(1, '2026-08-10', recurringDone=True), R(2, '2026-09-10')]}
+         'transactions': [R(2, '2026-09-10'), R(1, '2026-08-10', recurringDone=True)]}  # como na app: o último registado primeiro
 LINHA = '.page-current .transaction-list article[aria-label="Editar Ginásio"]'
 
 

@@ -122,10 +122,8 @@ export class MotorJarvis {
       const km = q.match(/(?:remov\w*|apag\w*|elimin\w*|anul\w*)\s+(?:a\s+)?(?:última|ultima)?\s*(?:despesa|receita|movimento|gasto)?\s*(?:de|do|da)?\s*(.+)/i);
       const kw = km && km[1] && semAcentos(km[1]).trim();
       const tipoOk = (t: Movimento) => (!wantInc || t.movementType === 'income') && (!wantExp || t.movementType === 'expense');
-      // O mais recente primeiro («apagar a última…»)
-      const recentes = [...f].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-      let tgt = kw && kw.length > 1 ? recentes.find((t) => semAcentos(t.title).includes(kw) && tipoOk(t)) : undefined;
-      if (!tgt) tgt = recentes.find((t) => t.movementType !== 'transfer' && tipoOk(t));
+      let tgt = kw && kw.length > 1 ? f.find((t) => semAcentos(t.title).includes(kw) && tipoOk(t)) : undefined;
+      if (!tgt) tgt = f.find((t) => t.movementType !== 'transfer' && tipoOk(t));
       if (!tgt) return 'Não encontrei nenhum movimento correspondente.';
       const quando = new Date(`${tgt.date}T12:00:00`).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' });
       if (criaCopias(tgt)) {
