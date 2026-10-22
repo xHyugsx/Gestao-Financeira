@@ -1,7 +1,7 @@
 // Contas por mês usadas pelas páginas Análise, Categorias, Resumo e Calendário (mesmas regras da app atual).
 import { anoMes, dia, type Estado, gastos, inicioDoMes, type Movimento } from '../dados';
 import { categoriaDespesa, categoriaReceita, simplificar } from '../movimentos/categorias';
-import { coresCategorias } from '../movimentos/cores';
+import { coresCategorias, TONS } from '../movimentos/cores';
 import { CATALOGO_ICONES, CATEGORIAS_BASE, type NomeIcone } from '../ui/icones';
 
 export const doMes = (movimentos: Movimento[], mes: Date) => movimentos.filter((m) => m.date.startsWith(anoMes(mes)));
@@ -21,6 +21,8 @@ export const CORES: Record<string, string> = {
   // cores novas (só na app nova, para categorias criadas pelo utilizador)
   teal: 'oklch(70% .12 185)', lime: 'oklch(82% .19 128)', amber: 'oklch(80% .16 70)', rose: 'oklch(70% .19 5)',
   indigo: 'oklch(58% .2 275)', sky: 'oklch(78% .12 235)', fuchsia: 'oklch(67% .26 322)', emerald: 'oklch(70% .16 158)',
+  // fatias pequenas juntas no gráfico circular
+  outras: 'var(--muted-foreground)',
 };
 
 const ICONE_POR_ID: Record<string, NomeIcone> = Object.fromEntries(CATALOGO_ICONES.map((e) => [e.id, e.icone]));
@@ -110,6 +112,39 @@ export function legendasDoGrafico(l: LinhaCategoria[], total: number): string {
       + `<text x="${tx}" y="${q.ly! + 9}" text-anchor="${ancora}" font-size="9" font-weight="700" style="fill:${CORES[q.tone] || 'var(--primary)'}">${percentagem(Math.round(q.p * 10) / 10)}</text>`;
   }));
   return svg;
+}
+
+/**
+ * Sem cores repetidas no mesmo gráfico: pela ordem alfabética, a primeira categoria de cada tom fica com ele e as
+ * seguintes passam para o primeiro tom ainda livre (se não houver, mantêm o seu). Recebe todas as categorias do tipo,
+ * mesmo as sem valor no mês, para as cores não mudarem de mês para mês.
+ */
+export function coresDistintas<T extends { name: string; tone: string }>(l: T[]): T[] {
+  const usados = new Set(l.map((e) => e.tone)), vistos = new Set<string>(), troca = new Map<string, string>();
+  [...l].sort((a, b) => a.name.localeCompare(b.name, 'pt-PT')).forEach((e) => {
+    if (!vistos.has(e.tone)) { vistos.add(e.tone); return; }
+    const livre = TONS.find((t) => !usados.has(t));
+    if (!livre) return;
+    usados.add(livre);
+    troca.set(e.name, livre);
+  });
+  return troca.size ? l.map((e) => (troca.has(e.name) ? { ...e, tone: troca.get(e.name)! } : e)) : l;
+}
+
+/** Fatias com seta: as de 5% ou mais; as mais pequenas (duas ou mais, no fim da lista ordenada) juntam-se em «Outras». */
+export function fatiasComSeta(l: LinhaCategoria[], total: number): LinhaCategoria[] {
+  const pequenas = l.filter((e) => e.amount < total * 0.05);
+  if (pequenas.length < 2) return l;
+  const amount = pequenas.reduce((s, e) => s + e.amount, 0);
+  return [...l.filter((e) => e.amount >= total * 0.05), { ...pequenas[0]!, name: 'Outras', tone: 'outras', amount, share: Math.round((amount / total) * 1000) / 10 }];
+}
+
+/** Caminho SVG de uma fatia do anel num quadrado 100×100 (`de`/`ate` em voltas, 0 = topo, no sentido dos ponteiros). */
+export function caminhoDaFatia(de: number, ate: number, R = 50, r = 34): string {
+  if (ate - de >= 0.9999) return caminhoDaFatia(de, de + 0.5, R, r) + caminhoDaFatia(de + 0.5, de + 1, R, r);
+  const p = (v: number, raio: number) => `${+(50 + raio * Math.sin(v * 2 * Math.PI)).toFixed(3)} ${+(50 - raio * Math.cos(v * 2 * Math.PI)).toFixed(3)}`;
+  const grande = ate - de > 0.5 ? 1 : 0;
+  return `M${p(de, R)}A${R} ${R} 0 ${grande} 1 ${p(ate, R)}L${p(ate, r)}A${r} ${r} 0 ${grande} 0 ${p(de, r)}Z`;
 }
 
 /** Contas do fecho do mês (secção "Fecho de mês" do Resumo). */

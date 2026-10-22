@@ -173,3 +173,35 @@
 .ffrec-saltado { opacity: .7; }
 .ffrec-saltado-rotulo { color: var(--muted-foreground); background: color-mix(in oklab, var(--muted-foreground) 14%, transparent); }
 .ffrec-ic-saltado { color: var(--muted-foreground); }
+
+/* Análise: gráfico circular em SVG (cada fatia entra a seguir à anterior; tocar destaca) */
+.donut-wrap .donut { position: absolute; }
+.ffdonut { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.donut > .ffdonut + div { position: relative; z-index: 1; cursor: pointer; }
+.ffdonut-fatia { cursor: pointer; transform-box: view-box; transform-origin: 50% 50%; transition: opacity .25s, transform .3s cubic-bezier(.22, 1, .36, 1); animation: ffdonut-entrar .65s cubic-bezier(.22, 1, .36, 1) backwards; animation-delay: calc(var(--i) * 70ms); }
+@keyframes ffdonut-entrar { from { opacity: 0; transform: rotate(-35deg) scale(.86); } }
+.ffcom-destaque .ffdonut-fatia:not(.ffdestaque) { opacity: .25; }
+.ffdonut-fatia.ffdestaque { transform: scale(1.06); }
+.donut-callouts { transition: opacity .25s; animation: ffaparecer .45s ease backwards; }
+.donut-wrap.ffcom-destaque .donut-callouts { opacity: .25; }
+@keyframes ffaparecer { from { opacity: 0; } }
+.ffdonut-nome { max-width: 5.4rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; justify-self: center; }
+.ffdonut-legenda > div { cursor: pointer; margin: -.2rem -.35rem; padding: .2rem .35rem; border-radius: .4rem; transition: opacity .25s, background-color .25s; -webkit-tap-highlight-color: transparent; }
+.ffdonut-legenda.ffcom-destaque > div:not(.ffdestaque) { opacity: .4; }
+.ffdonut-legenda > div.ffdestaque { background: rgba(255, 255, 255, .06); }
+.metric-panel.ffmedias strong { color: var(--foreground); }
+
+/* Análise: barras crescem em sequência; o mês escolhido (ou hoje) fica realçado; tocar mostra o valor */
+.ffbarras > div { position: relative; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.ffbarras i { position: relative; transform-origin: bottom; transition: opacity .25s; animation: ffbarra-crescer .6s cubic-bezier(.22, 1, .36, 1) backwards; animation-delay: calc(var(--i) * 45ms); }
+.bar-chart-diario.ffbarras i { animation-delay: calc(var(--i) * 16ms); }
+@keyframes ffbarra-crescer { from { transform: scaleY(0); } }
+.ffbarras .ffbarra-atual i { box-shadow: 0 0 .8rem color-mix(in oklab, var(--primary) 55%, transparent); }
+.ffbarras .ffbarra-atual span { color: var(--foreground); font-weight: 700; }
+.ffbarras.ffcom-toque > div:not(.ffbarra-tocada) i { opacity: .35; }
+.ffbarra-valor { position: absolute; z-index: 2; bottom: calc(100% + .3rem); left: 50%; transform: translateX(-50%); padding: .15rem .4rem; border-radius: .35rem; background: color-mix(in oklab, var(--background) 88%, var(--primary)); border: 1px solid var(--border); color: var(--foreground); font-size: .6rem; font-weight: 700; font-style: normal; white-space: nowrap; pointer-events: none; animation: ffaparecer .2s ease; }
+.ffbarra-valor.ffesq { left: 0; transform: none; }
+.ffbarra-valor.ffdir { left: auto; right: 0; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .ffdonut-fatia, .donut-callouts, .ffbarras i, .ffbarra-valor { animation: none; }
+}
