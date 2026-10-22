@@ -25,12 +25,29 @@ export function dataPorOmissao(detail: unknown): string {
   return `2026-09-${String(d).padStart(2, '0')}`;
 }
 
-/** Dia do salário (vencimento): 3.º dia útil a contar do fim do mês de `mes`. */
+/** Domingo de Páscoa do ano (calendário gregoriano, algoritmo de Meeus/Jones/Butcher). */
+function pascoa(ano: number): Date {
+  const a = ano % 19, b = Math.floor(ano / 100), c = ano % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const mes = Math.floor((h + l - 7 * m + 114) / 31), diaP = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(ano, mes - 1, diaP);
+}
+
+/** Feriados nacionais de Portugal do ano ("AAAA-MM-DD"): os de data fixa, a Sexta-feira Santa e o Corpo de Deus. */
+export function feriados(ano: number): Set<string> {
+  const fixos = ['01-01', '04-25', '05-01', '06-10', '08-15', '10-05', '11-01', '12-01', '12-08', '12-25'].map((x) => `${ano}-${x}`);
+  const p = pascoa(ano), mais = (n: number) => dia(new Date(p.getFullYear(), p.getMonth(), p.getDate() + n));
+  return new Set([...fixos, mais(-2), mais(60)]);
+}
+
+/** Dia do salário (vencimento): 3.º dia útil a contar do fim do mês de `mes` (sem fins de semana nem feriados nacionais). */
 export function diaDeVencimento(mes: Date): number | null {
+  const livres = feriados(mes.getFullYear());
   let contados = 0;
   for (let d = new Date(mes.getFullYear(), mes.getMonth() + 1, 0).getDate(); d > 0; d--) {
-    const semana = new Date(mes.getFullYear(), mes.getMonth(), d).getDay();
-    if (semana !== 0 && semana !== 6 && ++contados === 3) return d;
+    const data = new Date(mes.getFullYear(), mes.getMonth(), d), semana = data.getDay();
+    if (semana !== 0 && semana !== 6 && !livres.has(dia(data)) && ++contados === 3) return d;
   }
   return null;
 }
