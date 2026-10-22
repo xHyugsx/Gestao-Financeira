@@ -41,14 +41,14 @@ export function Calendario({ estado, mes, ocultos, diaEscolhido, escolherDia, as
     <main className="detail-view calendar-view">
       <section className="calendar-panel">
         <div className="calendar-weekdays">{DIAS_SEMANA.map((d) => <span key={d}>{d}</span>)}</div>
-        <div className="calendar-grid">
+        <div key={anoMes(mes)} className="calendar-grid">
           {celulas.map((d, i) => {
-            if (d === null) return <span key={`empty-${i}`} className="calendar-empty" />;
+            if (d === null) return <span key={`empty-${i}`} className="calendar-empty" style={{ '--i': i } as React.CSSProperties} />;
             const pontos = ['in', 'out', 'rec', 'tr'].filter((c) => doDia(d).some((m) => tipoDoPonto(m) === c));
             const fimDeSemana = new Date(mes.getFullYear(), mes.getMonth(), d).getDay() % 6 === 0;
             return (
               <Botao
-                key={d} type="button" variante="ghost" onClick={() => escolherDia(d)}
+                key={d} type="button" variante="ghost" onClick={() => escolherDia(d)} style={{ '--i': i } as React.CSSProperties}
                 className={`${diaEscolhido === d ? 'calendar-day calendar-day-active' : 'calendar-day'}${fimDeSemana ? ' ffcal-we' : ''}${hoje === `${anoMes(mes)}-${String(d).padStart(2, '0')}` ? ' ffcal-today' : ''}${calor.nivel[d] ? ` ffcal-q${calor.nivel[d]}` : calor.previsto[d] ? ' ffcal-futuro' : calor.semGastos.includes(d) ? ' ffcal-zero' : ''}`}
                 aria-label={calor.gasto[d] ? `${d}: gasto ${formatarEuros(calor.gasto[d]!, ocultos)}` : calor.previsto[d] ? `${d}: agendado ${formatarEuros(calor.previsto[d]!, ocultos)}` : calor.semGastos.includes(d) ? `${d}: sem despesas` : undefined}
               >

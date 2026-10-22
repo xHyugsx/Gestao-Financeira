@@ -205,3 +205,34 @@
 @media (prefers-reduced-motion: reduce) {
   .ffdonut-fatia, .donut-callouts, .ffbarras i, .ffbarra-valor { animation: none; }
 }
+
+/* Separadores: a pílula da opção escolhida desliza entre as opções */
+.segmented.ffseg { position: relative; }
+.ffseg > button { position: relative; z-index: 1; }
+.ffseg > .segment-active, .ffseg > .segment-active:hover { background: transparent; box-shadow: none; }
+.ffseg-pilula {
+  position: absolute; top: .22rem; left: .22rem; border-radius: .6rem; pointer-events: none;
+  width: calc((100% - .44rem - .2rem * (var(--cols) - 1)) / var(--cols)); height: calc((100% - .44rem - .2rem * (var(--rows) - 1)) / var(--rows));
+  background: var(--primary); box-shadow: 0 0 1.2rem color-mix(in oklab, var(--primary) 42%, transparent);
+  transform: translate(calc(var(--col) * (100% + .2rem)), calc(var(--row) * (100% + .2rem))); transition: transform .38s cubic-bezier(.22, 1, .36, 1);
+}
+
+/* Listas: as primeiras linhas entram em cascata */
+.transaction-list > article { animation: fflinha-entrar .38s cubic-bezier(.22, 1, .36, 1) backwards; }
+.transaction-list > article:nth-child(2) { animation-delay: 35ms; }
+.transaction-list > article:nth-child(3) { animation-delay: 70ms; }
+.transaction-list > article:nth-child(4) { animation-delay: 105ms; }
+.transaction-list > article:nth-child(5) { animation-delay: 140ms; }
+.transaction-list > article:nth-child(6) { animation-delay: 175ms; }
+.transaction-list > article:nth-child(7) { animation-delay: 210ms; }
+.transaction-list > article:nth-child(8) { animation-delay: 245ms; }
+.transaction-list > article:nth-child(n + 9) { animation: none; }
+@keyframes fflinha-entrar { from { opacity: 0; transform: translateY(10px); } }
+
+/* Calendário: os dias entram em cascata ao abrir e ao mudar de mês */
+.calendar-grid > * { animation: ffcal-entrar .34s cubic-bezier(.22, 1, .36, 1) backwards; animation-delay: calc(var(--i, 0) * 9ms); }
+@keyframes ffcal-entrar { from { opacity: 0; transform: scale(.6); } }
+@media (prefers-reduced-motion: reduce) {
+  .ffseg-pilula { transition: none; }
+  .transaction-list > article, .calendar-grid > * { animation: none; }
+}
