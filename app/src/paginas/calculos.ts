@@ -1,5 +1,5 @@
 // Contas por mês usadas pelas páginas Análise, Categorias, Resumo e Calendário (mesmas regras da app atual).
-import { anoMes, type Estado, gastos, inicioDoMes, type Movimento } from '../dados';
+import { anoMes, dia, type Estado, gastos, inicioDoMes, type Movimento } from '../dados';
 import { categoriaDespesa, categoriaReceita, simplificar } from '../movimentos/categorias';
 import { coresCategorias } from '../movimentos/cores';
 import { CATALOGO_ICONES, CATEGORIAS_BASE, type NomeIcone } from '../ui/icones';
@@ -152,12 +152,13 @@ export function gastosPorConta(estado: Pick<Estado, 'transactions' | 'accounts'>
 /**
  * Mapa de calor do calendário: gasto de cada dia do mês (despesas sem poupança nem investimentos) e nível 0–4 pela
  * posição entre os dias com gastos (assim uma renda não deixa os outros dias todos no nível mais baixo).
- * `semGastos`: dias já passados (até hoje) sem nenhuma despesa.
+ * `semGastos`: dias já passados (até hoje) sem nenhuma despesa. `previsto`: despesas agendadas (dias depois de hoje),
+ * que ficam fora dos níveis e do dia mais caro (ainda não aconteceram).
  */
 export function calorDoMes(movimentos: Movimento[], mes: Date, hoje = new Date()) {
-  const dias = diasDoMes(mes), gasto = Array<number>(dias + 1).fill(0);
+  const dias = diasDoMes(mes), gasto = Array<number>(dias + 1).fill(0), previsto = Array<number>(dias + 1).fill(0), hojeDia = dia(hoje);
   for (const m of doMes(movimentos, mes)) {
-    if (m.movementType === 'expense' && !/poupanca|investiment/.test(textoDe(m))) gasto[Number(m.date.slice(8, 10))]! += Math.abs(m.amount);
+    if (m.movementType === 'expense' && !/poupanca|investiment/.test(textoDe(m))) (m.date > hojeDia ? previsto : gasto)[Number(m.date.slice(8, 10))]! += Math.abs(m.amount);
   }
   const maximo = Math.max(0, ...gasto);
   const ordenados = gasto.filter((v) => v > 0).sort((a, b) => a - b);
@@ -165,7 +166,7 @@ export function calorDoMes(movimentos: Movimento[], mes: Date, hoje = new Date()
   const ultimo = anoMes(mes) < anoMes(hoje) ? dias : anoMes(mes) > anoMes(hoje) ? 0 : hoje.getDate();
   const semGastos = Array.from({ length: ultimo }, (_, i) => i + 1).filter((d) => !gasto[d]);
   const maisCaro = maximo > 0 ? gasto.indexOf(maximo) : null;
-  return { gasto, nivel, semGastos, maisCaro };
+  return { gasto, nivel, semGastos, maisCaro, previsto };
 }
 
 /**

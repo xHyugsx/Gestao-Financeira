@@ -159,3 +159,12 @@
 .ffanual-acoes { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: .4rem; justify-content: flex-end; margin-top: -.2rem; }
 .tx-acc.ffanual-estado-por-pagar { color: #fbbf24; background: rgba(251, 191, 36, .14); }
 .tx-acc.ffanual-estado-em-atraso { color: #fb7185; background: rgba(244, 63, 94, .16); }
+
+/* Calendário: dias futuros com despesas agendadas (ainda não aconteceram) */
+.calendar-day.ffcal-futuro { outline: 1.5px dashed rgba(var(--ffcalor), .75); outline-offset: -3px; }
+.ffcal-calor .ffcal-futuro { background: transparent; border: 1.5px dashed rgba(var(--ffcalor), .8); }
+
+/* Principal: agendados num grupo à parte */
+.ffgrupo { margin: .6rem 0 .35rem; font-size: .7rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted-foreground); }
+.ffagendados-resumo { display: flex; align-items: center; gap: .45rem; width: 100%; margin-top: .5rem; padding: .55rem .75rem; border: 1px dashed var(--border); border-radius: calc(var(--radius) - 2px); background: transparent; font: inherit; font-size: .78rem; color: var(--muted-foreground); text-align: left; cursor: pointer; }
+.ffagendados-resumo svg { width: 1rem; height: 1rem; color: var(--cosmic-blue); flex: none; }

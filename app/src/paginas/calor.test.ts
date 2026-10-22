@@ -22,4 +22,14 @@ describe('mapa de calor do calendário', () => {
     expect(c.maisCaro).toBeNull();
     expect(calorDoMes(l, new Date(2026, 8, 1), new Date(2026, 9, 8)).semGastos).toHaveLength(29);
   });
+
+  it('dias depois de hoje com despesas agendadas: fora dos níveis e do dia mais caro', () => {
+    const c = calorDoMes([...l, m('2026-10-25', -600, 'expense', 'Renda')], new Date(2026, 9, 1), new Date(2026, 9, 8, 12));
+    expect(c.previsto[25]).toBe(600);
+    expect(c.gasto[25]).toBe(0);
+    expect(c.nivel[25]).toBe(0);
+    expect(c.maisCaro).toBe(2);
+    expect(c.nivel[2]).toBe(4);
+  });
 });
+
