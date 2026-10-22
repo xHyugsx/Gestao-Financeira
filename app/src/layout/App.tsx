@@ -1,4 +1,4 @@
-import { type TouchEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { type TouchEvent, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { EcraBloqueio } from '../bloqueio/EcraBloqueio';
 import { ligacoes } from '../bloqueio/estado';
 import { PREFIXO, VERSAO } from '../config';
@@ -506,6 +506,19 @@ export function App() {
   }, [aparencia.autoHide, setOcultos]);
 
   useAnimacaoNumeros(`${transicao ? transicao.para : pagina}|${desvioMes}|1`, transicao ? '.page-incoming' : '.page-current', ocultos || bloqueada);
+
+  // ao mudar de mês, a página e o nome do mês deslizam no sentido das setas
+  const mesVisto = useRef(desvioMes);
+  useLayoutEffect(() => {
+    const antes = mesVisto.current;
+    mesVisto.current = desvioMes;
+    if (antes === desvioMes || bloqueada || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    const sentido = desvioMes > antes ? 1 : -1, curva = 'cubic-bezier(.22, 1, .36, 1)';
+    const deslizar = (seletor: string, px: number, ms: number) => document.querySelectorAll<HTMLElement>(seletor).forEach((el) => el.animate?.(
+      [{ transform: `translateX(${sentido * px}px)`, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: ms, easing: curva }));
+    deslizar('.page-current > *', 36, 340);
+    deslizar('.month-switcher > span', 18, 260);
+  }, [desvioMes, bloqueada]);
 
   if (bloqueada) return <EcraBloqueio key="ff-lock" hash={estado.pinHash} aoDesbloquear={() => setBloqueada(false)} />;
 
