@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { estadoInicial, type Movimento, saldoDaConta } from '../dados';
 import { alfabetica, corNova, TONS } from './cores';
 import {
-  criaCopias, dataSeguinte, estimativa, gerarRecorrentes, porConfirmar, recorrentesPrevistos, recorrenciaNaSerie, reporMes, saltarEsteMes, semSaltados, somarMeses, valoresDaSerie,
+  copiaNoMes, criaCopias, dataSeguinte, estimativa, gerarRecorrentes, porConfirmar, preencherCopia, recorrentesPrevistos, recorrenciaNaSerie, reporMes, saltarEsteMes, semSaltados, somarMeses, valoresDaSerie,
 } from './recorrentes';
 
 const renda: Movimento = { id: 1, title: 'Renda', detail: '5 julho · Habitação', amount: -600, date: '2026-07-05', movementType: 'expense', recurring: 'com', recurringEvery: 1 };
@@ -234,6 +234,23 @@ describe('salário: dia do salário e valor variável nas receitas', () => {
     const atual = sal(5, '2026-09-28', 1600, { recurringDay: undefined }), antigo = sal(4, '2026-08-27', 1500, { recurringDay: undefined, recurringDone: true });
     const depois = { ...antigo, recurringDay: 'salario' };
     expect(recorrenciaNaSerie([atual, depois], antigo, depois)[0]).toMatchObject({ recurringDay: 'salario', recurringEvery: 1 });
+  });
+});
+
+describe('movimento novo de uma série que já tem cópia no mês', () => {
+  const copia: Movimento = { ...renda, id: 60, date: '2026-10-05', detail: '5 outubro · Habitação', recurringEvery: 1 };
+  const novo: Movimento = { id: 61, title: 'Renda', detail: '6 outubro · Habitação', amount: -620, date: '2026-10-06', movementType: 'expense', note: 'com atraso' };
+
+  it('encontra a cópia do mesmo mês e da mesma série', () => {
+    expect(copiaNoMes([copia], novo)?.id).toBe(60);
+    expect(copiaNoMes([copia], { ...novo, date: '2026-11-06' })).toBeUndefined();
+    expect(copiaNoMes([copia], { ...novo, title: 'Água' })).toBeUndefined();
+    expect(copiaNoMes([{ ...copia, skipped: true }], novo)).toBeUndefined();
+    expect(copiaNoMes([{ ...copia, recurring: undefined }], novo)).toBeUndefined();
+  });
+
+  it('preencher: a cópia fica com o valor, a data e a nota do novo e continua na série', () => {
+    expect(preencherCopia(copia, novo)).toMatchObject({ id: 60, amount: -620, date: '2026-10-06', note: 'com atraso', recurring: 'com', recurringEvery: 1 });
   });
 });
 

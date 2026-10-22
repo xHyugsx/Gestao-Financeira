@@ -16,12 +16,13 @@ export function prepararJuncao(locais: Movimento[], outros: unknown[]): Juncao {
   const ids = new Set(locais.map((m) => String(m.id)));
   const linhas = new Set(locais.map((m) => m.importKey).filter(Boolean));
   const livres = new Map<string, number>();
-  for (const m of locais) livres.set(assinatura(m), (livres.get(assinatura(m)) || 0) + 1);
+  // Os saltados («só este mês») não contam como já existentes: o movimento real do outro telemóvel tem de entrar
+  for (const m of locais) if (!m.skipped) livres.set(assinatura(m), (livres.get(assinatura(m)) || 0) + 1);
   const usar = (a: string) => { const n = livres.get(a) || 0; if (n) livres.set(a, n - 1); return n > 0; };
   const novos: Movimento[] = [];
   let repetidos = 0;
   for (const o of outros) {
-    if (!eObjeto(o) || typeof o.amount !== 'number' || typeof o.title !== 'string') continue;
+    if (!eObjeto(o) || typeof o.amount !== 'number' || typeof o.title !== 'string' || o.skipped) continue;
     const m = { ...o, date: (o.date as string) || dataPorOmissao(o.detail) } as Movimento;
     const a = assinatura(m);
     if (ids.has(String(m.id)) || (m.importKey && linhas.has(m.importKey))) { usar(a); repetidos++; continue; }

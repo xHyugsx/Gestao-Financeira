@@ -11,9 +11,9 @@ import { acertarSaldo, aplicarBackup, chave, cifrarBackup, criarBackup, decifrar
 import { aviso as avisoVeterinario, definir as definirLembretes, todos as todosLembretes } from '../veterinario/lembretes';
 import { useDados } from '../estado/useDados';
 import { aspetosCategorias } from '../movimentos/categorias';
-import { ApagarRecorrente, EditarMovimento } from '../movimentos/EditarMovimento';
+import { ApagarRecorrente, DuplicadoRecorrente, EditarMovimento } from '../movimentos/EditarMovimento';
 import { aplicarJuncao, novoLote, prepararJuncao, semJuncao, ultimaJuncao } from '../movimentos/juntar';
-import { criaCopias, gerarRecorrentes, recorrenciaNaSerie, saltarEsteMes, semSaltados } from '../movimentos/recorrentes';
+import { copiaNoMes, criaCopias, gerarRecorrentes, porConfirmar, preencherCopia, recorrenciaNaSerie, saltarEsteMes, semSaltados } from '../movimentos/recorrentes';
 import { tipoVisual } from '../movimentos/regras';
 import { regrasPessoais } from '../importacao/config';
 import { lerFicheiro } from '../importacao/leitura';
@@ -139,7 +139,18 @@ export function App() {
 
   const tirarFoco = () => { if (document.activeElement instanceof HTMLElement) document.activeElement.blur(); };
   const mudarMovimentos = (f: (l: Movimento[]) => Movimento[]) => setEstado((s) => ({ ...s, transactions: f(s.transactions) }));
-  const guardarNovo = (m: Movimento) => { mudarMovimentos((l) => [m, ...l]); vibrar(30); tirarFoco(); setNovoAberto(false); };
+  const gravarNovo = (m: Movimento) => { mudarMovimentos((l) => [m, ...l]); vibrar(30); tirarFoco(); setNovoAberto(false); setDuplicado(null); };
+  const substituirCopia = (copia: Movimento, m: Movimento) => {
+    mudarMovimentos((l) => l.map((x) => (x.id === copia.id ? preencherCopia(copia, m) : x))); vibrar(30); tirarFoco(); setNovoAberto(false); setDuplicado(null);
+  };
+  // Se a série já tem cópia nesse mês: por confirmar, fica preenchida; com valor, pergunta (senão ficava a dobrar)
+  const [duplicado, setDuplicado] = useState<{ novo: Movimento; copia: Movimento } | null>(null);
+  const guardarNovo = (m: Movimento) => {
+    const copia = copiaNoMes(visivel.transactions, m);
+    if (!copia) { gravarNovo(m); return; }
+    if (porConfirmar(copia)) { substituirCopia(copia, m); setAviso(`Valor de «${copia.title.trim()}» confirmado (estava por confirmar).`); return; }
+    setNovoAberto(false); setDuplicado({ novo: m, copia });
+  };
   const guardarRegisto = (m: Movimento) => { mudarMovimentos((l) => [m, ...l]); vibrar(30); tirarFoco(); setAbastecimento(false); setDespesaVet(false); };
   const guardarEdicao = (m: Movimento) => {
     mudarMovimentos((l) => recorrenciaNaSerie(l.map((x) => (x.id === m.id ? m : x)), l.find((x) => x.id === m.id), m)); vibrar(30); tirarFoco(); setAEditar(null);
@@ -707,6 +718,10 @@ export function App() {
       <NovoAbastecimento aberto={abastecimento} aoMudar={setAbastecimento} aoGuardar={guardarRegisto} />
       <EditarMovimento movimento={aEditar} fechar={() => setAEditar(null)} estado={visivel} aoGuardar={guardarEdicao} aoEliminar={eliminar} />
       <ApagarRecorrente movimento={aApagarSerie} fechar={() => setAApagarSerie(null)} saltar={saltarMes} parar={apagar} />
+      <DuplicadoRecorrente
+        par={duplicado} fechar={() => setDuplicado(null)}
+        substituir={() => duplicado && substituirCopia(duplicado.copia, duplicado.novo)} registar={() => duplicado && gravarNovo(duplicado.novo)}
+      />
       <JanelaFotografia
         animal={vistaVet.fotografia} fotos={estado.petPhotos} fechar={() => mudarVistaVet({ fotografia: null })}
         mudarFotos={(f) => setEstado((s) => ({ ...s, petPhotos: f(s.petPhotos) }))}
