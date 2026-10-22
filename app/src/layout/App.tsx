@@ -379,6 +379,7 @@ export function App() {
   const contextoJarvis = (): ContextoJarvis => ({
     estado: semSaltados(estadoAtual.current), mes, agora, eur: (v) => formatarEuros(v, ocultos),
     saldoAtual: (c) => saldoDaConta(c, estadoAtual.current.transactions, new Date()).atual,
+    movimentoEditado: (antes, depois) => salarioNaTabela(antes, depois),
     saldoNoFim: (c, m) => {
       const e = estadoAtual.current, hoje = new Date();
       return saldoDaConta(c, previsaoDoMes(e.transactions, e.annualExpenses, hoje, m).movimentos, hoje, m).atual;

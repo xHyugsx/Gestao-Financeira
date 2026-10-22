@@ -42,5 +42,14 @@ describe('despesas anuais', () => {
     expect(renovarPagas(l, [mov('IUC', '2025-03-10'), mov('Seguro casa (parte)', '2026-10-02')], HOJE)).toBeNull();
     expect(renovarPagas(l, [{ ...mov('Seguro casa', '2026-10-02'), amount: 0, recurring: 'sem' }], HOJE)).toBeNull();
   });
+
+  it('não confunde com uma despesa mensal com o mesmo nome nem com um valor muito diferente', () => {
+    const mov = (amount: number, extra: Partial<Movimento> = {}): Movimento =>
+      ({ id: amount, title: 'Seguro casa', detail: 'x', amount, date: '2026-10-02', movementType: 'expense', ...extra });
+    expect(renovarPagas(l, [mov(-300, { recurring: 'com', recurringEvery: 1 })], HOJE)).toBeNull();
+    expect(renovarPagas(l, [mov(-30)], HOJE)).toBeNull();
+    expect(renovarPagas(l, [mov(-900)], HOJE)).toBeNull();
+    expect(renovarPagas(l, [mov(-320, { recurring: 'com', recurringEvery: 12 })], HOJE)).not.toBeNull();
+  });
 });
 
