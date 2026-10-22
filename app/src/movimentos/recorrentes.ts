@@ -26,8 +26,20 @@ function detalheCom(detail: string, data: string): string {
 const repete = (m: Movimento) => !!m.recurring && typeof m.recurringEvery === 'number' && m.recurringEvery > 0 && !m.recurringDone;
 
 /**
- * Cria as cópias em falta até `hoje` (inclusive). Devolve a lista nova, ou `null` se não houver nada a criar.
+ * Movimento da mesma série já registado no mês de `data` (à mão ou agendado) e que conta no saldo: dispensa a cópia
+ * automática, que ficaria a dobrar.
+ */
+function jaRegistado(lista: Movimento[], m: Movimento, data: string): Movimento | undefined {
+  const k = serieDe(m), mes = data.slice(0, 7);
+  return lista.find((x) => x.id !== m.id && !x.recurringDone && x.affectsBalance !== false && x.movementType === m.movementType
+    && !!x.date && x.date.startsWith(mes) && serieDe(x) === k);
+}
+
+/**
+ * Cria as cópias em falta até `hoje` (inclusive). Devolve a lista nova, ou `null` se não houver nada a mudar.
  * Cada cópia continua a série; a anterior fica marcada como feita, por isso apagar ou desmarcar a última pára a série.
+ * Se nesse mês já houver um movimento da mesma série (registado à mão ou agendado), não cria a cópia: esse movimento
+ * passa a ser o que cria a seguinte.
  */
 export function gerarRecorrentes(movimentos: Movimento[], hoje: Date, novoId: () => number | string = (() => { let n = Date.now(); return () => n++; })()): Movimento[] | null {
   const limite = dia(hoje);
@@ -38,6 +50,14 @@ export function gerarRecorrentes(movimentos: Movimento[], hoje: Date, novoId: ()
       if (!repete(m) || !m.date) continue;
       const data = somarMeses(m.date, m.recurringEvery as number);
       if (data > limite) continue;
+      const existente = jaRegistado(lista, m, data);
+      if (existente) {
+        lista = lista.map((x) => (x === m ? { ...x, recurringDone: true }
+          : x === existente ? { ...x, recurring: x.recurring || m.recurring, recurringEvery: x.recurringEvery || m.recurringEvery } : x));
+        criados++;
+        procurar = true;
+        break;
+      }
       const copia: Movimento = { ...m, id: novoId(), date: data, detail: detalheCom(m.detail, data) };
       delete copia.recurringDone; delete copia.skipped; delete copia.importKey; delete copia.importBatch; delete copia.mergeBatch;
       if (m.recurring === 'sem') { copia.amount = 0; if (m.revolut) copia.transferValue = 0; }
@@ -84,14 +104,18 @@ export function valoresDaSerie(movimentos: Movimento[], m: Movimento): number[] 
 }
 
 /**
- * Mudar o tipo de valor (fixo/variável) num movimento de uma série aplica-se também ao movimento que cria as cópias
- * seguintes (o mais recente da série); sem isso, mudar num movimento antigo não teria efeito.
+ * Mudar o tipo de valor (fixo/variável) ou a periodicidade num movimento de uma série aplica-se também ao movimento que
+ * cria as cópias seguintes (o mais recente da série); sem isso, mudar num movimento antigo não teria efeito.
+ * Desmarcar «Recorrente» num movimento antigo só o tira da série (para parar a série, usa-se o mais recente).
  */
-export function tipoNaSerie(lista: Movimento[], antes: Movimento | undefined, depois: Movimento): Movimento[] {
+export function recorrenciaNaSerie(lista: Movimento[], antes: Movimento | undefined, depois: Movimento): Movimento[] {
+  if (!antes || !depois.recurring) return lista;
   const variavel = (m: Movimento) => m.recurring === 'sem';
-  if (!antes || !depois.recurring || variavel(antes) === variavel(depois)) return lista;
+  const mudaTipo = variavel(antes) !== variavel(depois), mudaCada = (antes.recurringEvery || 0) !== (depois.recurringEvery || 0);
+  if (!mudaTipo && !mudaCada) return lista;
   const k = serieDe(antes);
-  return lista.map((x) => (x.id !== depois.id && repete(x) && serieDe(x) === k ? { ...x, recurring: depois.recurring } : x));
+  return lista.map((x) => (x.id === depois.id || !repete(x) || serieDe(x) !== k ? x
+    : { ...x, ...(mudaTipo ? { recurring: depois.recurring } : {}), ...(mudaCada ? { recurringEvery: depois.recurringEvery } : {}) }));
 }
 
 /**
@@ -105,7 +129,8 @@ export function recorrentesPrevistos(movimentos: Movimento[], hoje: Date, ate: s
     const valor = g.recurring === 'sem' ? estimativa([...valoresDaSerie(movimentos, g), g.skipped ? 0 : valorRecorrente(g)]) : valorRecorrente(g);
     if (!valor) continue;
     for (let d = somarMeses(g.date, g.recurringEvery!); d <= ate; d = somarMeses(d, g.recurringEvery!)) {
-      if (d <= desde) continue;
+      // Já registado (à mão ou agendado) nesse mês: conta pelo movimento, não pela previsão
+      if (d <= desde || jaRegistado(movimentos, g, d)) continue;
       const efeito = g.revolut ? { transferValue: valor } : g.movementType === 'transfer' ? {} : { amount: g.movementType === 'income' ? valor : -valor };
       previstos.push({ ...g, ...efeito, id: `previsto-${g.id}-${d}`, date: d, detail: detalheCom(g.detail, d), recurringDone: true });
     }
