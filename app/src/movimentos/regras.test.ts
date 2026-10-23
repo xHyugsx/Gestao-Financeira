@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Movimento } from '../dados';
-import { categoriasParaEditar, type ContextoNovo, lerValor, movimentoEditado, novoMovimento } from './regras';
+import { categoriasParaEditar, type ContextoNovo, duplicarMovimento, lerValor, movimentoEditado, novoMovimento } from './regras';
 
 const campos = (o: Record<string, string>) => { const f = new FormData(); for (const [k, v] of Object.entries(o)) f.set(k, v); return f; };
 const ctx = (o: Partial<ContextoNovo> = {}): ContextoNovo =>
@@ -105,5 +105,15 @@ describe('editar movimento', () => {
     expect(novoMovimento(campos({ title: 'Salário', amount: '1500', date: '2026-09-28' }), ctx({ tipo: 'income', recorrente: true, tipoValor: 'sem', periodicidade: 1, diaSalario: true })))
       .toMatchObject({ recurring: 'sem', recurringEvery: 1, recurringDay: 'salario' });
     expect(antigo.recurringEvery).toBeUndefined();
+  });
+});
+
+describe('duplicar um movimento para hoje', () => {
+  it('copia para hoje, sem marcas de série/importação/junção e com efeito no saldo', () => {
+    const m = { id: 1, title: 'Ginásio', amount: -30, date: '2026-08-10', detail: '10 agosto · Saúde', movementType: 'expense' as const,
+      recurring: 'com' as const, recurringEvery: 1, recurringDone: true, importKey: 'k', importBatch: 'b', mergeBatch: 'j', affectsBalance: false, note: 'n', person: 'X' };
+    const c = duplicarMovimento(m, new Date(2026, 8, 28, 12), 99);
+    expect(c).toEqual({ id: 99, title: 'Ginásio', amount: -30, date: '2026-09-28', detail: '28 setembro · Saúde', movementType: 'expense', affectsBalance: true, note: 'n', person: 'X' });
+    expect(m.recurring).toBe('com');
   });
 });

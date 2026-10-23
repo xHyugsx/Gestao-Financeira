@@ -1,4 +1,5 @@
 import { Botao } from './Botao';
+import { vibrarCurto } from './vibracao';
 
 interface Props<T extends string> {
   valor: T;
@@ -17,7 +18,7 @@ export function Segmentado<T extends string>({ valor, rotulo, opcoes, aoMudar, c
     <div className={`segmented ffseg${classe ? ` ${classe}` : ''}`} aria-label={rotulo}>
       {i >= 0 ? <span className="ffseg-pilula" style={pilula} aria-hidden="true" /> : null}
       {opcoes.map((o) => (
-        <Botao key={o.valor} type="button" variante="ghost" className={valor === o.valor ? 'segment-active' : ''} onClick={() => aoMudar(o.valor)}>
+        <Botao key={o.valor} type="button" variante="ghost" className={valor === o.valor ? 'segment-active' : ''} onClick={() => { if (o.valor !== valor) vibrarCurto(); aoMudar(o.valor); }}>
           {o.rotulo}
         </Botao>
       ))}

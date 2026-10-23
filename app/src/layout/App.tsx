@@ -15,7 +15,11 @@ import { ApagarRecorrente, DuplicadoRecorrente, EditarMovimento } from '../movim
 import { aplicarJuncao, novoLote, prepararJuncao, semJuncao, ultimaJuncao } from '../movimentos/juntar';
 import { copiaNoMes, criaCopias, gerarRecorrentes, porConfirmar, preencherCopia, recorrenciaNaSerie, salarioDaReceita, saltarEsteMes, semSaltados } from '../movimentos/recorrentes';
 import { renovarPagas } from '../paginas/anuais';
-import { tipoVisual } from '../movimentos/regras';
+import { duplicarMovimento, tipoVisual } from '../movimentos/regras';
+import { AcoesRapidas } from '../movimentos/AcoesRapidas';
+import { AcoesMovimento } from '../movimentos/Movimento';
+import { vibracao } from '../ui/vibracao';
+import { useOcultosDesfocados } from './ocultos';
 import { regrasPessoais } from '../importacao/config';
 import { lerFicheiro } from '../importacao/leitura';
 import { abrirRevisao, type ApiImportacao, desfazerImportacao, haImportacaoParaDesfazer, reabrirRevisao } from '../importacao/revisao';
@@ -129,6 +133,7 @@ export function App() {
   const tema = temaDe(aparencia);
   useEffect(() => { aplicarTema(bloqueada ? null : tema); }, [tema, bloqueada]);
 
+  vibracao.ligada = aparencia.haptics !== false;
   const vibrar = useCallback((padrao: number | number[]) => {
     try { if (aparencia.haptics !== false) navigator.vibrate?.(padrao); } catch { /* sem vibração */ }
   }, [aparencia.haptics]);
@@ -177,12 +182,38 @@ export function App() {
     realcar(m.id);
   };
   const [aApagarSerie, setAApagarSerie] = useState<Movimento | null>(null);
-  const apagar = (m: Movimento) => { mudarMovimentos((l) => l.filter((x) => x.id !== m.id)); vibrar([40, 60, 40]); setAEditar(null); setAApagarSerie(null); };
+  // Apagar mostra «Desfazer» durante 5 segundos (em vez de pedir confirmação antes)
+  const [desfazer, setDesfazer] = useState<{ chave: number; texto: string; repor: () => void } | null>(null);
+  useEffect(() => {
+    if (!desfazer) return;
+    const t = setTimeout(() => setDesfazer(null), 5000);
+    return () => clearTimeout(t);
+  }, [desfazer]);
+  const apagar = (m: Movimento) => {
+    const original = estadoAtual.current.transactions.find((x) => x.id === m.id) ?? m;
+    let pos = -1;
+    mudarMovimentos((l) => { pos = l.findIndex((x) => x.id === m.id); return l.filter((x) => x.id !== m.id); });
+    vibrar([40, 60, 40]); setAEditar(null); setAApagarSerie(null);
+    setDesfazer({
+      chave: Date.now(), texto: `«${original.title.trim()}» apagado`,
+      repor: () => {
+        mudarMovimentos((l) => (l.some((x) => x.id === original.id) ? l : [...l.slice(0, Math.max(0, pos)), original, ...l.slice(Math.max(0, pos))]));
+        vibrar(15); setDesfazer(null); realcar(original.id);
+      },
+    });
+  };
   const eliminar = (m: Movimento) => {
     // A cópia mais recente de uma série é a que cria a seguinte: apagá-la parava a série sem aviso
     if (criaCopias(m)) { setAEditar(null); setAApagarSerie(m); return; }
-    if (!window.confirm(`Eliminar "${m.title}"?`)) return;
     apagar(m);
+  };
+  // Ações rápidas (toque longo numa linha): editar, duplicar para hoje, apagar
+  const [acoes, setAcoes] = useState<Movimento | null>(null);
+  const abrirAcoes = useCallback((m: Movimento) => { vibrar(20); setAcoes(m); }, [vibrar]);
+  const duplicar = (m: Movimento) => {
+    const copia = duplicarMovimento(m, new Date(), Date.now());
+    mudarMovimentos((l) => [copia, ...l]); vibrar(30); setAcoes(null); realcar(copia.id);
+    setDesfazer({ chave: Date.now(), texto: `«${copia.title.trim()}» duplicado para hoje`, repor: () => { mudarMovimentos((l) => l.filter((x) => x.id !== copia.id)); vibrar(15); setDesfazer(null); } });
   };
   const saltarMes = (m: Movimento) => { mudarMovimentos((l) => saltarEsteMes(l, m)); vibrar(30); setAApagarSerie(null); };
 
@@ -235,6 +266,7 @@ export function App() {
     if (!para || para === pagina || transicao || !ids.includes(para)) return;
     const dir: Direcao = ids.indexOf(para) > ids.indexOf(pagina) ? 'left' : 'right';
     const moldura = document.querySelector('.app-shell');
+    vibrar(8);
     setDirecao(dir);
     if (reduzMovimento()) { setPagina(para); setArrasto(0); moldura?.scrollTo({ top: 0 }); return; }
     if (!dx) moldura?.scrollTo({ top: 0 });
@@ -539,6 +571,7 @@ export function App() {
     return () => document.removeEventListener('visibilitychange', f);
   }, [aparencia.autoHide, setOcultos]);
 
+  useOcultosDesfocados(ocultos && !bloqueada);
   useAnimacaoNumeros(`${transicao ? transicao.para : pagina}|${desvioMes}|1`, transicao ? '.page-incoming' : '.page-current', ocultos || bloqueada);
 
   // ao mudar de mês, a página e o nome do mês deslizam no sentido das setas
@@ -668,6 +701,7 @@ export function App() {
   const maisAberto = !!mais && mais !== 'out';
 
   return (
+    <AcoesMovimento.Provider value={abrirAcoes}>
     <div className={`cosmic-app accent-${tema === 'cosmico' ? aparencia.accent : 'violet'} background-${aparencia.backgroundIntensity} text-size-${aparencia.fontScale}`}>
       <div className="cosmic-field" aria-hidden="true" />
       <div
@@ -690,9 +724,9 @@ export function App() {
           </header>
         )}
         <div className="month-switcher" aria-label="Selecionar mês">
-          <Botao variante="ghost" tamanho="icone" onClick={() => setDesvioMes((d) => d - 1)} aria-label="Mês anterior"><Icone nome="chevron-left" /></Botao>
+          <Botao variante="ghost" tamanho="icone" onClick={() => { vibrar(8); setDesvioMes((d) => d - 1); }} aria-label="Mês anterior"><Icone nome="chevron-left" /></Botao>
           <span>{`${MESES[mes.getMonth()]} de ${mes.getFullYear()}`}</span>
-          <Botao variante="ghost" tamanho="icone" onClick={() => setDesvioMes((d) => d + 1)} aria-label="Mês seguinte"><Icone nome="chevron-right" /></Botao>
+          <Botao variante="ghost" tamanho="icone" onClick={() => { vibrar(8); setDesvioMes((d) => d + 1); }} aria-label="Mês seguinte"><Icone nome="chevron-right" /></Botao>
         </div>
         <div className="page-viewport">
           <div key={`pg-${pagina}`} className="page-current" style={estiloAtual as React.CSSProperties}>{conteudo(pagina)}</div>
@@ -793,7 +827,18 @@ export function App() {
         animal={vistaVet.fotografia} fotos={estado.petPhotos} fechar={() => mudarVistaVet({ fotografia: null })}
         mudarFotos={(f) => setEstado((s) => ({ ...s, petPhotos: f(s.petPhotos) }))}
       />
+      <AcoesRapidas
+        movimento={acoes} ocultos={ocultos} fechar={() => setAcoes(null)}
+        editar={(m) => { setAcoes(null); setAEditar(m); }} duplicar={duplicar} apagar={(m) => { setAcoes(null); eliminar(m); }}
+      />
       {aviso ? <div className="ffv2-aviso" role="status">{aviso}</div> : null}
+      {desfazer ? (
+        <div key={desfazer.chave} className="ffv2-aviso ffdesfazer" role="status">
+          <span>{desfazer.texto}</span>
+          <button type="button" onClick={desfazer.repor}>Desfazer</button>
+        </div>
+      ) : null}
     </div>
+    </AcoesMovimento.Provider>
   );
 }

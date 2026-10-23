@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { createContext, type ReactNode, useContext, useRef } from 'react';
 import { agendado, type Conta, type Movimento } from '../dados';
 import { formatarEuros } from '../ui/formatos';
 import { Icone } from '../ui/Icone';
@@ -12,13 +12,43 @@ function valor(m: Movimento, ocultos: boolean): string {
   return `${m.amount > 0 ? '+' : '−'}${formatarEuros(Math.abs(m.amount), ocultos)}`;
 }
 
+/** Ações rápidas (toque longo numa linha): fornecidas pela App; sem elas, a linha só abre a edição. */
+export const AcoesMovimento = createContext<((m: Movimento) => void) | null>(null);
+
 /** Linha clicável de um movimento (abre a janela de edição). */
 export function ArtigoMovimento({ movimento: m, aoAbrir, children }: { movimento: Movimento; aoAbrir: (m: Movimento) => void; children: ReactNode }) {
-  const abrir = () => aoAbrir(m);
+  const menu = useContext(AcoesMovimento);
+  // toque longo (ou clique com o botão direito) abre as ações rápidas; o toque que se segue não abre a edição
+  const premir = useRef<{ x: number; y: number; t: ReturnType<typeof setTimeout> } | null>(null);
+  const abriuMenu = useRef(false);
+  const largar = () => { if (premir.current) clearTimeout(premir.current.t); premir.current = null; };
+  const abrir = () => { if (abriuMenu.current) { abriuMenu.current = false; return; } aoAbrir(m); };
+  const toque = menu ? {
+    onTouchStart: (e: React.TouchEvent) => {
+      abriuMenu.current = false;
+      const p = e.touches[0];
+      if (!p) return;
+      largar();
+      premir.current = { x: p.clientX, y: p.clientY, t: setTimeout(() => { abriuMenu.current = true; premir.current = null; menu(m); }, 480) };
+    },
+    onTouchMove: (e: React.TouchEvent) => {
+      const s = premir.current, p = e.touches[0];
+      if (s && p && Math.hypot(p.clientX - s.x, p.clientY - s.y) > 10) largar();
+    },
+    onTouchEnd: largar,
+    onTouchCancel: largar,
+    onContextMenu: (e: React.MouseEvent) => {
+      e.preventDefault();
+      if (abriuMenu.current) return;
+      if (premir.current) abriuMenu.current = true;
+      largar();
+      menu(m);
+    },
+  } : {};
   return (
     <article
       role="button" tabIndex={0} aria-label={`Editar ${m.title}`} className="transaction-row transaction-row-clickable" data-id={String(m.id)}
-      onClick={abrir} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrir(); } }}
+      onClick={abrir} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); aoAbrir(m); } }} {...toque}
     >
       {children}
     </article>

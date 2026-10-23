@@ -17,6 +17,14 @@ export function diaEMes(data: string): string {
   return `${d.getDate()} ${MESES[d.getMonth()]}`;
 }
 
+/** Cópia de um movimento para hoje (ação «Duplicar»): sem marcas de série, importação ou junção, e com efeito no saldo. */
+export function duplicarMovimento(m: Movimento, hoje: Date, id: number): Movimento {
+  const data = dia(hoje), categoria = String(m.detail || '').split(' · ').slice(1).join(' · ');
+  const copia: Movimento = { ...m, id, date: data, detail: categoria ? `${diaEMes(data)} · ${categoria}` : diaEMes(data), affectsBalance: true };
+  for (const k of ['recurring', 'recurringEvery', 'recurringDay', 'recurringDone', 'skipped', 'importKey', 'importBatch', 'mergeBatch'] as const) delete copia[k];
+  return copia;
+}
+
 export function tipoVisual(tipo: TipoMovimento, categoria: string): string {
   if (tipo === 'transfer') return 'transfer';
   if (tipo === 'income') return 'income';
