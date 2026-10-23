@@ -14,13 +14,13 @@ async def t_agendados_nao_contam_no_saldo(app):
     await app.abrir(DADOS)
     p = app.page
     resumo = (await p.text_content('.page-current .ffagendados-resumo') or '').strip()
-    verificar('2 agendados · próximo: Renda, 30 setembro' in resumo, f'resumo dos agendados: {resumo}')
+    verificar('1 agendado · próximo: Renda, 30 setembro' in resumo, f'resumo dos agendados (só os deste mês): {resumo}')
     verificar(await p.evaluate("[...document.querySelectorAll('.page-current .transaction-list article h3')].map(e=>e.textContent)") == ['Supermercado'],
               'os agendados não podem tapar os movimentos recentes')
     await p.click('.page-current .ffagendados-resumo'); await p.wait_for_timeout(500)
     grupos = await p.evaluate("""[...document.querySelectorAll('.page-current .transaction-list')].map(l=>
       [...l.querySelectorAll('article')].map(a=>[a.querySelector('h3').textContent, !!a.querySelector('.ffagendado')]))""")
-    verificar(grupos == [[['Renda', True], ['Ginásio', True]], [['Supermercado', False]]], f'grupos (agendados do mais próximo, depois até hoje): {grupos}')
+    verificar(grupos == [[['Renda', True]], [['Supermercado', False]]], f'grupos (agendados do mês, depois até hoje): {grupos}')
     saldos = await app.saldos()
     verificar(saldos.get('Principal') == '950,00 €', f'hoje (28/09) só conta o Supermercado: {saldos}')
     await p.click('button[aria-label="Mês seguinte"]'); await p.wait_for_timeout(600)

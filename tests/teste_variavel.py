@@ -39,8 +39,9 @@ async def t_tipo_de_valor_num_movimento_antigo(app):
     await app.page.emulate_media(reduced_motion='reduce')
     await app.abrir(DADOS)
     p = app.page
-    # a lista mostra as três Luz, da mais recente para a mais antiga: abre a de 5 de agosto (já não cria cópias)
-    await p.locator('.page-current .transaction-list article[aria-label="Editar Luz"]').nth(1).click(); await p.wait_for_timeout(500)
+    # a Principal só mostra o mês escolhido: abre a Luz de 5 de agosto (já não cria cópias)
+    await p.click('button[aria-label="Mês anterior"]'); await p.wait_for_timeout(500)
+    await p.locator('.page-current .transaction-list article[aria-label="Editar Luz"]').first.click(); await p.wait_for_timeout(500)
     verificar(await p.input_value('[role=dialog] input[name=date]') == '2026-08-05', 'abriu o movimento errado')
     await p.select_option('[role=dialog] select[name=tipoValor]', 'com')
     await p.click('[role=dialog] button[type=submit]'); await p.wait_for_timeout(600)
