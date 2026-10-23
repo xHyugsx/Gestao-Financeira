@@ -58,18 +58,42 @@
 @keyframes ffcontas-encher { from { transform: scaleX(0); } }
 @media (prefers-reduced-motion: reduce) { .ffcontas-barra b { animation: none; } }
 
-/* ===== Calendário: mapa de calor dos gastos (a cor segue o tema: --ffcalor) ===== */
-:root { --ffcalor: 236, 72, 153; }
-.calendar-day.ffcal-q1 { background: rgba(var(--ffcalor), .14); }
-.calendar-day.ffcal-q2 { background: rgba(var(--ffcalor), .28); }
-.calendar-day.ffcal-q3 { background: rgba(var(--ffcalor), .45); }
-.calendar-day.ffcal-q4 { background: rgba(var(--ffcalor), .66); }
-.calendar-day.ffcal-zero { background: rgba(52, 211, 153, .12); }
+/* ===== Calendário: mapa de calor dos gastos (verde = pouco → amarelo → laranja → vermelho = muito; igual em todos os temas) ===== */
+:root { --ffcal-1: 34, 197, 94; --ffcal-2: 250, 204, 21; --ffcal-3: 249, 115, 22; --ffcal-4: 239, 68, 68; }
+.calendar-day.ffcal-q1, .ffcal-calor .ffcal-q1 { background: rgba(var(--ffcal-1), .55); }
+.calendar-day.ffcal-q2, .ffcal-calor .ffcal-q2 { background: rgba(var(--ffcal-2), .62); }
+.calendar-day.ffcal-q3, .ffcal-calor .ffcal-q3 { background: rgba(var(--ffcal-3), .66); }
+.calendar-day.ffcal-q4, .ffcal-calor .ffcal-q4 { background: rgba(var(--ffcal-4), .72); }
+/* fim de semana em cinzento (o vermelho fica só para «muito gasto»); nos dias com gasto, letra branca */
+body .calendar-day.ffcal-we { color: var(--muted-foreground); }
+body .calendar-day.ffcal-q1, body .calendar-day.ffcal-q2, body .calendar-day.ffcal-q3, body .calendar-day.ffcal-q4 { color: #fff; font-weight: 700; text-shadow: 0 1px 2px rgba(0, 0, 0, .55); }
+/* dia escolhido: anel branco, sem tapar a cor do gasto (em todos os temas) */
+.calendar-grid .calendar-day.calendar-day-active { background: transparent !important; color: var(--foreground) !important; font-weight: 700; box-shadow: inset 0 0 0 2px #fff, 0 0 12px rgba(255, 255, 255, .4) !important; }
+.calendar-grid .calendar-day.calendar-day-active.ffcal-q1 { background: rgba(var(--ffcal-1), .55) !important; }
+.calendar-grid .calendar-day.calendar-day-active.ffcal-q2 { background: rgba(var(--ffcal-2), .62) !important; }
+.calendar-grid .calendar-day.calendar-day-active.ffcal-q3 { background: rgba(var(--ffcal-3), .66) !important; }
+.calendar-grid .calendar-day.calendar-day-active.ffcal-q4 { background: rgba(var(--ffcal-4), .72) !important; }
+/* dias sem despesas: só um contorno verde (nada gasto), sem fundo */
+.calendar-day.ffcal-zero { box-shadow: inset 0 0 0 1.5px rgba(var(--ffcal-1), .6); }
 .ffcal-calor { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: .3rem; margin-top: .6rem; font-size: .66rem; color: var(--muted-foreground); }
 .ffcal-calor i { width: .85rem; height: .85rem; border-radius: .25rem; display: inline-block; }
-.ffcal-calor .ffcal-q1 { background: rgba(var(--ffcalor), .14); } .ffcal-calor .ffcal-q2 { background: rgba(var(--ffcalor), .28); }
-.ffcal-calor .ffcal-q3 { background: rgba(var(--ffcalor), .45); } .ffcal-calor .ffcal-q4 { background: rgba(var(--ffcalor), .66); }
-.ffcal-calor .ffcal-zero { background: rgba(52, 211, 153, .25); }
+.ffcal-calor .ffcal-zero { background: transparent; box-shadow: inset 0 0 0 1.5px rgba(var(--ffcal-1), .7); }
+.ffcal-titulo { margin-right: .2rem; color: var(--foreground); opacity: .8; }
+
+/* Tipos de movimento por símbolos brancos (a cor fica só para o gasto do dia):
+   ▲ receita · ▼ despesa · ○ recorrente · ◆ transferência */
+i.ffd-in, i.ffd-out, i.ffd-rec, i.ffd-tr {
+  border-radius: 0; background: var(--foreground); box-shadow: none; outline: none;
+  -webkit-mask: var(--ffforma) center / contain no-repeat; mask: var(--ffforma) center / contain no-repeat;
+}
+.ffdots { gap: .16rem; height: .46rem; }
+.ffdots i { width: .46rem; height: .46rem; }
+.ffcal-legend i.ffd-in, .ffcal-legend i.ffd-out, .ffcal-legend i.ffd-rec, .ffcal-legend i.ffd-tr { width: .62rem; height: .62rem; border-radius: 0; }
+.ffd-in { --ffforma: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M5 .8 9.6 9H.4z'/%3E%3C/svg%3E"); }
+.ffd-out { --ffforma: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M5 9.2 .4 1h9.2z'/%3E%3C/svg%3E"); }
+.ffd-rec { --ffforma: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Ccircle cx='5' cy='5' r='3.6' fill='none' stroke='black' stroke-width='2'/%3E%3C/svg%3E"); }
+.ffd-tr { --ffforma: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M5 .3 9.7 5 5 9.7.3 5z'/%3E%3C/svg%3E"); }
+.calendar-payday, .ffcal-legend b { color: var(--foreground) !important; }
 .ffcal-zero-leg { display: inline-flex; align-items: center; gap: .3rem; margin-left: .6rem; }
 .ffcal-resumo { margin: .5rem 0 0; text-align: center; font-size: .72rem; color: var(--muted-foreground); }
 
@@ -161,8 +185,8 @@
 .tx-acc.ffanual-estado-em-atraso { color: #fb7185; background: rgba(244, 63, 94, .16); }
 
 /* Calendário: dias futuros com despesas agendadas (ainda não aconteceram) */
-.calendar-day.ffcal-futuro { outline: 1.5px dashed rgba(var(--ffcalor), .75); outline-offset: -3px; }
-.ffcal-calor .ffcal-futuro { background: transparent; border: 1.5px dashed rgba(var(--ffcalor), .8); }
+.calendar-day.ffcal-futuro { outline: 1.5px dashed rgba(255, 255, 255, .55); outline-offset: -3px; }
+.ffcal-calor .ffcal-futuro { background: transparent; border: 1.5px dashed rgba(255, 255, 255, .6); }
 
 /* Principal: agendados num grupo à parte */
 .ffgrupo { margin: .6rem 0 .35rem; font-size: .7rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted-foreground); }
