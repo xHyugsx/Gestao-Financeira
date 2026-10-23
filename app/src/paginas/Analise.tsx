@@ -67,6 +67,7 @@ export function Analise({ estado, mes, ocultos, tipo, mudarTipo }: Props) {
     const l = coresDistintas(categoriasDoMes(estado, mes, tipo === 'receitas' ? 'receitas' : 'despesas')).filter((e) => e.amount > 0);
     const total = l.reduce((s, e) => s + e.amount, 0);
     const escolhida = l.find((e) => e.name === destaque);
+    const maxComp = Math.max(1, ...l.map((e) => Math.max(e.amount, e.anterior)));
     let fim = 0;
     const fatias = l.map((e, i) => {
       const de = fim;
@@ -111,14 +112,26 @@ export function Analise({ estado, mes, ocultos, tipo, mudarTipo }: Props) {
         </div>
         {l.length ? (
           <div className={`chart-legend chart-legend-compact ffdonut-legenda${escolhida ? ' ffcom-destaque' : ''}`}>
-            {l.map((e) => (
-              <div key={e.name} className={e.name === destaque ? 'ffdestaque' : undefined} aria-pressed={e.name === destaque} {...comoBotao(() => tocarFatia(e.name))}>
-                <span className={`legend-dot tone-${e.tone}`} />
-                <span>{e.name}</span>
-                <strong>{eur(e.amount)}</strong>
-                <small>{percentagem(e.share)}</small>
-              </div>
-            ))}
+            {l.map((e) => {
+              // comparação com o mês anterior: seta com a variação e barra fantasma do valor desse mês
+              const sobe = e.amount > e.anterior, bom = tipo === 'receitas' ? sobe : !sobe;
+              const v = e.anterior ? variacao(e.amount, e.anterior) : null;
+              return (
+                <div key={e.name} className={e.name === destaque ? 'ffdestaque' : undefined} aria-pressed={e.name === destaque} {...comoBotao(() => tocarFatia(e.name))}>
+                  <span className={`legend-dot tone-${e.tone}`} />
+                  <span>{e.name}</span>
+                  <strong>{eur(e.amount)}</strong>
+                  <small>{percentagem(e.share)}</small>
+                  <em className={`ffcomp-var ${v === null || e.amount === e.anterior ? 'ffcomp-novo' : bom ? 'amount-positive' : 'amount-negative'}`} title={`Mês anterior: ${eur(e.anterior)}`}>
+                    {v === null ? 'novo' : e.amount === e.anterior ? '=' : `${sobe ? '↑' : '↓'} ${formatarPercentagem(v)}`}
+                  </em>
+                  <i className="ffcomp" aria-hidden="true">
+                    <s style={{ transform: `scaleX(${e.anterior / maxComp})` }} />
+                    <b className={`tone-${e.tone}`} style={{ transform: `scaleX(${e.amount / maxComp})` }} />
+                  </i>
+                </div>
+              );
+            })}
           </div>
         ) : <div className="ffvazio"><RoboVazio /><p className="chart-empty">{tipo === 'receitas' ? 'Sem receitas neste mês.' : 'Sem gastos neste mês.'}</p></div>}
       </>
