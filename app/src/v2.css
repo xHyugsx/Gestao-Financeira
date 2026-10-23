@@ -281,6 +281,8 @@ body .add-button.ffplus:active::after { transform: rotate(90deg); }
 html[data-tema="aurora"] .ffplus-onda { border-color: #34d399; }
 html[data-tema="por-do-sol"] .ffplus-onda { border-color: #fb923c; }
 html[data-tema="dourado"] .ffplus-onda { border-color: #d4af37; }
+html[data-tema="oceano"] .ffplus-onda { border-color: #22d3ee; }
+html[data-tema="floresta"] .ffplus-onda { border-color: #a3e635; }
 
 /* A linha do movimento acabado de gravar brilha por instantes */
 .transaction-row.ffrealce { position: relative; }
@@ -320,6 +322,8 @@ html[data-tema="dourado"] .ffplus-onda { border-color: #d4af37; }
 html[data-tema="aurora"] .ffdesfazer button, html[data-tema="aurora"] .ffdesfazer::after { background: #34d399; }
 html[data-tema="por-do-sol"] .ffdesfazer button, html[data-tema="por-do-sol"] .ffdesfazer::after { background: #fb923c; }
 html[data-tema="dourado"] .ffdesfazer button, html[data-tema="dourado"] .ffdesfazer::after { background: #d4af37; }
+html[data-tema="oceano"] .ffdesfazer button, html[data-tema="oceano"] .ffdesfazer::after { background: #22d3ee; }
+html[data-tema="floresta"] .ffdesfazer button, html[data-tema="floresta"] .ffdesfazer::after { background: #a3e635; }
 
 /* Toque longo numa linha: sem seleção de texto nem menu do navegador; ao premir, a linha afunda um pouco */
 .transaction-row-clickable { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; transition: transform .18s ease; }
@@ -377,6 +381,7 @@ html[data-tema="dourado"] .ffdesfazer button, html[data-tema="dourado"] .ffdesfa
 html[data-tema="aurora"] .ffrobo-luz, html[data-tema="aurora"] .ffrobo-olhos rect { fill: #6ee7b7; }
 html[data-tema="por-do-sol"] .ffrobo-luz, html[data-tema="por-do-sol"] .ffrobo-olhos rect { fill: #fdba74; }
 html[data-tema="dourado"] .ffrobo-luz, html[data-tema="dourado"] .ffrobo-olhos rect { fill: #f5d77a; }
+html[data-tema="floresta"] .ffrobo-luz, html[data-tema="floresta"] .ffrobo-olhos rect { fill: #bef264; }
 @media (prefers-reduced-motion: reduce) {
   .ffcompacto, .ffcompacto.on { transition: none; }
   .ffrobo-corpo, .ffrobo-sombra, .ffrobo-olhos, .ffrobo-luz { animation: none; }
@@ -413,6 +418,7 @@ html[data-tema="dourado"] .ffrobo-luz, html[data-tema="dourado"] .ffrobo-olhos r
 html[data-tema="aurora"] .ffjv-row .ffjv-seg { border-color: #6ee7b7; background: rgba(110, 231, 183, .1); }
 html[data-tema="por-do-sol"] .ffjv-row .ffjv-seg { border-color: #fdba74; background: rgba(253, 186, 116, .1); }
 html[data-tema="dourado"] .ffjv-row .ffjv-seg { border-color: #f5d77a; background: rgba(245, 215, 122, .1); }
+html[data-tema="floresta"] .ffjv-row .ffjv-seg { border-color: #bef264; background: rgba(190, 242, 100, .1); }
 
 /* Ano em revista: partilhar o ecrã como imagem */
 .ffrev-partilhar { position: absolute; right: 62px; top: calc(env(safe-area-inset-top, 0px) + 26px); width: 2.2rem; height: 2.2rem; display: grid; place-items: center; border-radius: 50%; background: rgba(255, 255, 255, .12); color: #fff; border: 0; cursor: pointer; z-index: 1; }

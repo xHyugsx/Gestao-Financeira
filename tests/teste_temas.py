@@ -18,7 +18,7 @@ async def t_escolher_tema(app):
     p = app.page
     await aparencia(app)
     nomes = await p.evaluate("[...document.querySelectorAll('.fftema strong')].map(e=>e.textContent)")
-    verificar(nomes == ['Cósmico', 'Aurora', 'Pôr do sol', 'Noite dourada'], f'temas: {nomes}')
+    verificar(nomes == ['Cósmico', 'Aurora', 'Pôr do sol', 'Noite dourada', 'Oceano', 'Floresta'], f'temas: {nomes}')
     verificar(await p.query_selector('.accent-options'), 'no Cósmico devia aparecer a cor de destaque')
     await p.click('.fftema-aurora'); await p.wait_for_timeout(400)
     verificar(await p.evaluate(TEMA) == 'aurora', 'o tema não foi aplicado')
@@ -43,3 +43,22 @@ async def t_ecra_de_bloqueio_nao_muda(app):
     for k in '1234': await p.keyboard.press(k)
     await p.wait_for_timeout(1300)
     verificar(not await p.query_selector('#ff-lock') and await p.evaluate(TEMA) == 'dourado', 'depois de desbloquear o tema devia aplicar-se')
+
+
+async def t_temas_oceano_e_floresta(app):
+    await app.abrir({'transactions': []})
+    p = app.page
+    await aparencia(app)
+    for tema, letra, titulo in [('oceano', 'Manrope', 'Outfit'), ('floresta', 'Nunito', 'Playfair Display')]:
+        await p.click(f'.fftema-{tema}'); await p.wait_for_timeout(400)
+        verificar(await p.evaluate(TEMA) == tema, f'o tema {tema} não foi aplicado')
+        fonte = await p.evaluate("getComputedStyle(document.body).fontFamily")
+        verificar(letra in fonte, f'{tema}: letra do texto {fonte}')
+        disp = await p.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--font-display')")
+        verificar(titulo in disp, f'{tema}: letra dos títulos {disp}')
+        verificar(await p.evaluate(f"document.fonts.load('16px \"{letra}\"').then(l=>l.length>0)"), f'a letra {letra} não carregou (offline)')
+        fundo = await p.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--background')")
+        verificar(fundo.strip() and 'oklch' in fundo, f'{tema}: cores próprias {fundo}')
+    dados = json.loads(await p.evaluate("P=>localStorage.getItem(P+'v3')", PREFIXO))
+    verificar(dados['appearance'].get('theme') == 'floresta', f"não gravou: {dados['appearance']}")
+    verificar(not app.erros, f'erros: {app.erros}')

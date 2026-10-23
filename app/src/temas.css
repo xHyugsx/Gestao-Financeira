@@ -62,6 +62,44 @@ html[data-tema="dourado"] .ffdica { background: rgba(40, 34, 18, .6); border-col
 html[data-tema="dourado"] .bar-chart i { background: linear-gradient(to top, #8a6d1d, #f5d77a); }
 html[data-tema="dourado"] .jarvis-fab { filter: sepia(.6) saturate(1.3); }
 
+/* ===== Oceano: mar profundo, azuis e água-marinha, Manrope no texto e Outfit nos títulos ===== */
+html[data-tema="oceano"] {
+  --background: oklch(14% .05 245); --card: oklch(20% .06 240 / .72); --secondary: oklch(22% .06 240); --muted: oklch(22% .05 240);
+  --primary: oklch(70% .15 232); --primary-foreground: oklch(14% .05 245); --accent: oklch(82% .12 195); --ring: oklch(70% .15 232);
+  --border: oklch(76% .1 220 / .22); --muted-foreground: oklch(76% .04 220); --cosmic-blue: oklch(82% .12 195);
+  --positive: oklch(82% .16 165); --negative: oklch(70% .2 20); --font-display: 'Outfit', sans-serif;
+}
+html[data-tema="oceano"] body, html[data-tema="oceano"] button, html[data-tema="oceano"] input, html[data-tema="oceano"] select { font-family: 'Manrope', sans-serif; }
+html[data-tema="oceano"] .cosmic-app:before {
+  background-image: radial-gradient(70% 45% at 15% 0%, rgba(34, 211, 238, .38), transparent 70%), radial-gradient(70% 50% at 90% 30%, rgba(37, 99, 235, .4), transparent 70%),
+    radial-gradient(90% 60% at 50% 100%, rgba(8, 47, 99, .8), transparent 70%), linear-gradient(#04152b, #020b18);
+}
+html[data-tema="oceano"] .ffhero-ring { background: radial-gradient(circle at 50% 30%, rgba(20, 90, 160, .55), rgba(3, 14, 32, .92) 68%); box-shadow: 0 0 34px rgba(34, 211, 238, .28), 0 0 90px rgba(37, 99, 235, .22), inset 0 0 38px rgba(56, 189, 248, .3); }
+html[data-tema="oceano"] .ffhero-ring::before, html[data-tema="oceano"] body .add-button.ffplus::before { background: conic-gradient(from 0deg, #38bdf8, #22d3ee, #2563eb, #a5f3fc, #38bdf8); animation-duration: 18s; filter: drop-shadow(0 0 6px rgba(34, 211, 238, .8)); }
+html[data-tema="oceano"] body .add-button.ffplus::after { background: linear-gradient(135deg, #a5f3fc, #22d3ee 50%, #3b82f6); }
+html[data-tema="oceano"] .ffhero-ring strong.ffhero-valor { text-shadow: 0 0 18px rgba(34, 211, 238, .5); }
+html[data-tema="oceano"] .ffdica { background: rgba(8, 40, 80, .55); border-color: rgba(56, 189, 248, .3); } html[data-tema="oceano"] .ffdica svg { color: #67e8f9; }
+html[data-tema="oceano"] .bar-chart i { background: linear-gradient(to top, #2563eb, #22d3ee); }
+
+/* ===== Floresta: verdes de pinhal e musgo, Nunito no texto e títulos em Playfair Display ===== */
+html[data-tema="floresta"] {
+  --background: oklch(15% .03 150); --card: oklch(21% .045 150 / .72); --secondary: oklch(23% .045 150); --muted: oklch(23% .04 150);
+  --primary: oklch(74% .16 138); --primary-foreground: oklch(15% .03 150); --accent: oklch(84% .15 115); --ring: oklch(74% .16 138);
+  --border: oklch(78% .1 140 / .22); --muted-foreground: oklch(76% .04 140); --cosmic-blue: oklch(84% .15 115);
+  --positive: oklch(82% .17 145); --negative: oklch(70% .19 30); --font-display: 'Playfair Display', serif;
+}
+html[data-tema="floresta"] body, html[data-tema="floresta"] button, html[data-tema="floresta"] input, html[data-tema="floresta"] select { font-family: 'Nunito', sans-serif; }
+html[data-tema="floresta"] .cosmic-app:before {
+  background-image: radial-gradient(70% 45% at 20% 0%, rgba(132, 204, 22, .28), transparent 70%), radial-gradient(60% 45% at 90% 25%, rgba(20, 184, 166, .25), transparent 70%),
+    radial-gradient(90% 60% at 50% 100%, rgba(20, 60, 35, .85), transparent 70%), linear-gradient(#0b1a12, #050d08);
+}
+html[data-tema="floresta"] .ffhero-ring { background: radial-gradient(circle at 50% 30%, rgba(40, 100, 50, .55), rgba(6, 16, 10, .92) 68%); box-shadow: 0 0 34px rgba(132, 204, 22, .22), 0 0 90px rgba(20, 184, 166, .18), inset 0 0 38px rgba(132, 204, 22, .25); }
+html[data-tema="floresta"] .ffhero-ring::before, html[data-tema="floresta"] body .add-button.ffplus::before { background: conic-gradient(from 0deg, #84cc16, #22c55e, #14b8a6, #bef264, #84cc16); animation-duration: 24s; filter: drop-shadow(0 0 6px rgba(132, 204, 22, .7)); }
+html[data-tema="floresta"] body .add-button.ffplus::after { background: linear-gradient(135deg, #d9f99d, #84cc16 50%, #14b8a6); }
+html[data-tema="floresta"] .ffhero-ring strong.ffhero-valor { font-family: 'Playfair Display', serif; text-shadow: 0 0 18px rgba(132, 204, 22, .45); }
+html[data-tema="floresta"] .ffdica { background: rgba(20, 50, 28, .58); border-color: rgba(132, 204, 22, .28); } html[data-tema="floresta"] .ffdica svg { color: #bef264; }
+html[data-tema="floresta"] .bar-chart i { background: linear-gradient(to top, #15803d, #a3e635); }
+
 /* Calendário: dia escolhido com as cores do tema (o mapa de calor é igual em todos) */
 html[data-tema="aurora"] .calendar-day-active { background: linear-gradient(135deg, #22d3ee, #10b981 60%, #3b82f6) !important; box-shadow: 0 0 16px rgba(16, 185, 129, .6) !important; }
 html[data-tema="por-do-sol"] .calendar-day-active { background: linear-gradient(135deg, #fbbf24, #fb923c 55%, #f43f5e) !important; box-shadow: 0 0 16px rgba(251, 146, 60, .6) !important; }
@@ -78,4 +116,7 @@ html[data-tema="dourado"] .calendar-day-active { background: linear-gradient(135
 .fftema-aurora i { background: conic-gradient(#34d399, #22d3ee, #3b82f6, #34d399); }
 .fftema-por-do-sol i { background: conic-gradient(#fbbf24, #fb923c, #f43f5e, #c026d3, #fbbf24); }
 .fftema-dourado i { background: conic-gradient(#8a6d1d, #f5d77a, #d4af37, #8a6d1d); }
+.fftema-oceano i { background: conic-gradient(#38bdf8, #22d3ee, #2563eb, #a5f3fc, #38bdf8); }
+.fftema-floresta i { background: conic-gradient(#84cc16, #22c55e, #14b8a6, #bef264, #84cc16); }
+.fftema-oceano strong { font-family: 'Outfit', sans-serif; } .fftema-floresta strong { font-family: 'Playfair Display', serif; }
 .fftema-aurora strong { font-family: 'Outfit', sans-serif; } .fftema-por-do-sol strong { font-family: 'Nunito', sans-serif; } .fftema-dourado strong { font-family: 'Playfair Display', serif; }
