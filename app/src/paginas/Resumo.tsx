@@ -9,7 +9,7 @@ import { Icone } from '../ui/Icone';
 import { RoboVazio } from '../ui/RoboVazio';
 import { Segmentado } from '../ui/Segmentado';
 import { AnoEmRevista } from './AnoEmRevista';
-import { categoriasDoMes, doMes, fechoDoMes, percentagem, receitas, variacao } from './calculos';
+import { categoriasDoMes, doMes, evolucaoDoSaldo, fechoDoMes, percentagem, pontosDaLinha, receitas, variacao } from './calculos';
 import { type DespesaAnual, despesasAnuais, estadoAnual, movimentoDoPagamento, renovar, totalProximos12 } from './anuais';
 import { previsaoDoMes } from './previsao';
 import { recorrentesDoMes } from './subscricoes';
@@ -95,7 +95,23 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
       <section className="summary-grid ffsaldos">
         {contas.map((c) => {
           const v = saldoDaConta(c, comPrevistos, hoje, mes).atual;
-          return <article key={c.id}><span>{c.name}</span><strong className={v < 0 ? 'amount-negative' : 'amount-positive'}>{eur(v)}</strong></article>;
+          // evolução do saldo nos últimos 12 meses (escondida com os valores ocultos)
+          const serie = ocultos ? [] : evolucaoDoSaldo(c, comPrevistos, hoje, mes);
+          const pontos = pontosDaLinha(serie, 150, 30);
+          const linha = pontos.map(([x, y]) => `${x},${y}`).join(' ');
+          const ultimo = pontos[pontos.length - 1];
+          return (
+            <article key={`${c.id}-${anoMes(mes)}`}>
+              <span>{c.name}</span><strong className={v < 0 ? 'amount-negative' : 'amount-positive'}>{eur(v)}</strong>
+              {pontos.length > 1 ? (
+                <svg className="ffspark" viewBox="0 0 150 30" role="img" aria-label={`Evolução do saldo nos últimos ${pontos.length} meses`}>
+                  <polygon className="ffspark-area" points={`${pontos[0]![0]},30 ${linha} ${ultimo![0]},30`} />
+                  <polyline className="ffspark-linha" points={linha} />
+                  <circle className="ffspark-ponto" cx={ultimo![0]} cy={ultimo![1]} r="2.2" />
+                </svg>
+              ) : null}
+            </article>
+          );
         })}
       </section>
       {nRec || nAnuais || receitasPrevistas.length ? (
