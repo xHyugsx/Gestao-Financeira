@@ -2,6 +2,7 @@ import { type Estado, MESES, type Movimento } from '../dados';
 import { ArtigoMovimento, TextoMovimento } from '../movimentos/Movimento';
 import { formatarEuros, formatarPercentagem } from '../ui/formatos';
 import { Icone } from '../ui/Icone';
+import { RoboVazio } from '../ui/RoboVazio';
 import { eCombustivel } from './calculos';
 
 interface Props {
@@ -66,7 +67,7 @@ export function Combustivel({ estado, mes, agora, ocultos, abrirMovimento }: Pro
               </div>
               <strong className="amount-negative">−{eur(Math.abs(m.amount))}</strong>
             </ArtigoMovimento>
-          )) : <div className="vet-empty">Sem gastos de combustível neste mês.</div>}
+          )) : <div className="vet-empty ffvazio-linha"><RoboVazio pequeno />Sem gastos de combustível neste mês.</div>}
         </div>
       </section>
     </main>

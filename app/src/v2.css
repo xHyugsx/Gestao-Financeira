@@ -343,3 +343,41 @@ html[data-tema="dourado"] .ffdesfazer button, html[data-tema="dourado"] .ffdesfa
   .transaction-row-clickable { transition: none; }
 }
 
+/* Cabeçalho compacto ao fazer scroll: barra fina com a página e o mês (sem backdrop-filter) */
+.ffcompacto {
+  position: fixed; z-index: 35; top: 0; left: 50%; width: min(100%, 31rem); display: flex; align-items: center; justify-content: space-between; gap: .6rem;
+  padding: calc(env(safe-area-inset-top, 0px) + .45rem) 1rem .45rem; background: color-mix(in oklab, var(--background) 94%, transparent);
+  border-bottom: 1px solid var(--border); box-shadow: 0 .5rem 1.5rem rgba(0, 0, 0, .35); border-radius: 0 0 1rem 1rem;
+  transform: translate(-50%, -110%); opacity: 0; visibility: hidden;
+  transition: transform .32s cubic-bezier(.22, 1, .36, 1), opacity .25s, visibility 0s .32s;
+}
+.ffcompacto.on { transform: translate(-50%, 0); opacity: 1; visibility: visible; transition: transform .32s cubic-bezier(.22, 1, .36, 1), opacity .25s, visibility 0s; }
+.ffcompacto strong { font-family: var(--font-display); font-size: .95rem; }
+.ffcompacto-meses { display: flex; align-items: center; gap: .25rem; font-size: .78rem; color: var(--foreground); }
+.ffcompacto-mes { min-width: 6.6rem; text-align: center; }
+.ffcompacto button { display: grid; place-items: center; width: 1.9rem; height: 1.9rem; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .14); background: rgba(255, 255, 255, .05); color: var(--foreground); cursor: pointer; }
+.ffcompacto button:active { transform: scale(.9); }
+.ffcompacto svg { width: .95rem; height: .95rem; }
+
+/* Estados vazios com o robô */
+.ffvazio { display: grid; justify-items: center; gap: .4rem; padding: .6rem 0 .2rem; text-align: center; }
+.ffvazio .tx-search-empty, .ffvazio .chart-empty { margin: 0; }
+.ffrobo { width: 4.2rem; height: 4.2rem; overflow: visible; }
+.ffrobo-pequeno { width: 2.6rem; height: 2.6rem; flex: none; }
+.calendar-empty-state svg.ffrobo { width: 4.2rem; height: 4.2rem; color: inherit; opacity: 1; }
+.ffvazio-linha { display: flex; align-items: center; gap: .7rem; text-align: left; }
+.ffrobo-corpo { animation: ffrobo-flutuar 3.2s ease-in-out infinite; }
+.ffrobo-sombra { fill: rgba(0, 0, 0, .45); transform-box: fill-box; transform-origin: center; animation: ffrobo-sombra 3.2s ease-in-out infinite; }
+.ffrobo-olhos { transform-box: fill-box; transform-origin: center; animation: ffrobo-piscar 4.6s ease-in-out infinite; }
+.ffrobo-luz { fill: #67e8f9; animation: ffrobo-luz 2.4s ease-in-out infinite; }
+@keyframes ffrobo-flutuar { 50% { transform: translateY(-3.5px); } }
+@keyframes ffrobo-sombra { 50% { transform: scaleX(.8); opacity: .6; } }
+@keyframes ffrobo-piscar { 0%, 90%, 100% { transform: scaleY(1); } 94% { transform: scaleY(.12); } }
+@keyframes ffrobo-luz { 50% { opacity: .35; } }
+html[data-tema="aurora"] .ffrobo-luz, html[data-tema="aurora"] .ffrobo-olhos rect { fill: #6ee7b7; }
+html[data-tema="por-do-sol"] .ffrobo-luz, html[data-tema="por-do-sol"] .ffrobo-olhos rect { fill: #fdba74; }
+html[data-tema="dourado"] .ffrobo-luz, html[data-tema="dourado"] .ffrobo-olhos rect { fill: #f5d77a; }
+@media (prefers-reduced-motion: reduce) {
+  .ffcompacto, .ffcompacto.on { transition: none; }
+  .ffrobo-corpo, .ffrobo-sombra, .ffrobo-olhos, .ffrobo-luz { animation: none; }
+}
