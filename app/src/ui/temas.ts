@@ -7,6 +7,8 @@ export const TEMAS = [
   { id: 'aurora', nome: 'Aurora', descricao: 'Noite polar, verdes e azuis' },
   { id: 'por-do-sol', nome: 'Pôr do sol', descricao: 'Tons quentes e letra arredondada' },
   { id: 'dourado', nome: 'Noite dourada', descricao: 'Preto e dourado, números em serifa' },
+  { id: 'oceano', nome: 'Oceano', descricao: 'Mar profundo, azuis e água-marinha' },
+  { id: 'floresta', nome: 'Floresta', descricao: 'Verdes de pinhal e musgo, títulos em serifa' },
 ] as const;
 
 export type Tema = (typeof TEMAS)[number]['id'];

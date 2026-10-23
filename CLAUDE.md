@@ -37,7 +37,7 @@ Contém o contexto do projeto e as regras de trabalho acordadas com o dono da ap
 - **Lembretes veterinários**, lembrete de backup, indicador de espaço de armazenamento e aviso de gravação falhada.
 - **Proteção dos dados**: pedido de armazenamento persistente (o Android não apaga os dados por falta de espaço; estado em Definições › Dados) e **backup protegido com palavra-passe** (AES-256-GCM, chave PBKDF2-SHA256; o backup normal continua igual).
 - **Juntar movimentos de outro telemóvel** (Definições › Backup): lê o backup do outro telemóvel (normal ou protegido) e acrescenta só os movimentos que ainda não existem (mesmo `id`, mesmo `importKey` ou mesma data/valor/título). Os juntados ficam com `affectsBalance:false` (os saldos deste telemóvel não mudam) e `mergeBatch`; «Desfazer a última junção» remove o lote mais recente. Os saltados («só este mês») não contam como já existentes nem são juntados.
-- **Temas** (Definições › Aparência › Tema): Cósmico (original), Aurora, Pôr do sol e Noite dourada — cores, fundo, anel, botão +, letra, gráficos e velocidade das animações. Guardado em `appearance.theme`; aplicado em `<html data-tema>` (`app/src/ui/temas.ts`, `app/src/temas.css`); letras em `fonts/` (offline). A cor de destaque só se aplica ao Cósmico.
+- **Temas** (Definições › Aparência › Tema): Cósmico (original), Aurora, Pôr do sol, Noite dourada, **Oceano** e **Floresta** (v2.34.0) — cores, fundo, anel, botão +, letra, gráficos e velocidade das animações. Guardado em `appearance.theme`; aplicado em `<html data-tema>` (`app/src/ui/temas.ts`, `app/src/temas.css`); letras em `fonts/` (offline). A cor de destaque só se aplica ao Cósmico.
 - Aviso **"Nova versão disponível"** com botões Ignorar/Atualizar.
 
 ---
