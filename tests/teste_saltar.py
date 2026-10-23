@@ -23,7 +23,7 @@ async def t_so_este_mes(app):
     await p.click('[role=dialog] button:has-text("Só este mês")'); await p.wait_for_timeout(600)
     ms = {m['id']: m for m in await app.movimentos()}
     verificar(ms[2].get('skipped') is True and len(ms) == 2, f'a cópia devia ficar saltada, não apagada: {ms}')
-    verificar(await p.locator(LINHA).count() == 1, 'a cópia saltada devia desaparecer da lista')
+    verificar(await p.locator(LINHA).count() == 0, 'a cópia saltada devia desaparecer da lista de setembro')
     verificar((await app.saldos()).get('Principal') == '970,00 €', 'a cópia saltada não conta no saldo')
     await p.click('.segmented button:text-is("Recorrentes")'); await p.wait_for_timeout(500)
     verificar(await p.locator('.page-current .ffrec-saltado').count() == 1, 'setembro saltado aparece como «Saltado» nos Recorrentes')
@@ -59,6 +59,7 @@ async def t_parar_a_serie(app):
     verificar([m['id'] for m in await app.movimentos()] == [1], 'parar a série apaga a cópia')
     # as outras (que já não criam cópias) continuam com a confirmação simples
     p.once('dialog', lambda d: d.accept())
+    await p.click('button[aria-label="Mês anterior"]'); await p.wait_for_timeout(500)  # a Principal só mostra o mês escolhido
     await p.locator(LINHA).first.click(); await p.wait_for_timeout(500)
     await p.click('[role=dialog] button:has-text("Eliminar")'); await p.wait_for_timeout(600)
     verificar(await app.movimentos() == [], 'a confirmação simples devia apagar o movimento antigo')

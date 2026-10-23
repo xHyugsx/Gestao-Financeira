@@ -1,4 +1,4 @@
-import { agendado, anoMes, type Estado, type Movimento, rendimentoDoMes } from '../dados';
+import { agendado, anoMes, type Estado, MESES, type Movimento, rendimentoDoMes } from '../dados';
 import { aspetosCategorias, simplificar } from '../movimentos/categorias';
 import { LinhaMovimento } from '../movimentos/Movimento';
 import { diaEMes } from '../movimentos/regras';
@@ -42,9 +42,11 @@ export function Principal({ estado, mes, ocultos, lista, mudarLista, vibrar, abr
     || (contaFiltro === 'principal' ? !m.account || m.account === 'principal'
       : contaFiltro === 'revolut' ? m.account === 'revolut' || m.revolut?.holder === 'Conjunta'
         : m.account === contaFiltro);
+  // Só os movimentos do mês escolhido nas setas (por omissão, o mês atual), também em «Ver todas» e na pesquisa.
   // Mais recentes primeiro (no mesmo dia, o último registado primeiro); a app atual mostrava pela ordem de registo.
   // Os agendados (data futura) ficam num grupo à parte, do mais próximo para o mais distante, para não taparem os recentes.
-  const porData = [...movimentos].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  const doMes = movimentos.filter((m) => (m.date || '').startsWith(anoMes(mes)));
+  const porData = [...doMes].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
   const base = lista.expandida ? porData.filter((m) => passaPesquisa(m) && passaConta(m)) : porData;
   const agendados = base.filter((m) => agendado(m, hoje)).reverse();
   const ateHoje = base.filter((m) => !agendado(m, hoje));
@@ -97,8 +99,12 @@ export function Principal({ estado, mes, ocultos, lista, mudarLista, vibrar, abr
             ))}
           </div>
         ) : null}
-        {lista.expandida && (termo || contaFiltro !== 'all') && !visiveis.length && !agendados.length ? (
-          <p className="tx-search-empty">{termo ? `Sem resultados para «${lista.pesquisa.trim()}».` : 'Sem movimentos nesta conta.'}</p>
+        {!visiveis.length && !agendados.length ? (
+          <p className="tx-search-empty">
+            {lista.expandida && termo ? `Sem resultados para «${lista.pesquisa.trim()}» em ${MESES[mes.getMonth()]}.`
+              : lista.expandida && contaFiltro !== 'all' ? `Sem movimentos nesta conta em ${MESES[mes.getMonth()]}.`
+                : `Sem movimentos em ${MESES[mes.getMonth()]}.`}
+          </p>
         ) : (
           <>
             {lista.expandida && agendados.length ? (
