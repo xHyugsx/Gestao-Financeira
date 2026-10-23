@@ -9,7 +9,7 @@ import { calorDoMes, diasDoMes, doMes } from './calculos';
 const DIAS_SEMANA = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 const LEGENDA: [string, string][] = [['in', 'Receita'], ['out', 'Despesa'], ['rec', 'Recorrente'], ['tr', 'Transferência']];
 
-/** Tipo do ponto colorido de cada movimento num dia do calendário. */
+/** Tipo do símbolo de cada movimento num dia do calendário (▲ receita, ▼ despesa, ○ recorrente, ◆ transferência). */
 function tipoDoPonto(m: Movimento): string {
   if (m.revolut || m.movementType === 'transfer') return 'tr';
   if (m.recurring) return 'rec';
@@ -64,7 +64,7 @@ export function Calendario({ estado, mes, ocultos, diaEscolhido, escolherDia, as
           <span key="sal"><b>€</b>Salário</span>
         </div>
         <div className="ffcal-calor" aria-label="Gasto por dia">
-          <span>Menos</span>{[1, 2, 3, 4].map((n) => <i key={n} className={`ffcal-q${n}`} />)}<span>Mais</span>
+          <span className="ffcal-titulo">Gasto do dia:</span><span>Pouco</span>{[1, 2, 3, 4].map((n) => <i key={n} className={`ffcal-q${n}`} />)}<span>Muito</span>
           <span className="ffcal-zero-leg"><i className="ffcal-zero" />Sem despesas</span>
           {calor.previsto.some(Boolean) ? <span className="ffcal-zero-leg"><i className="ffcal-futuro" />Agendado</span> : null}
         </div>
