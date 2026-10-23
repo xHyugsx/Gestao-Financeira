@@ -2,7 +2,7 @@ import { anoMes, dia, diaDeVencimento, type Estado, MESES, type Movimento } from
 import type { aspetosCategorias } from '../movimentos/categorias';
 import { LinhaMovimento } from '../movimentos/Movimento';
 import { Botao } from '../ui/Botao';
-import { Icone } from '../ui/Icone';
+import { RoboVazio } from '../ui/RoboVazio';
 import { formatarEuros } from '../ui/formatos';
 import { calorDoMes, diasDoMes, doMes } from './calculos';
 
@@ -88,7 +88,7 @@ export function Calendario({ estado, mes, ocultos, diaEscolhido, escolherDia, as
             <LinhaMovimento key={m.id} movimento={m} contas={estado.accounts} aspetos={aspetos} ocultos={ocultos} aoAbrir={abrirMovimento} />
           )) : (
             <div className="calendar-empty-state">
-              <Icone nome="calendar-days" />
+              <RoboVazio />
               <h3>Sem movimentos</h3>
               <p>Não existem movimentos registados nesta data.</p>
             </div>

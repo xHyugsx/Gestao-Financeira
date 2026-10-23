@@ -574,6 +574,18 @@ export function App() {
   useOcultosDesfocados(ocultos && !bloqueada);
   useAnimacaoNumeros(`${transicao ? transicao.para : pagina}|${desvioMes}|1`, transicao ? '.page-incoming' : '.page-current', ocultos || bloqueada);
 
+  // Cabeçalho compacto: quando o seletor do mês sai do ecrã ao fazer scroll, aparece uma barra fina com a página e o mês
+  const [compacto, setCompacto] = useState(false);
+  useEffect(() => {
+    const alvo = document.querySelector('.month-switcher'), raiz = document.querySelector('.app-shell');
+    if (bloqueada || !alvo || !raiz || typeof IntersectionObserver === 'undefined') { setCompacto(false); return; }
+    const obs = new IntersectionObserver(([e]) => {
+      if (e) setCompacto(!e.isIntersecting && e.boundingClientRect.top < (e.rootBounds?.top ?? 0));
+    }, { root: raiz, threshold: 0 });
+    obs.observe(alvo);
+    return () => obs.disconnect();
+  }, [bloqueada]);
+
   // ao mudar de mês, a página e o nome do mês deslizam no sentido das setas
   const mesVisto = useRef(desvioMes);
   useLayoutEffect(() => {
@@ -584,7 +596,7 @@ export function App() {
     const deslizar = (seletor: string, px: number, ms: number) => document.querySelectorAll<HTMLElement>(seletor).forEach((el) => el.animate?.(
       [{ transform: `translateX(${sentido * px}px)`, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: ms, easing: curva }));
     deslizar('.page-current > *', 36, 340);
-    deslizar('.month-switcher > span', 18, 260);
+    deslizar('.month-switcher > span, .ffcompacto-mes', 18, 260);
   }, [desvioMes, bloqueada]);
 
   if (bloqueada) return <EcraBloqueio key="ff-lock" hash={estado.pinHash} aoDesbloquear={() => setBloqueada(false)} />;
@@ -827,6 +839,14 @@ export function App() {
         animal={vistaVet.fotografia} fotos={estado.petPhotos} fechar={() => mudarVistaVet({ fotografia: null })}
         mudarFotos={(f) => setEstado((s) => ({ ...s, petPhotos: f(s.petPhotos) }))}
       />
+      <div className={`ffcompacto${compacto ? ' on' : ''}`} aria-hidden={!compacto}>
+        <strong>{PAGINAS.find((p) => p.id === pagina)?.label}</strong>
+        <div className="ffcompacto-meses">
+          <button type="button" tabIndex={compacto ? 0 : -1} aria-label="Recuar um mês" onClick={() => { vibrar(8); setDesvioMes((d) => d - 1); }}><Icone nome="chevron-left" /></button>
+          <span className="ffcompacto-mes">{`${MESES[mes.getMonth()]} ${mes.getFullYear()}`}</span>
+          <button type="button" tabIndex={compacto ? 0 : -1} aria-label="Avançar um mês" onClick={() => { vibrar(8); setDesvioMes((d) => d + 1); }}><Icone nome="chevron-right" /></button>
+        </div>
+      </div>
       <AcoesRapidas
         movimento={acoes} ocultos={ocultos} fechar={() => setAcoes(null)}
         editar={(m) => { setAcoes(null); setAEditar(m); }} duplicar={duplicar} apagar={(m) => { setAcoes(null); eliminar(m); }}

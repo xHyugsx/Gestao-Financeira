@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { anoMes, dia, type Estado, gastos, inicioDoMes } from '../dados';
 import { formatarEuros, formatarPercentagem } from '../ui/formatos';
+import { RoboVazio } from '../ui/RoboVazio';
 import { Segmentado } from '../ui/Segmentado';
 import { pessoasDaFamilia } from '../movimentos/pessoas';
 import { caminhoDaFatia, categoriasDoMes, CORES, coresDistintas, diasDoMes, doMes, fatiasComSeta, type GastoConta, gastosPorConta, gastosPorPessoa, legendasDoGrafico, percentagem, receitas, variacao } from './calculos';
@@ -119,7 +120,7 @@ export function Analise({ estado, mes, ocultos, tipo, mudarTipo }: Props) {
               </div>
             ))}
           </div>
-        ) : <p className="chart-empty">{tipo === 'receitas' ? 'Sem receitas neste mês.' : 'Sem gastos neste mês.'}</p>}
+        ) : <div className="ffvazio"><RoboVazio /><p className="chart-empty">{tipo === 'receitas' ? 'Sem receitas neste mês.' : 'Sem gastos neste mês.'}</p></div>}
       </>
     );
   };

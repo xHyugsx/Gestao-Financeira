@@ -4,6 +4,7 @@ import { Botao } from '../ui/Botao';
 import { Dialogo } from '../ui/Dialogo';
 import { formatarEuros } from '../ui/formatos';
 import { Icone } from '../ui/Icone';
+import { RoboVazio } from '../ui/RoboVazio';
 import { Segmentado } from '../ui/Segmentado';
 import { animais, classeDoAnimal, simboloDoAnimal } from '../veterinario/animais';
 import { montar } from '../veterinario/lembretes';
@@ -154,7 +155,7 @@ export function Veterinario({ estado, mes, ocultos, vista, mudarVista, abrirMovi
                 </div>
                 <strong className="amount-negative">−{eur(Math.abs(m.amount))}</strong>
               </ArtigoMovimento>
-            )) : <div className="vet-empty">{`Sem despesas veterinárias em ${MESES[mes.getMonth()]}.`}</div>}
+            )) : <div className="vet-empty ffvazio-linha"><RoboVazio pequeno />{`Sem despesas veterinárias em ${MESES[mes.getMonth()]}.`}</div>}
           </div>
         </section>
       </>

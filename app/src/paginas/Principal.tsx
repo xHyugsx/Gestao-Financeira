@@ -5,6 +5,7 @@ import { diaEMes } from '../movimentos/regras';
 import { Botao } from '../ui/Botao';
 import { formatarEuros, formatarPercentagem, MOEDA } from '../ui/formatos';
 import { Icone } from '../ui/Icone';
+import { RoboVazio } from '../ui/RoboVazio';
 import { fraseDoDia } from './frase';
 
 export interface ListaMovimentos {
@@ -100,11 +101,14 @@ export function Principal({ estado, mes, ocultos, lista, mudarLista, vibrar, abr
           </div>
         ) : null}
         {!visiveis.length && !agendados.length ? (
+          <div className="ffvazio">
+          <RoboVazio />
           <p className="tx-search-empty">
             {lista.expandida && termo ? `Sem resultados para «${lista.pesquisa.trim()}» em ${MESES[mes.getMonth()]}.`
               : lista.expandida && contaFiltro !== 'all' ? `Sem movimentos nesta conta em ${MESES[mes.getMonth()]}.`
                 : `Sem movimentos em ${MESES[mes.getMonth()]}.`}
           </p>
+          </div>
         ) : (
           <>
             {lista.expandida && agendados.length ? (

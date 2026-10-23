@@ -6,6 +6,7 @@ import { lerValor } from '../movimentos/regras';
 import { Botao } from '../ui/Botao';
 import { formatarEuros, formatarPercentagem } from '../ui/formatos';
 import { Icone } from '../ui/Icone';
+import { RoboVazio } from '../ui/RoboVazio';
 import { Segmentado } from '../ui/Segmentado';
 import { AnoEmRevista } from './AnoEmRevista';
 import { categoriasDoMes, doMes, fechoDoMes, percentagem, receitas, variacao } from './calculos';
@@ -166,7 +167,7 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
                   <small className={`ffrec-${i.estado.replace(' ', '-')}`}>{ROTULO[i.estado]}</small>
                 </div>
               </ArtigoMovimento>
-            ))) : <div className="vet-empty">Sem recorrentes neste mês. Marque um movimento como «Recorrente» para aparecer aqui.</div>}
+            ))) : <div className="vet-empty ffvazio-linha"><RoboVazio pequeno />Sem recorrentes neste mês. Marque um movimento como «Recorrente» para aparecer aqui.</div>}
           </div>
         </section>
         {r.anual > 0 ? (
@@ -225,7 +226,7 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
                   ) : null}
                 </article>
               );
-            }) : <div className="vet-empty">Sem despesas anuais registadas.</div>}
+            }) : <div className="vet-empty ffvazio-linha"><RoboVazio pequeno />Sem despesas anuais registadas.</div>}
           </div>
         </section>
         <form
