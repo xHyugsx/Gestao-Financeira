@@ -20,6 +20,10 @@ import { AcoesRapidas } from '../movimentos/AcoesRapidas';
 import { AcoesMovimento } from '../movimentos/Movimento';
 import { vibracao } from '../ui/vibracao';
 import { useOcultosDesfocados } from './ocultos';
+import {
+  CHAVE_RESPOSTA, contaDoDrive, descarregarCopia, enviarCopia, esquecerToken, lerConfigDrive, listarCopias, mudarConfigDrive, muitoMaisPequena,
+  obterToken, pedirAutorizacao, receberResposta, revogar, TESTE_SENHA, tokenValido,
+} from '../dados/drive';
 import { regrasPessoais } from '../importacao/config';
 import { lerFicheiro } from '../importacao/leitura';
 import { abrirRevisao, type ApiImportacao, desfazerImportacao, haImportacaoParaDesfazer, reabrirRevisao } from '../importacao/revisao';
@@ -345,13 +349,107 @@ export function App() {
     }
     return lerBackup(texto);
   };
+  // Google Drive: a cópia protegida deste telemóvel vai para o Drive em cada backup (e substitui a anterior)
+  const [, setVersaoDrive] = useState(0);
+  const mexeuDrive = () => setVersaoDrive((v) => v + 1);
+  const erroDrive = (e: unknown) => {
+    const m = e instanceof Error ? e.message : '';
+    setMensagemBackup(m === 'access_denied' ? 'O Google não autorizou o acesso ao Drive.' : m === 'tempo' ? 'A autorização do Google não chegou. Tenta outra vez.'
+      : m === 'sem_cliente' ? 'Falta o ID de cliente do Google.' : !navigator.onLine ? 'Sem internet: a cópia não foi enviada para o Drive.' : 'Não foi possível falar com o Google Drive. Tenta outra vez.');
+    mexeuDrive();
+  };
+  const terminarLigacao = async (token: string) => {
+    const conta = await contaDoDrive(token);
+    mudarConfigDrive((c) => ({ ...c, ligado: true, conta }));
+    setMensagemBackup(`Ligado ao Google Drive${conta ? ` (${conta})` : ''}. Cada backup passa a enviar também a cópia protegida.`);
+    mexeuDrive();
+  };
+  useEffect(() => {
+    const tratar = (valor?: string | null) => {
+      const r = receberResposta(valor);
+      if (!r) return;
+      if (r.erro) { erroDrive(new Error(r.erro)); return; }
+      // voltou à app depois de ir ao Google nesta janela: termina o que tinha ficado a meio
+      if (!r.esperava && r.token) {
+        if (r.acao === 'ligar') void terminarLigacao(r.token).catch(erroDrive);
+        else { setMensagemBackup('Autorização do Google renovada. Repete o backup para enviar a cópia.'); mexeuDrive(); }
+      }
+    };
+    tratar();
+    const f = (e: StorageEvent) => { if (e.key === CHAVE_RESPOSTA && e.newValue) tratar(e.newValue); };
+    const v = () => { if (document.visibilityState === 'visible') tratar(); };
+    window.addEventListener('storage', f);
+    document.addEventListener('visibilitychange', v);
+    return () => { window.removeEventListener('storage', f); document.removeEventListener('visibilitychange', v); };
+  }, []);
+  /**
+   * Envia a cópia protegida para o Drive. `senha` cifra a cópia; se não for a da última vez, devolve `'outra-senha'`
+   * (a não ser que já venha confirmada). Chamada no toque: se faltar a autorização, abre já a janela do Google.
+   */
+  const enviarDrive = async (senha: string, confirmada: boolean, descarregarTambem: boolean): Promise<'outra-senha' | void> => {
+    const c = lerConfigDrive();
+    const tokenP = obterToken('enviar');
+    tokenP.catch(() => {});
+    if (c.verificador && !confirmada && (await decifrarBackup(c.verificador as Parameters<typeof decifrarBackup>[0], senha)) !== TESTE_SENHA) return 'outra-senha';
+    const conteudo = conteudoBackup();
+    if (descarregarTambem) { descarregar(nomeFicheiroBackup(), JSON.stringify(conteudo, null, 2), 'application/json'); registarBackup(); }
+    const n = estadoAtual.current.transactions.length;
+    if (muitoMaisPequena(n, c.movimentos) && !window.confirm(`A cópia nova tem ${n} movimentos e a que está no Drive tem ${c.movimentos}. Substituir a do Drive na mesma?`)) {
+      setMensagemBackup(descarregarTambem ? 'Cópia descarregada. A do Google Drive ficou como estava.' : 'A cópia do Google Drive ficou como estava.');
+      return;
+    }
+    setMensagemBackup('A enviar a cópia protegida para o Google Drive…');
+    try {
+      const [cifrado, verificador] = await Promise.all([cifrarBackup(JSON.stringify(conteudo), senha), cifrarBackup(TESTE_SENHA, senha)]);
+      const token = await tokenP;
+      const r = await enviarCopia(token, JSON.stringify(cifrado, null, 2), lerConfigDrive());
+      mudarConfigDrive((x) => ({ ...x, ...r, ultimoEnvio: new Date().toISOString(), movimentos: n, verificador }));
+      setMensagemBackup(`${descarregarTambem ? 'Cópia descarregada e enviada' : 'Cópia enviada'} para o Google Drive (substituiu a anterior).`);
+      mexeuDrive();
+    } catch (e) { erroDrive(e); }
+  };
   const acoesBackup: AcoesBackup = {
     criar: descarregarBackup,
+    drive: {
+      config: lerConfigDrive(),
+      autorizado: !!tokenValido(),
+      guardarCliente: (id) => {
+        const v = id.trim();
+        if (!/^[\w-]+\.apps\.googleusercontent\.com$/.test(v)) { setMensagemBackup('O ID de cliente termina em «.apps.googleusercontent.com».'); return; }
+        mudarConfigDrive((c) => ({ ...c, clientId: v })); setMensagemBackup('ID de cliente guardado. Agora liga o Google Drive.'); mexeuDrive();
+      },
+      esquecerCliente: () => { mudarConfigDrive((c) => ({ ...c, clientId: undefined, ligado: false })); esquecerToken(); mexeuDrive(); },
+      ligar: () => { setMensagemBackup('A abrir o Google…'); pedirAutorizacao('ligar', true).then(terminarLigacao).catch(erroDrive); },
+      desligar: () => {
+        const t = tokenValido();
+        if (t) void revogar(t);
+        esquecerToken();
+        mudarConfigDrive((c) => ({ ...c, ligado: false, conta: undefined }));
+        setMensagemBackup('Google Drive desligado. A cópia que lá está não foi apagada.'); mexeuDrive();
+      },
+      mudarDispositivo: (nome) => { const v = nome.trim().slice(0, 40); if (v) { mudarConfigDrive((c) => ({ ...c, dispositivo: v })); mexeuDrive(); } },
+      enviar: (senha, confirmada, descarregarTambem) => enviarDrive(senha, confirmada, descarregarTambem),
+      listar: async () => {
+        try { const t = await obterToken('listar'); return await listarCopias(t, lerConfigDrive()); } catch (e) { erroDrive(e); return null; }
+      },
+      abrir: async (id, nome) => {
+        try { const t = await obterToken('abrir'); return new File([await descarregarCopia(t, id)], nome, { type: 'application/json' }); } catch (e) { erroDrive(e); return null; }
+      },
+    },
     exportarCsv: () => {
       descarregar(`financas-familiar-movimentos-${new Date().toISOString().slice(0, 10)}.csv`, csvDosMovimentos(visivel.transactions), 'text/csv;charset=utf-8');
       setMensagemBackup('Ficheiro CSV descarregado.');
     },
     criarProtegido: async (senha) => {
+      // com o Drive ligado, a mesma cópia protegida vai também para lá (e esta palavra-passe passa a ser a do Drive)
+      if (lerConfigDrive().ligado) {
+        const b = cifrarBackup(JSON.stringify(conteudoBackup()), senha);
+        const envio = enviarDrive(senha, true, false);
+        descarregar(nomeFicheiroBackup().replace('.json', '-protegido.json'), JSON.stringify(await b, null, 2), 'application/json');
+        registarBackup();
+        await envio;
+        return;
+      }
       const b = await cifrarBackup(JSON.stringify(conteudoBackup()), senha);
       descarregar(nomeFicheiroBackup().replace('.json', '-protegido.json'), JSON.stringify(b, null, 2), 'application/json');
       setMensagemBackup('Cópia de segurança protegida descarregada.');
