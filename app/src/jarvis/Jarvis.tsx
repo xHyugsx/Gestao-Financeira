@@ -6,6 +6,7 @@ import { Botao } from '../ui/Botao';
 import { Icone } from '../ui/Icone';
 import { corrigir } from './correcao';
 import type { ContextoJarvis, MotorJarvis } from './motor';
+import { seguimentos } from './seguimentos';
 
 export interface Mensagem { role: 'user' | 'assistant'; content: string; file?: boolean }
 
@@ -59,6 +60,11 @@ export function Jarvis({ aberto, fechar, motor, contexto, vocabulario, lerAnexo,
   const [aEscrever, setAEscrever] = useState(false);
   const [, setVersao] = useState(0);
   const lista = useRef<HTMLDivElement>(null);
+  // só as mensagens que chegam com a janela aberta entram com animação (as antigas aparecem logo)
+  const inicio = useRef<number | null>(null);
+  if (!aberto) inicio.current = null;
+  else if (inicio.current === null || mensagens.length < inicio.current) inicio.current = mensagens.length;
+  const novo = (i: number) => (inicio.current !== null && i >= inicio.current ? ' ffjv-novo' : '');
   const juntar = (m: Mensagem) => mudarMensagens((l) => [...l, m].slice(-100));
 
   useEffect(() => {
@@ -97,6 +103,11 @@ export function Jarvis({ aberto, fechar, motor, contexto, vocabulario, lerAnexo,
     >{l}</button>
   ));
   const ultimaAi = mensagens.map((m) => m.role).lastIndexOf('assistant');
+  const ultimaPergunta = [...mensagens].reverse().find((m) => m.role === 'user' && !m.file)?.content ?? '';
+  const seguir = mensagens.length && mensagens[mensagens.length - 1]?.role === 'assistant' ? seguimentos(ultimaPergunta, new Date()) : [];
+  const botoesSeguir = seguir.map((q, k) => (
+    <button key={`seg-${q}`} type="button" className="ffjv-seg" style={{ animationDelay: `${k * 60}ms` }} onClick={() => enviar(q)}>↪ {q}</button>
+  ));
   const marca = <span className="jarvis-box-mark ffjv-mark" aria-hidden="true" dangerouslySetInnerHTML={{ __html: SVG_JARVIS }} />;
   const pendente = motor.pendente;
   return (
@@ -118,9 +129,9 @@ export function Jarvis({ aberto, fechar, motor, contexto, vocabulario, lerAnexo,
             <p className="jarvis-msg jarvis-msg-ai">{`Saudações${nome ? ` ${nome}` : ''}, em que posso ser útil hoje?`}</p>
           </div>
           {mensagens.map((e, i) => (e.role === 'user'
-            ? <p key={i} className={`jarvis-msg jarvis-msg-me${e.file ? ' jarvis-msg-file' : ''}`}>{e.content}</p>
+            ? <p key={i} className={`jarvis-msg jarvis-msg-me${e.file ? ' jarvis-msg-file' : ''}${novo(i)}`}>{e.content}</p>
             : (
-              <div key={i} className={`ffjv-ai${!aEscrever && i === ultimaAi ? ' last' : ''}`}>
+              <div key={i} className={`ffjv-ai${!aEscrever && i === ultimaAi ? ' last' : ''}${novo(i)}`}>
                 {marca}
                 <p className={`jarvis-msg jarvis-msg-ai${e.file ? ' jarvis-msg-file' : ''}`}>{e.content}</p>
               </div>
@@ -137,14 +148,14 @@ export function Jarvis({ aberto, fechar, motor, contexto, vocabulario, lerAnexo,
             </div>
           ) : null}
           {aEscrever ? (
-            <div className="ffjv-ai last">
+            <div className="ffjv-ai last ffjv-novo">
               {marca}
               <p className="jarvis-msg jarvis-msg-ai jarvis-typing" aria-label="Jarvis a escrever"><i /><i /><i /></p>
             </div>
           ) : null}
           {!mensagens.length && !aEscrever ? <div className="jarvis-suggest">{sugestoes}</div> : null}
         </div>
-        {mensagens.length > 0 && !aEscrever && !pendente ? <div className="ffjv-row">{sugestoes}</div> : null}
+        {mensagens.length > 0 && !aEscrever && !pendente ? <div className="ffjv-row">{botoesSeguir}{sugestoes.filter((b) => !seguir.includes(String(b.key)))}</div> : null}
         <form className="jarvis-box-composer" onSubmit={(e) => { e.preventDefault(); enviar(texto); }}>
           <label className="jarvis-attach" aria-label="Anexar ficheiro">
             <Icone nome="paperclip" />

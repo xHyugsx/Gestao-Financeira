@@ -403,3 +403,20 @@ html[data-tema="dourado"] .ffrobo-luz, html[data-tema="dourado"] .ffrobo-olhos r
 .ffcal-semana { align-self: center; justify-self: end; font-size: .6rem; font-weight: 700; color: var(--foreground); opacity: .85; white-space: nowrap; }
 .ffcal-semana-zero { color: var(--muted-foreground); font-weight: 400; }
 @media (prefers-reduced-motion: reduce) { .ffspark, .ffcomp s, .ffcomp b { animation: none; } }
+
+/* Jarvis: as mensagens novas entram com efeito de mola; perguntas de seguimento por cima da caixa */
+.jarvis-msg-me.ffjv-novo { transform-origin: 100% 100%; animation: ffjv-msg .42s cubic-bezier(.34, 1.56, .64, 1) backwards; }
+.ffjv-ai.ffjv-novo { transform-origin: 0 100%; animation: ffjv-msg .46s cubic-bezier(.34, 1.56, .64, 1) backwards; }
+@keyframes ffjv-msg { from { opacity: 0; transform: translateY(12px) scale(.86); } }
+.ffjv-row .ffjv-seg { border-color: #67e8f9; background: rgba(103, 232, 249, .1); color: #e0fbff; font-weight: 600; animation: ffjv-seg .35s cubic-bezier(.22, 1, .36, 1) backwards; }
+@keyframes ffjv-seg { from { opacity: 0; transform: translateY(6px); } }
+html[data-tema="aurora"] .ffjv-row .ffjv-seg { border-color: #6ee7b7; background: rgba(110, 231, 183, .1); }
+html[data-tema="por-do-sol"] .ffjv-row .ffjv-seg { border-color: #fdba74; background: rgba(253, 186, 116, .1); }
+html[data-tema="dourado"] .ffjv-row .ffjv-seg { border-color: #f5d77a; background: rgba(245, 215, 122, .1); }
+
+/* Ano em revista: partilhar o ecrã como imagem */
+.ffrev-partilhar { position: absolute; right: 62px; top: calc(env(safe-area-inset-top, 0px) + 26px); width: 2.2rem; height: 2.2rem; display: grid; place-items: center; border-radius: 50%; background: rgba(255, 255, 255, .12); color: #fff; border: 0; cursor: pointer; z-index: 1; }
+.ffrev-partilhar svg { width: 1.05rem; height: 1.05rem; }
+.ffrev-partilhar:disabled { opacity: .5; }
+.ffrev-estado { position: absolute; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 74px); transform: translateX(-50%); margin: 0; padding: .35rem .8rem; border-radius: 999px; background: rgba(0, 0, 0, .45); font-size: .75rem; z-index: 1; animation: ffaparecer .2s ease; }
+@media (prefers-reduced-motion: reduce) { .jarvis-msg-me.ffjv-novo, .ffjv-ai.ffjv-novo, .ffjv-row .ffjv-seg, .ffrev-estado { animation: none; } }

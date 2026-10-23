@@ -4,54 +4,69 @@ import { type ReactNode, useEffect, useState } from 'react';
 import type { Estado } from '../dados';
 import { formatarEuros, formatarPercentagem } from '../ui/formatos';
 import { Icone } from '../ui/Icone';
+import { type Cartao, desenharCartao, partilharImagem } from './cartaoRevista';
 import { anoEmRevista } from './revista';
 
 const CURTOS = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
 
-interface Ecra { id: string; conteudo: ReactNode }
+interface Ecra { id: string; conteudo: ReactNode; cartao: Cartao }
 
 export function AnoEmRevista({ estado, ano, ocultos, aberto, fechar }: { estado: Estado; ano: number; ocultos: boolean; aberto: boolean; fechar: () => void }) {
   const [i, setI] = useState(0);
+  const [estadoPartilha, setEstadoPartilha] = useState('');
   useEffect(() => { if (aberto) setI(0); }, [aberto]);
+  useEffect(() => {
+    if (!estadoPartilha || estadoPartilha === 'a preparar') return;
+    const t = setTimeout(() => setEstadoPartilha(''), 2200);
+    return () => clearTimeout(t);
+  }, [estadoPartilha]);
   if (!aberto) return null;
   const r = anoEmRevista(estado, ano);
   const eur = (v: number) => formatarEuros(v, ocultos);
   const maximo = Math.max(1, ...r.porMes);
   const ecras: Ecra[] = [
-    { id: 'capa', conteudo: <><p className="ffrev-olho">O teu ano em revista</p><h2 className="ffrev-gigante">{ano}</h2><p>{r.movimentos} movimentos registados{r.ateMes < 11 ? ` até ${new Date(ano, r.ateMes, 1).toLocaleDateString('pt-PT', { month: 'long' })}` : ''}.</p></> },
-    { id: 'gasto', conteudo: <><p className="ffrev-olho">Gastaram</p><h2 className="ffrev-valor">{eur(r.gasto)}</h2>
+    { id: 'capa', cartao: { olho: 'O teu ano em revista', valor: String(ano), linhas: [`${r.movimentos} movimentos registados.`] }, conteudo: <><p className="ffrev-olho">O teu ano em revista</p><h2 className="ffrev-gigante">{ano}</h2><p>{r.movimentos} movimentos registados{r.ateMes < 11 ? ` até ${new Date(ano, r.ateMes, 1).toLocaleDateString('pt-PT', { month: 'long' })}` : ''}.</p></> },
+    { id: 'gasto', cartao: { olho: 'Gastaram', valor: eur(r.gasto), linhas: [`Em média ${eur(r.gasto / (r.ateMes + 1))} por mês.`, ...(r.variacao !== null ? [`${r.variacao <= 0 ? '↓' : '↑'} ${formatarPercentagem(r.variacao)} face ao mesmo período de ${ano - 1}`] : [])] }, conteudo: <><p className="ffrev-olho">Gastaram</p><h2 className="ffrev-valor">{eur(r.gasto)}</h2>
       <p>Em média {eur(r.gasto / (r.ateMes + 1))} por mês.</p>
       {r.variacao !== null ? <p className={r.variacao <= 0 ? 'ffrev-bom' : 'ffrev-mau'}>{r.variacao <= 0 ? '↓' : '↑'} {formatarPercentagem(r.variacao)} face ao mesmo período de {ano - 1}</p> : null}</> },
   ];
   if (r.mesMaisCaro) {
-    ecras.push({ id: 'meses', conteudo: <><p className="ffrev-olho">O mês mais caro</p><h2 className="ffrev-valor">{r.mesMaisCaro.mes}</h2><p>{eur(r.mesMaisCaro.valor)}</p>
+    ecras.push({ id: 'meses', cartao: { olho: 'O mês mais caro', valor: r.mesMaisCaro.mes, linhas: [eur(r.mesMaisCaro.valor)], barras: r.porMes.map((v, k) => ({ rotulo: CURTOS[k]!, v, futuro: k > r.ateMes })) }, conteudo: <><p className="ffrev-olho">O mês mais caro</p><h2 className="ffrev-valor">{r.mesMaisCaro.mes}</h2><p>{eur(r.mesMaisCaro.valor)}</p>
       <div className="ffrev-barras" aria-hidden="true">
         {r.porMes.map((v, k) => <div key={k} className={k > r.ateMes ? 'ffrev-futuro' : ''}><i style={{ transform: `scaleY(${Math.max(0.03, v / maximo)})` }} /><span>{CURTOS[k]}</span></div>)}
       </div>
       {r.mesMaisPoupado ? <p>O mais leve foi {r.mesMaisPoupado.mes}: {eur(r.mesMaisPoupado.valor)}.</p> : null}</> });
   }
   if (r.categorias.length) {
-    ecras.push({ id: 'categorias', conteudo: <><p className="ffrev-olho">Para onde foi o dinheiro</p>
+    ecras.push({ id: 'categorias', cartao: { olho: 'Para onde foi o dinheiro', valor: r.categorias[0]!.nome, linhas: [], lista: r.categorias.map((c) => ({ nome: c.nome, texto: `${eur(c.valor)} · ${formatarPercentagem(c.parte)}`, parte: c.parte })) }, conteudo: <><p className="ffrev-olho">Para onde foi o dinheiro</p>
       <ol className="ffrev-lista">{r.categorias.map((c, k) => (
         <li key={c.nome}><b>{k + 1}</b><span>{c.nome}<small>{eur(c.valor)} · {formatarPercentagem(c.parte)}</small></span><i style={{ transform: `scaleX(${c.parte / 100})` }} /></li>
       ))}</ol></> });
   }
   if (r.maisGasto) {
-    ecras.push({ id: 'sitios', conteudo: <><p className="ffrev-olho">Onde se gastou mais</p><h2 className="ffrev-valor">{r.maisGasto.titulo}</h2><p>{eur(r.maisGasto.valor)} no ano.</p>
+    ecras.push({ id: 'sitios', cartao: { olho: 'Onde se gastou mais', valor: r.maisGasto.titulo, linhas: [`${eur(r.maisGasto.valor)} no ano.`, ...(r.maisVezes ? [`A ida mais frequente: ${r.maisVezes.titulo}, ${r.maisVezes.vezes} vezes.`] : [])] }, conteudo: <><p className="ffrev-olho">Onde se gastou mais</p><h2 className="ffrev-valor">{r.maisGasto.titulo}</h2><p>{eur(r.maisGasto.valor)} no ano.</p>
       {r.maisVezes ? <p>E a ida mais frequente: <b>{r.maisVezes.titulo}</b>, {r.maisVezes.vezes} vezes.</p> : null}</> });
   }
   if (r.poupado > 0 || r.recebido > 0) {
-    ecras.push({ id: 'poupanca', conteudo: <><p className="ffrev-olho">{r.poupado > 0 ? 'Puseram de parte' : 'Receberam'}</p><h2 className="ffrev-valor">{eur(r.poupado > 0 ? r.poupado : r.recebido)}</h2>
+    ecras.push({ id: 'poupanca', cartao: { olho: r.poupado > 0 ? 'Puseram de parte' : 'Receberam', valor: eur(r.poupado > 0 ? r.poupado : r.recebido), linhas: r.poupado > 0 && r.recebido > 0 ? [`${formatarPercentagem((r.poupado / r.recebido) * 100)} do que receberam.`] : [] }, conteudo: <><p className="ffrev-olho">{r.poupado > 0 ? 'Puseram de parte' : 'Receberam'}</p><h2 className="ffrev-valor">{eur(r.poupado > 0 ? r.poupado : r.recebido)}</h2>
       {r.poupado > 0 && r.recebido > 0 ? <p>{formatarPercentagem((r.poupado / r.recebido) * 100)} do que receberam ({eur(r.recebido)}).</p> : null}</> });
   }
   if (r.diasSemGastos > 0) {
-    ecras.push({ id: 'dias', conteudo: <><p className="ffrev-olho">Dias sem despesas</p><h2 className="ffrev-gigante">{r.diasSemGastos}</h2>{r.maiorSequencia > 1 ? <p>A maior sequência: {r.maiorSequencia} dias seguidos.</p> : null}</> });
+    ecras.push({ id: 'dias', cartao: { olho: 'Dias sem despesas', valor: String(r.diasSemGastos), linhas: r.maiorSequencia > 1 ? [`A maior sequência: ${r.maiorSequencia} dias seguidos.`] : [] }, conteudo: <><p className="ffrev-olho">Dias sem despesas</p><h2 className="ffrev-gigante">{r.diasSemGastos}</h2>{r.maiorSequencia > 1 ? <p>A maior sequência: {r.maiorSequencia} dias seguidos.</p> : null}</> });
   }
-  ecras.push({ id: 'fim', conteudo: <><p className="ffrev-olho">{ano}</p><h2 className="ffrev-valor">Bom trabalho!</h2><p>Continuem a registar: no fim do ano há mais.</p></> });
+  ecras.push({ id: 'fim', cartao: { olho: String(ano), valor: 'Bom trabalho!', linhas: ['Continuem a registar: no fim do ano há mais.'] }, conteudo: <><p className="ffrev-olho">{ano}</p><h2 className="ffrev-valor">Bom trabalho!</h2><p>Continuem a registar: no fim do ano há mais.</p></> });
 
   const atual = Math.min(i, ecras.length - 1);
   const avancar = () => (atual < ecras.length - 1 ? setI(atual + 1) : fechar());
   const recuar = () => setI(Math.max(0, atual - 1));
+  const partilhar = async () => {
+    const e = ecras[atual]!;
+    setEstadoPartilha('a preparar');
+    try {
+      const r2 = await partilharImagem(await desenharCartao(e.cartao, ano, atual), `ano-em-revista-${ano}-${e.id}.png`);
+      setEstadoPartilha(r2 === 'guardado' ? 'Imagem guardada' : r2 === 'partilhado' ? 'Partilhado' : '');
+    } catch { setEstadoPartilha('Não foi possível criar a imagem'); }
+  };
   return (
     <Radix.Root open onOpenChange={(a) => { if (!a) fechar(); }}>
       <Radix.Portal>
@@ -62,6 +77,12 @@ export function AnoEmRevista({ estado, ano, ocultos, aberto, fechar }: { estado:
           <Radix.Title className="sr-only">Ano em revista {ano}</Radix.Title>
           <div className="ffrev-progresso">{ecras.map((e, k) => <i key={e.id} className={k < atual ? 'feito' : k === atual ? 'atual' : ''} />)}</div>
           <Radix.Close className="ffrev-fechar" aria-label="Fechar"><Icone nome="x" /></Radix.Close>
+          {!ocultos ? (
+            <button type="button" className="ffrev-partilhar" aria-label="Partilhar este ecrã como imagem" disabled={estadoPartilha === 'a preparar'} onClick={() => { void partilhar(); }}>
+              <Icone nome="upload" />
+            </button>
+          ) : null}
+          {estadoPartilha && estadoPartilha !== 'a preparar' ? <p className="ffrev-estado" role="status">{estadoPartilha}</p> : null}
           <div
             className="ffrev-palco" role="button" tabIndex={-1} aria-label="Seguinte"
             onClick={(e) => { const b = e.currentTarget.getBoundingClientRect(); if (e.clientX - b.left < b.width / 3) recuar(); else avancar(); }}
