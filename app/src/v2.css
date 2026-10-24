@@ -426,3 +426,18 @@ html[data-tema="floresta"] .ffjv-row .ffjv-seg { border-color: #bef264; backgrou
 .ffrev-partilhar:disabled { opacity: .5; }
 .ffrev-estado { position: absolute; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 74px); transform: translateX(-50%); margin: 0; padding: .35rem .8rem; border-radius: 999px; background: rgba(0, 0, 0, .45); font-size: .75rem; z-index: 1; animation: ffaparecer .2s ease; }
 @media (prefers-reduced-motion: reduce) { .jarvis-msg-me.ffjv-novo, .ffjv-ai.ffjv-novo, .ffjv-row .ffjv-seg, .ffrev-estado { animation: none; } }
+
+/* Definições › Backup › Google Drive */
+.ffdrive { display: grid; gap: .6rem; margin: .4rem 0 .8rem; padding: .85rem; border: 1px solid var(--border); border-radius: 1rem; background: color-mix(in oklab, var(--card) 80%, transparent); }
+.ffdrive-titulo { display: flex; align-items: center; gap: .5rem; font-size: .9rem; }
+.ffdrive-titulo svg { width: 1.1rem; height: 1.1rem; color: var(--cosmic-blue); }
+.ffdrive-ligado { margin-left: auto; padding: .15rem .55rem; border-radius: 999px; font-size: .68rem; font-weight: 700; color: #052e1a; background: #4ade80; }
+.ffdrive-cliente { display: grid; gap: .5rem; }
+.ffdrive-cliente label, .ffdrive-nome { display: grid; gap: .3rem; font-size: .75rem; color: var(--muted-foreground); }
+.ffdrive-cliente input, .ffdrive-nome input { height: 2.4rem; padding: 0 .7rem; border-radius: .7rem; border: 1px solid var(--border); background: var(--background); color: var(--foreground); font: inherit; font-size: .82rem; }
+.ffdrive-retorno { word-break: break-all; font-size: .72rem; color: var(--foreground); }
+.ffdrive-copias { display: grid; gap: .4rem; }
+.ffdrive-copias article { display: flex; align-items: center; gap: .4rem; padding: .55rem .7rem; border: 1px solid var(--border); border-radius: .8rem; }
+.ffdrive-copias article span { display: grid; flex: 1; min-width: 0; font-size: .8rem; }
+.ffdrive-copias article small { color: var(--muted-foreground); font-size: .68rem; }
+.ffdrive-volta { margin: 30vh 1.5rem 0; text-align: center; font-size: 1rem; color: #e9ecff; }

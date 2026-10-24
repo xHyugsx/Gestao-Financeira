@@ -9,6 +9,7 @@ import { Icone } from '../ui/Icone';
 import { montarEspaco } from './espaco';
 import { TEMAS as TEMAS_APP, temaDe } from '../ui/temas';
 import { SENHA_MIN } from '../dados';
+import { type ConfigDrive, enderecoDeRetorno, type FicheiroDrive } from '../dados/drive';
 import { type Animal, animaisDe } from '../veterinario/animais';
 import { definir as definirLembretes, todos as todosLembretes } from '../veterinario/lembretes';
 import type { RegraPessoal } from '../importacao/classificacao';
@@ -309,8 +310,24 @@ export function Dados({ espaco, limpar, protegido }: { espaco: string; limpar: (
 
 const espacosMontados = new WeakSet<HTMLElement>();
 
+export interface AcoesDrive {
+  config: ConfigDrive;
+  /** Já há autorização do Google nesta sessão (não vai abrir a janela do Google). */
+  autorizado: boolean;
+  guardarCliente: (id: string) => void;
+  esquecerCliente: () => void;
+  ligar: () => void;
+  desligar: () => void;
+  mudarDispositivo: (nome: string) => void;
+  /** `'outra-senha'`: a palavra-passe não é a da última vez (pede-se para a repetir). */
+  enviar: (senha: string, confirmada: boolean, descarregarTambem: boolean) => Promise<'outra-senha' | void>;
+  listar: () => Promise<FicheiroDrive[] | null>;
+  abrir: (id: string, nome: string) => Promise<File | null>;
+}
+
 export interface AcoesBackup {
   criar: () => void;
+  drive: AcoesDrive;
   criarProtegido: (senha: string) => Promise<void>;
   /** `'senha'`: o ficheiro é protegido e falta a palavra-passe; `'errada'`: a palavra-passe não serve. */
   restaurar: (f: File, senha?: string) => Promise<'senha' | 'errada' | void>;
@@ -352,13 +369,35 @@ export function Backup({ ultimo, mensagem, acoes }: { ultimo: string; mensagem: 
   const linha = (icone: 'download' | 'upload', titulo: string, texto: string, onClick: () => void) => (
     <Botao variante="ghost" className="setting-row" onClick={onClick}><Icone nome={icone} /><span><strong>{titulo}</strong><small>{texto}</small></span></Botao>
   );
+  // Google Drive: com ele ligado, «Criar backup» pede a palavra-passe da cópia protegida que vai para o Drive
+  const drive = acoes.drive, cfg = drive.config;
+  const [paraDrive, setParaDrive] = useState<{ descarregar: boolean; repetir: boolean } | null>(null);
+  const [copias, setCopias] = useState<FicheiroDrive[] | null>(null);
+  const enviarDrive = async (ev: FormEvent<HTMLFormElement>) => {
+    ev.preventDefault();
+    if (!paraDrive) return;
+    const f = new FormData(ev.currentTarget), senha = String(f.get('senha') ?? ''), repetir = String(f.get('repetir') ?? '');
+    if (senha.length < SENHA_MIN) { setErro(`A palavra-passe tem de ter pelo menos ${SENHA_MIN} caracteres.`); return; }
+    const confirmada = paraDrive.repetir || !cfg.verificador;
+    if (confirmada && senha !== repetir) { setErro('As palavras-passe não coincidem.'); return; }
+    setErro('');
+    const r = await drive.enviar(senha, confirmada, paraDrive.descarregar);
+    if (r === 'outra-senha') { setParaDrive({ ...paraDrive, repetir: true }); setErro('Não é a palavra-passe da última cópia no Drive. Para a usar daqui em diante, repete-a.'); return; }
+    setParaDrive(null);
+  };
+  const abrirDoDrive = async (c: FicheiroDrive, juntar: boolean) => {
+    const f = await drive.abrir(c.id, c.name);
+    if (f) await abrir(f, juntar);
+  };
+  const dataCurta = (d?: string) => (d ? new Date(d).toLocaleString('pt-PT', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '');
   return (
     <>
       <div className="view-heading"><p className="eyebrow">Cópias de segurança</p><h2>Backup</h2></div>
       <section className="backup-last"><small>Último backup neste telemóvel</small><strong>{data}</strong></section>
       <div key="ffsto" className="ffsto-slot" ref={(el) => { if (el && !espacosMontados.has(el)) { espacosMontados.add(el); montarEspaco(el); } }} />
       <section className="settings-list">
-        {linha('download', 'Criar backup', 'Cópia JSON com movimentos, definições, fotos e Jarvis', acoes.criar)}
+        {linha('download', 'Criar backup', cfg.ligado ? 'Descarrega a cópia e envia a protegida para o Google Drive' : 'Cópia JSON com movimentos, definições, fotos e Jarvis',
+          () => { setErro(''); if (cfg.ligado) setParaDrive({ descarregar: true, repetir: false }); else acoes.criar(); })}
         <Botao variante="ghost" className="setting-row ffv2-extra" aria-expanded={protegido} onClick={() => { setErro(''); setProtegido((v) => !v); }}>
           <Icone nome="lock-keyhole" /><span><strong>Criar backup protegido</strong><small>A mesma cópia, cifrada com uma palavra-passe</small></span>
         </Botao>
@@ -373,6 +412,17 @@ export function Backup({ ultimo, mensagem, acoes }: { ultimo: string; mensagem: 
         ) : null}
         {linha('download', 'Exportar movimentos (CSV)', 'Folha de cálculo para Excel ou Sheets', acoes.exportarCsv)}
       </section>
+      {paraDrive ? (
+        <form className="settings-panel movement-form ffv2-senha ffdrive-senha" onSubmit={(ev) => void enviarDrive(ev)}>
+          <p className="settings-copy"><strong>Cópia protegida para o Google Drive</strong> · substitui a anterior deste telemóvel.</p>
+          <label>Palavra-passe da cópia no Drive<input name="senha" type="password" autoComplete="current-password" minLength={SENHA_MIN} required /></label>
+          {paraDrive.repetir || !cfg.verificador ? <label>Repetir palavra-passe<input name="repetir" type="password" autoComplete="new-password" minLength={SENHA_MIN} required /></label> : null}
+          {!cfg.verificador ? <p className="settings-copy">Sem esta palavra-passe não é possível abrir a cópia do Drive. Guarda-a num sítio seguro.</p> : null}
+          <Botao type="submit"><Icone nome="upload" />{paraDrive.descarregar ? 'Descarregar e enviar para o Drive' : 'Enviar para o Drive'}</Botao>
+          {paraDrive.descarregar ? <Botao type="button" variante="ghost" onClick={() => { setParaDrive(null); acoes.criar(); }}>Só descarregar (sem enviar)</Botao> : null}
+          <Botao type="button" variante="ghost" onClick={() => { setParaDrive(null); setErro(''); }}>Cancelar</Botao>
+        </form>
+      ) : null}
       {protegido ? (
         <form className="settings-panel movement-form ffv2-senha" onSubmit={(ev) => void criarProtegido(ev)}>
           <label>Palavra-passe<input name="senha" type="password" autoComplete="new-password" minLength={SENHA_MIN} required /></label>
@@ -395,6 +445,48 @@ export function Backup({ ultimo, mensagem, acoes }: { ultimo: string; mensagem: 
       />
       <input ref={deOutro} type="file" accept="application/json,.json" className="hidden" aria-label="Backup do outro telemóvel" onChange={escolhido(true)} />
       {mensagem ? <p className="settings-message" role="status">{mensagem}</p> : null}
+      <section className="ffdrive" aria-label="Google Drive">
+        <div className="ffdrive-titulo"><Icone nome="database" /><strong>Google Drive</strong>{cfg.ligado ? <span className="ffdrive-ligado">Ligado</span> : null}</div>
+        {!cfg.clientId ? (
+          <form className="ffdrive-cliente" onSubmit={(ev) => { ev.preventDefault(); drive.guardarCliente(String(new FormData(ev.currentTarget).get('cliente') ?? '')); }}>
+            <p className="settings-copy">Guarda a cópia protegida no teu Google Drive, substituída em cada backup. Primeiro cria um «ID de cliente» na Google Cloud (passos em <code>docs/GOOGLE-DRIVE.md</code>) e cola-o aqui.</p>
+            <label>ID de cliente do Google<input name="cliente" autoComplete="off" placeholder="…apps.googleusercontent.com" required /></label>
+            <p className="settings-copy">Endereço de retorno a registar: <code className="ffdrive-retorno">{enderecoDeRetorno()}</code></p>
+            <Botao type="submit">Guardar</Botao>
+          </form>
+        ) : !cfg.ligado ? (
+          <div className="settings-list">
+            <Botao variante="ghost" className="setting-row" onClick={drive.ligar}><Icone nome="upload" /><span><strong>Ligar ao Google Drive</strong><small>Abre o Google para autorizares; a app só vê os ficheiros que ela própria cria</small></span></Botao>
+            <Botao variante="ghost" className="setting-row ffv2-extra" onClick={drive.esquecerCliente}><Icone nome="x" /><span><strong>Mudar o ID de cliente</strong><small>{cfg.clientId.slice(0, 18)}…</small></span></Botao>
+          </div>
+        ) : (
+          <>
+            <p className="settings-copy">
+              {cfg.conta ? <>Conta <strong>{cfg.conta}</strong> · </> : null}
+              {cfg.ultimoEnvio ? `Último envio: ${dataCurta(cfg.ultimoEnvio)}` : 'Ainda sem cópias enviadas'}
+            </p>
+            <div className="settings-list">
+              <Botao variante="ghost" className="setting-row" onClick={() => { setErro(''); setParaDrive({ descarregar: false, repetir: false }); }}><Icone nome="upload" /><span><strong>Enviar agora</strong><small>Só para o Drive, sem descarregar</small></span></Botao>
+              <Botao variante="ghost" className="setting-row" onClick={() => { void drive.listar().then(setCopias); }}><Icone nome="download" /><span><strong>Cópias no Drive</strong><small>Restaurar ou juntar movimentos (também a do outro telemóvel)</small></span></Botao>
+              <Botao variante="ghost" className="setting-row ffv2-extra" onClick={drive.desligar}><Icone nome="x" /><span><strong>Desligar o Google Drive</strong><small>A cópia que lá está não é apagada</small></span></Botao>
+            </div>
+            <label className="ffdrive-nome">Nome deste telemóvel no Drive
+              <input defaultValue={cfg.dispositivo} maxLength={40} onBlur={(e) => drive.mudarDispositivo(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }} />
+            </label>
+          </>
+        )}
+        {copias ? (
+          <div className="ffdrive-copias">
+            {copias.length ? copias.map((c) => (
+              <article key={c.id}>
+                <span><strong>{c.name.replace(/^Finanças - backup protegido \(|\)\.json$/g, '')}</strong><small>{dataCurta(c.modifiedTime)}</small></span>
+                <Botao type="button" tamanho="pequeno" variante="contorno" onClick={() => { void abrirDoDrive(c, false); }}>Restaurar</Botao>
+                <Botao type="button" tamanho="pequeno" variante="contorno" onClick={() => { void abrirDoDrive(c, true); }}>Juntar</Botao>
+              </article>
+            )) : <p className="settings-copy">Ainda não há cópias no Drive.</p>}
+          </div>
+        ) : null}
+      </section>
       <p className="text-xs text-muted-foreground">Guarda o ficheiro JSON fora do telemóvel (Drive, email). Restaurar pede sempre confirmação antes de substituir os dados.</p>
     </>
   );
