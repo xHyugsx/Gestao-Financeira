@@ -104,15 +104,12 @@ async def t_duplicado_de_um_recorrente(app):
     verificar('off' in tag and 'Possível duplicado' in tag, f'a cópia do recorrente não foi vista como duplicado: {tag}')
 
 
-async def t_acertar_saldo_pelo_extrato(app):
+async def t_extrato_com_saldo_nao_mexe_na_conta(app):
     contas = [{'id': 'principal', 'name': 'Principal', 'balance': 800}, {'id': 'revolut', 'name': 'Revolut Conjunta', 'balance': 0}]
     await app.abrir({'accounts': contas})
     await seccao(app)
     await importar(app, 'tests/dados/extrato_ficticio.csv')
     p = app.page
-    await p.check('.ffst-bal'); await p.click('.ffst-go'); await p.wait_for_timeout(900)
-    principal = (await dados(app))['accounts'][0]
-    verificar(principal['balance'] == 1000 and principal['adjDays'] == {'2026-09-28': 200}, f'conta: {principal}')
-    p.once('dialog', lambda dl: dl.accept())
-    await p.click('.setting-row:has-text("Desfazer a última importação")'); await p.wait_for_timeout(500)
-    verificar((await dados(app))['accounts'][0] == contas[0], f'não repôs a conta: {(await dados(app))["accounts"][0]}')
+    verificar(not await p.query_selector('.ffst-bal'), 'a revisão não devia oferecer «Acertar o saldo» (v2.36.0)')
+    await p.click('.ffst-go'); await p.wait_for_timeout(900)
+    verificar((await dados(app))['accounts'][0] == contas[0], f'a conta não pode mudar: {(await dados(app))["accounts"][0]}')

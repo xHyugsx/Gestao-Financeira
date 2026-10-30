@@ -15,7 +15,7 @@ async def t_recorrente_registado_a_mao_nao_duplica(app):
     ms = {m['id']: m for m in await app.movimentos()}
     verificar(len(ms) == 2, f'não devia criar a renda de 25/09 (já registada a 27/09): {list(ms.values())}')
     verificar(ms[1].get('recurringDone') is True and ms[2].get('recurringEvery') == 1, f'a renda de 27/09 passa a continuar a série: {ms}')
-    verificar((await app.saldos()).get('Principal') == '-200,00 €', 'saldo com duas rendas (agosto e setembro), não três')
+    verificar(await app.gastos() == '600,00 €', f'setembro com uma renda, não duas: {await app.gastos()}')
     await p.click('.segmented button:text-is("Recorrentes")'); await p.wait_for_timeout(500)
     rec = await p.evaluate("""[...document.querySelectorAll('.page-current .transaction-list article')].map(a=>
       [a.querySelector('h3').textContent, a.querySelector('.ffrec-dir small').textContent])""")

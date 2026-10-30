@@ -25,7 +25,7 @@ describe('novo movimento', () => {
 
   it('receita, transferência e tipo visual', () => {
     expect(novoMovimento(campos({ title: 'Salário', amount: '1000', date: '2026-09-01', category: 'Salário', account: 'principal' }), ctx({ tipo: 'income' })))
-      .toMatchObject({ amount: 1000, kind: 'income', affectsBalance: false });
+      .toMatchObject({ amount: 1000, kind: 'income', affectsBalance: true });
     const t = novoMovimento(campos({ title: 'Reforço', amount: '50', date: '2026-09-02' }), ctx({ tipo: 'transfer' })) as Movimento;
     expect(t).toMatchObject({ amount: 0, kind: 'transfer', movementType: 'transfer', detail: '2 setembro · Transferência' });
     expect('account' in t).toBe(false);

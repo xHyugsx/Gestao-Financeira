@@ -14,7 +14,7 @@ NAO_SEI = 'Ainda não sei responder'
 async def t_seguimentos_que_o_jarvis_percebe(app):
     await app.abrir(DADOS)
     p = app.page
-    for base in ['Quanto gastei este mês?', 'Saldo das contas', 'Rendimento do mês', 'Receitas do mês', 'Maior categoria', 'Combustível este mês', 'Veterinário este mês']:
+    for base in ['Quanto gastei este mês?', 'Gastos por conta', 'Previsão dos gastos em outubro', 'Rendimento do mês', 'Receitas do mês', 'Maior categoria', 'Combustível este mês', 'Veterinário este mês']:
         await app.jarvis(base)
         seg = await p.evaluate("[...document.querySelectorAll('.ffjv-row .ffjv-seg')].map(b=>b.textContent.replace('↪ ',''))")
         verificar(seg, f'«{base}» devia ter perguntas de seguimento')

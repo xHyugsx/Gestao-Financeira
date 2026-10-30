@@ -24,7 +24,7 @@ async def t_so_este_mes(app):
     ms = {m['id']: m for m in await app.movimentos()}
     verificar(ms[2].get('skipped') is True and len(ms) == 2, f'a cópia devia ficar saltada, não apagada: {ms}')
     verificar(await p.locator(LINHA).count() == 0, 'a cópia saltada devia desaparecer da lista de setembro')
-    verificar((await app.saldos()).get('Principal') == '970,00 €', 'a cópia saltada não conta no saldo')
+    verificar(await app.gastos() == '0,00 €', f'a cópia saltada não conta nos gastos: {await app.gastos()}')
     await p.click('.segmented button:text-is("Recorrentes")'); await p.wait_for_timeout(500)
     verificar(await p.locator('.page-current .ffrec-saltado').count() == 1, 'setembro saltado aparece como «Saltado» nos Recorrentes')
     resumo = await p.evaluate("[...document.querySelectorAll('.page-current .summary-grid article strong')].map(e=>e.textContent.replace(/\\u00a0/g,' '))")
@@ -33,7 +33,7 @@ async def t_so_este_mes(app):
     await p.click('.page-current .ffrec-saltado button:has-text("Repor")'); await p.wait_for_timeout(500)
     ms = {m['id']: m for m in await app.movimentos()}
     verificar('skipped' not in ms[2], f'repor tira a marca de saltado: {ms[2]}')
-    verificar((await app.saldos()).get('Principal') == '940,00 €', 'reposto, volta a contar no saldo')
+    verificar(await app.gastos() == '30,00 €', f'reposto, volta a contar nos gastos: {await app.gastos()}')
     verificar(not app.erros, f'erros: {app.erros}')
 
 

@@ -62,7 +62,6 @@ export function novoMovimento(campos: FormData, c: ContextoNovo): Movimento | Er
   if (!Number.isFinite(valor) || valor < 0 || (valor === 0 && !semValor)) {
     return ['amount', 'Valor inválido. Use, por exemplo, 621,18 ou 1.234,56.'];
   }
-  const afetaSaldo = campos.get('affectsBalance') === 'on';
   const extras = {
     ...(c.recorrente ? { recurring: c.tipoValor, recurringEvery: c.periodicidade || 1, ...(c.diaSalario ? { recurringDay: 'salario' } : {}) } : {}),
     ...(nota ? { note: nota } : {}),
@@ -71,7 +70,7 @@ export function novoMovimento(campos: FormData, c: ContextoNovo): Movimento | Er
     const revolut = { holder: String(campos.get('revolutHolder') || 'Conjunta'), purpose: String(campos.get('revolutPurpose') || 'Carregamento') };
     return {
       id: c.id, title: titulo, detail: `${diaEMes(data)} · Revolut ${revolut.holder} · ${revolut.purpose}`, amount: 0, kind: 'transfer',
-      movementType: 'transfer', date: data, affectsBalance: afetaSaldo, revolut, transferValue: valor, ...extras,
+      movementType: 'transfer', date: data, affectsBalance: true, revolut, transferValue: valor, ...extras,
     };
   }
   const conta = String(campos.get('account') || 'principal');
@@ -79,7 +78,7 @@ export function novoMovimento(campos: FormData, c: ContextoNovo): Movimento | Er
   return {
     id: c.id, title: titulo, detail: `${diaEMes(data)} · ${c.tipo === 'transfer' ? 'Transferência' : categoria}`,
     amount: c.tipo === 'expense' ? -valor : c.tipo === 'income' ? valor : 0, kind: tipoVisual(c.tipo, categoria),
-    movementType: c.tipo, date: data, affectsBalance: afetaSaldo,
+    movementType: c.tipo, date: data, affectsBalance: true,
     ...(conta !== 'principal' && c.tipo !== 'transfer' ? { account: conta } : {}),
     ...(pessoa && c.tipo === 'expense' ? { person: pessoa } : {}), ...extras,
   };

@@ -87,7 +87,6 @@ export function NovaDespesaVet({ aberto, aoMudar, aoGuardar, animal }: PropsJane
         <label>Descrição<input name="title" placeholder="Ex.: consulta, medicação..." /></label>
         <label>Local / clínica<input name="clinic" placeholder="Opcional" /></label>
         <label>Origem do dinheiro<select name="source"><option>Conta principal</option><option>Revolut</option></select></label>
-        <label className="checkbox-row"><input name="affectsBalance" type="checkbox" defaultChecked /> Atualiza saldo da conta de origem</label>
         <Acoes cancelar={() => aoMudar(false)} />
       </form>
     </Dialogo>

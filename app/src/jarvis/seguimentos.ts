@@ -11,7 +11,8 @@ export function seguimentos(pergunta: string, hoje: Date): string[] {
   if (/combust/.test(n)) return passado ? ['Combustível este mês'] : ['Combustível no mês passado', 'Média mensal de combustível'];
   if (/veterin/.test(n)) return passado ? ['Veterinário este mês'] : ['Veterinário no mês passado', 'Média mensal de veterinário'];
   if (/maior categoria/.test(n)) return passado ? ['Maior categoria'] : ['Maior categoria no mês passado', 'Quanto gastei este mês?'];
-  if (/saldo|previs/.test(n)) return [`Previsão do saldo em ${seguinte}`, 'Saldo no fim do mês passado'].filter((q) => q.toLowerCase() !== pergunta.trim().toLowerCase());
+  if (/conta|saldo/.test(n)) return passado ? ['Gastos por conta este mês'] : ['Gastos por conta no mês passado', `Previsão dos gastos em ${seguinte}`];
+  if (/previs/.test(n)) return ['Gastos por conta', 'Quanto gastei este mês?'];
   if (/rendimento/.test(n)) return passado ? ['Rendimento do mês'] : ['Rendimento do mês passado'];
   if (/receita/.test(n)) return passado ? ['Receitas do mês'] : ['Receitas do mês passado', 'Média mensal de receitas'];
   if (/gast|despes/.test(n)) return passado ? ['Quanto gastei este mês?', 'Maior categoria no mês passado'] : ['Quanto gastei no mês passado?', 'Gastei mais do que no mês passado?', 'Maior categoria'];

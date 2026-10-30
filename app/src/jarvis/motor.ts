@@ -5,7 +5,7 @@ import { CATEGORIAS_POR_OMISSAO } from '../dados/esquema';
 import { categoriaDespesa, categoriaReceita } from '../movimentos/categorias';
 import { criaCopias, saltarEsteMes } from '../movimentos/recorrentes';
 import { tipoVisual } from '../movimentos/regras';
-import { categoriasDoMes, eCombustivel, percentagem, variacao } from '../paginas/calculos';
+import { categoriasDoMes, eCombustivel, gastosPorConta, percentagem, variacao } from '../paginas/calculos';
 import { animais, deAnimal } from '../veterinario/animais';
 import type { InfoLembrete, Lembrete } from '../veterinario/lembretes';
 import type { PendenteRecibo } from './recibos';
@@ -28,9 +28,8 @@ export interface ContextoJarvis {
   mes: Date;
   agora: Date;
   eur: (v: number) => string;
-  saldoAtual: (c: Conta) => number;
-  /** Saldo no fim de um mês: passado (o que havia nesse dia) ou futuro (previsão com recorrentes e despesas anuais). */
-  saldoNoFim?: (c: Conta, mes: Date) => number;
+  /** Movimentos até ao fim de um mês futuro, com os recorrentes e as despesas anuais previstos (previsão dos gastos). */
+  previsao?: (mes: Date) => Movimento[];
   /** Movimento alterado pelo Jarvis (ex.: o salário passa para a tabela de Salários). */
   movimentoEditado?: (antes: Movimento, depois: Movimento) => void;
   mudarMovimentos: (f: (l: Movimento[]) => Movimento[]) => void;
@@ -234,9 +233,9 @@ export class MotorJarvis {
     const ffD = (() => {
       const m = n.match(new RegExp(`\\b(${ffMo.join('|')})\\b(?:\\s+(?:de\\s+)?(20\\d{2}))?`));
       if (m) {
-        // Sem ano: o mês já passado; no saldo, o mais próximo (novembro em setembro = previsão deste ano)
+        // Sem ano: o mês já passado; na previsão, o mais próximo (novembro em setembro = previsão deste ano)
         const mi = ffMo.indexOf(m[1]!), Y = ffNow.getFullYear(), dif = mi - ffNow.getMonth();
-        const y = m[2] ? +m[2] : /saldo|previs/.test(n) ? (dif > 6 ? Y - 1 : dif < -6 ? Y + 1 : Y) : dif > 0 ? Y - 1 : Y;
+        const y = m[2] ? +m[2] : /previs|vou gastar/.test(n) ? (dif > 6 ? Y - 1 : dif < -6 ? Y + 1 : Y) : dif > 0 ? Y - 1 : Y;
         return new Date(y, mi, 1);
       }
       if (/mes (passado|anterior)|ultimo mes/.test(n)) return new Date(ffNow.getFullYear(), ffNow.getMonth() - 1, 1);
@@ -422,12 +421,23 @@ export class MotorJarvis {
         return `Não encontrei gastos com «${w[1]!.trim().replace(/(^|\s)\S/g, (x) => x.toUpperCase())}». Verifica se o nome está igual ao dos teus movimentos.`;
       }
     }
-    const saldos = () => c.estado.accounts.map((a) => `${a.name}: ${A(c.saldoAtual(a))}`).join(' · ');
+    // Os saldos das contas deixaram de aparecer (v2.36.0): perguntas sobre contas mostram os gastos por conta
+    const porConta = (D: Date, L: string) => {
+      const l = gastosPorConta(c.estado, D).filter((x) => x.amount > 0);
+      return `${/saldo/.test(n) ? 'A app já não mostra os saldos das contas. ' : ''}${l.length ? `Gastos por conta em ${L}: ${l.map((x) => `${x.name}: ${A(x.amount)}`).join(' · ')}.` : `Não há gastos registados em ${L}.`}`;
+    };
     if (ffD) {
       ik = ik || this.tema || 'res';
       const L = ffL(ffD), Dp = new Date(ffD.getFullYear(), ffD.getMonth() - 1, 1), Lp = ffL(Dp), tx = on(ffD), g = gastosDe(tx), gp = gastosDe(on(Dp));
       const rc = tx.filter((t) => t.movementType === 'income').reduce((e, t) => e + t.amount, 0);
-      if (ik !== 'sld' && !tx.length && ffD > new Date(ffNow.getFullYear(), ffNow.getMonth(), 1)) return `${L[0]!.toUpperCase() + L.slice(1)} ainda não chegou — não há movimentos registados.`;
+      if (/previs|vou gastar/.test(n) && anoMes(ffD) > anoMes(ffNow) && c.previsao) {
+        const total = gastosDe(c.previsao(ffD).filter((t) => t.date.startsWith(anoMes(ffD))));
+        if (!total) return `Ainda não há gastos previstos para ${L}.`;
+        return total === g ? `Previsão dos gastos em ${L}: ${A(total)} (já registados ou agendados).`
+          : `Previsão dos gastos em ${L}: ≈ ${A(total)} (${g ? `${A(g)} já registados ou agendados e ` : ''}${A(total - g)} de recorrentes e despesas anuais previstos).`;
+      }
+      if (ik === 'sld') return porConta(ffD, L);
+      if (!tx.length && ffD > new Date(ffNow.getFullYear(), ffNow.getMonth(), 1)) return `${L[0]!.toUpperCase() + L.slice(1)} ainda não chegou — não há movimentos registados.`;
       if (ik === 'comb') {
         const l = tx.filter(eCombustivel), v = l.reduce((e, t) => e + Math.abs(t.amount), 0);
         return l.length ? `Combustível em ${L}: ${A(v)} em ${l.length} ${l.length === 1 ? 'abastecimento' : 'abastecimentos'}.` : `Não há abastecimentos registados em ${L}.`;
@@ -448,12 +458,6 @@ export class MotorJarvis {
         return r ? `Rendimento de ${L} (salários de ${Lp}): ${A(r)}${rp ? `, ${r >= rp ? '+' : '−'}${pctAbs(variacao(r, rp))} face ao mês anterior` : ''}.` : `Não há salários registados em ${Lp}.`;
       }
       if (ik === 'rec') return `Receitas registadas em ${L}: ${A(rc)}.`;
-      if (ik === 'sld') {
-        const atual = anoMes(ffNow), alvo = anoMes(ffD);
-        if (alvo === atual || !c.saldoNoFim) return `Saldos hoje — ${saldos()}.`;
-        const lista = c.estado.accounts.map((a) => `${a.name}: ${A(c.saldoNoFim!(a, ffD))}`).join(' · ');
-        return alvo > atual ? `Previsão do saldo no fim de ${L} (com os recorrentes e as despesas anuais previstos) — ${lista}.` : `Saldo no fim de ${L} — ${lista}.`;
-      }
       if (ik === 'gas') return g ? `Em ${L} gastaste ${A(g)}${gp ? `, ${g > gp ? 'mais' : 'menos'} ${pctAbs(variacao(g, gp))} do que em ${Lp}` : ''}.` : `Não há gastos registados em ${L}.`;
       return g || rc || un(Dp) ? `Resumo de ${L}: gastos ${A(g)} · receitas ${A(rc)} · rendimento ${A(un(Dp))}.` : `Não há movimentos registados em ${L}.`;
     }
@@ -478,10 +482,10 @@ export class MotorJarvis {
       return dn ? `Rendimento de ${mm} (salários de ${mp}): ${A(dn)}${fn ? `, ${dn >= fn ? '+' : '−'}${pctAbs(variacao(dn, fn))} face ao mês anterior` : ''}.` : `Ainda não há salários registados em ${mp}.`;
     }
     if (/receit|recebi|ganhei/.test(n)) return `Receitas registadas em ${mm}: ${A(on(It).filter((t) => t.movementType === 'income').reduce((e, t) => e + t.amount, 0))}.`;
-    if (/saldo|conta|revolut|dinheiro/.test(n)) return `Saldos — ${saldos()}.`;
+    if (/saldo|conta|revolut|dinheiro/.test(n)) return porConta(It, mm);
     if (/gast|despes|paguei/.test(n)) return sn ? `Em ${mm} gastaste ${A(sn)}${cn ? `, ${sn > cn ? 'mais' : 'menos'} ${pctAbs(variacao(sn, cn))} do que em ${mp}` : ''}.` : `Ainda não há gastos registados em ${mm}.`;
     if (/obrigad/.test(n)) return 'De nada! Sempre que precisares, estou aqui.';
-    if (/^(ola|oi|bom dia|boa tarde|boa noite)/.test(n)) return 'Olá! Pergunta-me por gastos, saldo, rendimento, categorias, combustível ou veterinário.';
-    return 'Ainda não sei responder a isso. Experimenta perguntar por gastos, saldo, rendimento, receitas, categorias, combustível ou veterinário.';
+    if (/^(ola|oi|bom dia|boa tarde|boa noite)/.test(n)) return 'Olá! Pergunta-me por gastos, rendimento, categorias, combustível ou veterinário.';
+    return 'Ainda não sei responder a isso. Experimenta perguntar por gastos, rendimento, receitas, categorias, combustível ou veterinário.';
   }
 }

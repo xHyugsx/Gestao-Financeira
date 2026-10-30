@@ -46,7 +46,6 @@
 @media (prefers-reduced-motion: reduce) { .ffdica { animation: none; } }
 
 /* ===== Resumo: saldos das contas ===== */
-.ffsaldos-titulo { margin-top: .4rem; }
 
 /* ===== Análise: gastos por conta ===== */
 .ffcontas .section-heading { margin-bottom: .5rem; }
@@ -173,7 +172,6 @@ i.ffd-in, i.ffd-out, i.ffd-rec, i.ffd-tr {
 .ffultimo { justify-self: start; margin-top: -.35rem; padding: .2rem .55rem; border: 0; border-radius: 999px; font: inherit; font-size: .72rem; color: #fbbf24; background: rgba(251, 191, 36, .12); cursor: pointer; }
 
 /* Resumo de um mês futuro: nota dos recorrentes previstos incluídos na previsão */
-.ffprevistos { margin: -.3rem 0 .4rem; text-align: center; font-size: .72rem; color: var(--muted-foreground); }
 
 /* Apagar a última cópia de uma série recorrente */
 .ffapagar-opcoes { display: grid; gap: .45rem; margin: 0; padding-left: 1.1rem; font-size: .82rem; color: var(--muted-foreground); }
@@ -387,13 +385,6 @@ html[data-tema="floresta"] .ffrobo-luz, html[data-tema="floresta"] .ffrobo-olhos
   .ffrobo-corpo, .ffrobo-sombra, .ffrobo-olhos, .ffrobo-luz { animation: none; }
 }
 
-/* Resumo: evolução do saldo de cada conta nos últimos 12 meses */
-.ffspark { display: block; width: 100%; height: auto; margin-top: .45rem; overflow: visible; transform-origin: bottom; animation: ffspark-entrar .6s cubic-bezier(.22, 1, .36, 1) .12s backwards; }
-@keyframes ffspark-entrar { from { opacity: 0; transform: translateY(6px) scaleY(.35); } }
-.ffspark-area { fill: color-mix(in oklab, var(--cosmic-blue) 16%, transparent); }
-.ffspark-linha { fill: none; stroke: var(--cosmic-blue); stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
-.ffspark-ponto { fill: #fff; stroke: var(--cosmic-blue); stroke-width: 1.5; }
-
 /* Análise: cada categoria comparada com o mês anterior (seta e barra fantasma) */
 .ffdonut-legenda > div { grid-template-columns: auto minmax(0, 1fr) auto 2.6rem 3.2rem; row-gap: .28rem; }
 .ffcomp-var { font-size: .6rem; }
@@ -407,7 +398,7 @@ html[data-tema="floresta"] .ffrobo-luz, html[data-tema="floresta"] .ffrobo-olhos
 .ffcal-semana-titulo { text-align: right; }
 .ffcal-semana { align-self: center; justify-self: end; font-size: .6rem; font-weight: 700; color: var(--foreground); opacity: .85; white-space: nowrap; }
 .ffcal-semana-zero { color: var(--muted-foreground); font-weight: 400; }
-@media (prefers-reduced-motion: reduce) { .ffspark, .ffcomp s, .ffcomp b { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .ffcomp s, .ffcomp b { animation: none; } }
 
 /* Jarvis: as mensagens novas entram com efeito de mola; perguntas de seguimento por cima da caixa */
 .jarvis-msg-me.ffjv-novo { transform-origin: 100% 100%; animation: ffjv-msg .42s cubic-bezier(.34, 1.56, .64, 1) backwards; }

@@ -84,16 +84,14 @@ async def t_poupanca_conjunta_nao_soma_a_revolut(app):
     await app.page.emulate_media(reduced_motion='reduce')
     await app.abrir({})
     p = app.page
-    antes = await app.saldos()
     await novo(app)
     await p.fill('[role=dialog] input[name=title]', 'Cofre'); await p.fill('[role=dialog] input[name=amount]', '50')
     await p.locator('[role=dialog] label.checkbox-row', has_text='Transferência para Revolut').locator('input').check(); await p.wait_for_timeout(200)
     verificar('Poupança Conjunta' in await opcoes(app, '[role=dialog] select[name=revolutHolder]'), 'falta «Poupança Conjunta»')
     await p.select_option('[role=dialog] select[name=revolutHolder]', 'Poupança Conjunta')
     await p.click('[role=dialog] button[type=submit]'); await p.wait_for_timeout(800)
-    depois = await app.saldos()
-    verificar(depois['Revolut Conjunta'] == antes['Revolut Conjunta'], f'mudou o saldo da Revolut Conjunta: {antes} → {depois}')
-    verificar(depois['Principal'] != antes['Principal'] and '50' in depois['Principal'], f'não saiu da Principal: {antes} → {depois}')
+    cofre = next(m for m in (await dados(app))['transactions'] if m['title'] == 'Cofre')
+    verificar(cofre['revolut']['holder'] == 'Poupança Conjunta' and cofre['transferValue'] == 50, f'transferência para a Poupança Conjunta: {cofre}')
 
 
 async def t_categoria_nova_recebe_cor_que_ninguem_usa(app):
@@ -126,22 +124,14 @@ async def t_mudar_o_nome_de_uma_categoria(app):
     verificar(detalhes == ['10 setembro · Supermercado', '2 setembro · Supermercado', '20 setembro · Lazer'], f'movimentos: {detalhes}')
 
 
-async def t_saldo_corrigido_so_a_partir_do_dia(app):
-    await app.page.emulate_media(reduced_motion='reduce')
+async def t_contas_so_com_nomes(app):
     contas = [{'id': 'principal', 'name': 'Principal', 'balance': 0}, {'id': 'revolut', 'name': 'Revolut Conjunta', 'balance': 0},
-              {'id': 'ed', 'name': 'Cartão refeição', 'balance': 146, 'createdAt': '2026-06'}]
+              {'id': 'ed', 'name': 'Cartão refeição', 'balance': 146, 'createdAt': '2026-06', 'lowAt': 20, 'adjDays': {'2026-09-01': -4}}]
     await app.abrir({'accounts': contas, 'transactions': [MOV(1, 'Almoço', '2026-09-10', v=-20, account='ed')]})
     p = app.page
-    saldo = lambda: app.saldos()
-    verificar((await saldo())['Cartão refeição'] == '126,00 €', f'saldo inicial: {await saldo()}')
     await p.click('button[aria-label="Definições"]'); await p.wait_for_timeout(400)
     await p.click('.set-menu-item:has-text("Contas bancárias")'); await p.wait_for_timeout(500)
-    verificar(await p.input_value('input[name="ed-balance"]') == '126', 'o campo não mostra o saldo de hoje')
-    await p.fill('input[name="ed-balance"]', '72'); await p.click('.settings-panel button[type=submit]'); await p.wait_for_timeout(400)
+    verificar(not await p.query_selector('.settings-panel input[name$="-balance"], .settings-panel input[name$="-low"]'), 'as contas já não têm saldo nem aviso de saldo baixo')
+    await p.fill('input[name="ed-name"]', 'Edenred'); await p.click('.settings-panel button[type=submit]'); await p.wait_for_timeout(400)
     conta = next(c for c in (await dados(app))['accounts'] if c['id'] == 'ed')
-    verificar(conta['adjDays'] == {'2026-09-28': -54}, f'acerto: {conta}')
-    await p.go_back(); await p.wait_for_timeout(600)
-    verificar((await saldo())['Cartão refeição'] == '72,00 €', f'saldo depois da correção: {await saldo()}')
-    await p.click('[aria-label="Mês anterior"]'); await p.wait_for_timeout(400)
-    verificar((await saldo())['Cartão refeição'] == '146,00 €', f'agosto devia manter o saldo antigo: {await saldo()}')
-    verificar('Fim de agosto' in await p.text_content('.ffsaldos-titulo'), 'o título não diz que é o saldo no fim de agosto')
+    verificar(conta == {**contas[2], 'name': 'Edenred'}, f'só o nome muda (o resto fica guardado como estava): {conta}')

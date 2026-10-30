@@ -1,5 +1,5 @@
 // Contas por mês usadas pelas páginas Análise, Categorias, Resumo e Calendário (mesmas regras da app atual).
-import { anoMes, type Conta, dia, type Estado, gastos, inicioDoMes, type Movimento, saldoDaConta } from '../dados';
+import { anoMes, dia, type Estado, gastos, inicioDoMes, type Movimento } from '../dados';
 import { categoriaDespesa, categoriaReceita, simplificar } from '../movimentos/categorias';
 import { coresCategorias, TONS } from '../movimentos/cores';
 import { CATALOGO_ICONES, CATEGORIAS_BASE, type NomeIcone } from '../ui/icones';
@@ -148,25 +148,6 @@ export function caminhoDaFatia(de: number, ate: number, R = 50, r = 34): string 
   const p = (v: number, raio: number) => `${+(50 + raio * Math.sin(v * 2 * Math.PI)).toFixed(3)} ${+(50 - raio * Math.cos(v * 2 * Math.PI)).toFixed(3)}`;
   const grande = ate - de > 0.5 ? 1 : 0;
   return `M${p(de, R)}A${R} ${R} 0 ${grande} 1 ${p(ate, R)}L${p(ate, r)}A${r} ${r} 0 ${grande} 0 ${p(de, r)}Z`;
-}
-
-/**
- * Saldo de uma conta no fim de cada um dos últimos `n` meses até `mes` (mini-gráfico do Resumo). Começa no mês em que a
- * conta foi criada ou no do primeiro movimento, se forem mais recentes. `todos` pode trazer os previstos (meses futuros).
- */
-export function evolucaoDoSaldo(conta: Conta, todos: Movimento[], hoje: Date, mes: Date, n = 12): number[] {
-  const primeiro = todos.reduce((a, m) => (m.date && m.date.slice(0, 7) < a ? m.date.slice(0, 7) : a), anoMes(mes));
-  const inicio = [primeiro, conta.createdAt || ''].sort().pop()!;
-  const meses = Array.from({ length: n }, (_, i) => inicioDoMes(mes, i - n + 1)).filter((d) => anoMes(d) >= inicio);
-  return meses.map((d) => saldoDaConta(conta, todos, hoje, d).atual);
-}
-
-/** Pontos de uma linha num retângulo `w`×`h` (com margem), do mínimo ao máximo dos valores. */
-export function pontosDaLinha(valores: number[], w = 100, h = 28, margem = 3): [number, number][] {
-  if (!valores.length) return [];
-  const min = Math.min(...valores), max = Math.max(...valores), amp = max - min || 1;
-  const passo = valores.length > 1 ? (w - margem * 2) / (valores.length - 1) : 0;
-  return valores.map((v, i) => [+(margem + i * passo).toFixed(2), +(max === min ? h / 2 : h - margem - ((v - min) / amp) * (h - margem * 2)).toFixed(2)]);
 }
 
 /** Contas do fecho do mês (secção "Fecho de mês" do Resumo). */

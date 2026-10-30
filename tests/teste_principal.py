@@ -37,10 +37,18 @@ async def t_frase_do_dia(app):
     verificar(not await p.query_selector('.ffdica'), 'frase do dia num mês passado')
 
 
-async def t_resumo_mostra_os_saldos_de_todas_as_contas(app):
+async def t_sem_saldos_das_contas(app):
     await app.page.emulate_media(reduced_motion='reduce')
     await app.abrir(DADOS)
-    verificar(await app.saldos() == {'Principal': '50,00 €', 'Revolut Conjunta': '100,00 €', 'Cartão refeição': '60,00 €'}, f'saldos: {await app.saldos()}')
+    p = app.page
+    for pagina in ('principal', 'resumo', 'analise'):
+        await p.evaluate(f"window.ffGoPg('{pagina}')"); await p.wait_for_timeout(700)
+        texto = await p.inner_text('.page-current')
+        verificar('Saldo' not in texto.replace('Saldo antes de', ''), f'{pagina} ainda mostra saldos: {texto[:200]}')
+    await p.click('[aria-label="Adicionar movimento"]'); await p.wait_for_timeout(500)
+    verificar('saldo' not in (await p.inner_text('[role=dialog]')).lower(), 'o novo movimento ainda fala do saldo')
+    verificar(await p.query_selector('[role=dialog] select[name=account]'), 'a escolha da conta tem de continuar')
+    verificar(not app.erros, f'erros: {app.erros}')
 
 
 async def t_analise_mostra_gastos_por_conta(app):

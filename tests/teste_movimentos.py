@@ -28,13 +28,3 @@ async def t_filtro_por_conta(app):
     await p.locator('.ffacc-row button', has_text='Cartão refeição').click(); await p.wait_for_timeout(300)
     t = await p.evaluate("[...document.querySelectorAll('.transaction-list h3')].map(e=>e.textContent)")
     verificar(t == ['Almoço'], f'filtro devolveu {t}')
-
-
-async def t_saldo_da_conta_transita_entre_meses(app):
-    await app.abrir({'accounts': [{'id': 'principal', 'name': 'Principal', 'balance': 0}, {'id': 'revolut', 'name': 'Revolut Conjunta', 'balance': 0}, {'id': 'ed', 'name': 'Cartão refeição', 'balance': 100, 'createdAt': '2026-08'}],
-                     'transactions': [{'id': 1, 'title': 'Almoço', 'amount': -20, 'date': '2026-08-20', 'detail': 'x', 'movementType': 'expense', 'account': 'ed'}]})
-    p = app.page
-    v1 = (await app.saldos())['Cartão refeição']
-    await p.click('[aria-label="Mês anterior"]'); await p.wait_for_timeout(1500)
-    v2 = (await app.saldos())['Cartão refeição']
-    verificar(v1 == v2 and v1.startswith('80,00'), f'saldo não transitou: {v1} / {v2}')

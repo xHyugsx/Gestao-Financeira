@@ -1,4 +1,4 @@
-"""Movimentos com data futura (agendados): só contam no saldo a partir do dia; etiqueta «Agendado»; previsão no Resumo."""
+"""Movimentos com data futura (agendados): grupo à parte na Principal, etiqueta «Agendado» e contam nos gastos do mês."""
 from correr import verificar
 
 M = lambda i, d, t, v, **x: {'id': i, 'title': t, 'amount': v, 'date': d, 'detail': 'x · Outros', 'movementType': 'expense', **x}
@@ -9,7 +9,7 @@ DADOS = {'accounts': [{'id': 'principal', 'name': 'Principal', 'balance': 1000},
     M(3, '2026-10-05', 'Ginásio', -20)]}
 
 
-async def t_agendados_nao_contam_no_saldo(app):
+async def t_agendados_a_parte_e_nos_gastos_do_mes(app):
     await app.page.emulate_media(reduced_motion='reduce')
     await app.abrir(DADOS)
     p = app.page
@@ -21,12 +21,9 @@ async def t_agendados_nao_contam_no_saldo(app):
     grupos = await p.evaluate("""[...document.querySelectorAll('.page-current .transaction-list')].map(l=>
       [...l.querySelectorAll('article')].map(a=>[a.querySelector('h3').textContent, !!a.querySelector('.ffagendado')]))""")
     verificar(grupos == [[['Renda', True]], [['Supermercado', False]]], f'grupos (agendados do mês, depois até hoje): {grupos}')
-    saldos = await app.saldos()
-    verificar(saldos.get('Principal') == '950,00 €', f'hoje (28/09) só conta o Supermercado: {saldos}')
+    verificar(await app.gastos() == '350,00 €', f'os gastos de setembro contam a renda agendada: {await app.gastos()}')
     await p.click('button[aria-label="Mês seguinte"]'); await p.wait_for_timeout(600)
-    verificar('Previsão para o fim de outubro' in await p.text_content('.page-current .ffsaldos-titulo'), 'falta «Previsão» no mês futuro')
-    saldos = await app.saldos()
-    verificar(saldos.get('Principal') == '630,00 €', f'previsão de outubro (com os agendados): {saldos}')
+    verificar(await app.gastos() == '20,00 €', f'gastos de outubro (agendado): {await app.gastos()}')
     verificar(not app.erros, f'erros: {app.erros}')
 
 

@@ -15,11 +15,11 @@ export const SVG_JARVIS = '<svg viewBox="0 0 32 32" aria-hidden="true"><g class=
 // Sugestões por página (js/modulos/jarvis-sugestoes.js): [texto, texto a preencher na caixa]
 const D: [string, string] = ['Adicionar despesa…', 'Adiciona despesa de '], R: [string, string] = ['Adicionar receita…', 'Adiciona receita de '];
 const SUGESTOES: Record<string, [string, string?][]> = {
-  principal: [['Quanto gastei este mês?'], ['Saldo das contas'], ['Rendimento do mês'], D],
+  principal: [['Quanto gastei este mês?'], ['Gastos por conta'], ['Rendimento do mês'], D],
   analise: [['Maior categoria'], ['Quanto gastei este mês?'], ['Receitas do mês'], ['Rendimento do mês']],
   categorias: [['Maior categoria'], ['Quanto gastei este mês?'], D],
-  resumo: [['Saldo das contas'], ['Receitas do mês'], ['Rendimento do mês'], ['Quanto gastei este mês?']],
-  calendario: [['Quanto gastei este mês?'], ['Saldo das contas'], D, R],
+  resumo: [['Gastos por conta'], ['Receitas do mês'], ['Rendimento do mês'], ['Quanto gastei este mês?']],
+  calendario: [['Quanto gastei este mês?'], ['Gastos por conta'], D, R],
   combustivel: [['Combustível este mês'], ['Quanto gastei este mês?'], D],
   veterinario: [['Veterinário este mês'], ['Quanto gastei este mês?'], ['Maior categoria'], D],
 };

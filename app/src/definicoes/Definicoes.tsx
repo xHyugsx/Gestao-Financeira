@@ -13,7 +13,7 @@ export type Seccao = 'profile' | 'categories' | 'accounts' | 'appearance' | 'sec
 const TITULOS: Record<Seccao, [string, string]> = {
   profile: ['Perfil e família', 'Dados pessoais e membros'],
   categories: ['Categorias', 'Organizar despesas e receitas'],
-  accounts: ['Contas bancárias', 'Nomes e saldos disponíveis'],
+  accounts: ['Contas bancárias', 'Contas para escolher em cada movimento'],
   appearance: ['Aparência', 'Tema, fundo e tamanho do texto'],
   security: ['Segurança', 'Bloqueio local da aplicação'],
   backup: ['Backup', 'Cópias de segurança'],

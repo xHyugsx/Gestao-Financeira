@@ -30,16 +30,15 @@ async def t_duplicado_fica_desmarcado(app):
     verificar(d == [True], f'duplicado não detetado: {d}')
 
 
-async def t_importar_nao_mexe_no_saldo_e_desfazer(app):
+async def t_importar_e_desfazer(app):
     await app.abrir(MANUAL)
     await anexar(app, 'tests/dados/extrato_ficticio.xlsx')
     p = app.page
-    antes = await p.evaluate("window.ffImpApi.get().acc[0].cur")
+    verificar(not await p.query_selector('.ffst-bal') and 'saldo' not in (await p.text_content('.ffst-opt')).lower(), 'a revisão já não acerta saldos')
     await p.click('.ffst-go'); await p.wait_for_timeout(900)
     m = await app.movimentos(); imp = [x for x in m if x.get('importBatch')]
     verificar(len(imp) == 9, f'importou {len(imp)} (esperado 9)')
-    verificar(all(x.get('affectsBalance') is False for x in imp), 'movimentos importados alteram o saldo')
-    verificar(await p.evaluate("window.ffImpApi.get().acc[0].cur") == antes, 'saldo mudou com a importação')
+    verificar(all(x.get('affectsBalance') is False for x in imp), 'os movimentos importados ficam com affectsBalance:false')
     r = await app.jarvis('desfazer importação')
     verificar('anulada' in r and len(await app.movimentos()) == 1, r)
 

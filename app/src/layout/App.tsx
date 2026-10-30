@@ -7,7 +7,7 @@ import { pedirPersistencia } from '../definicoes/persistencia';
 import { iniciarAvisos } from '../definicoes/lembreteBackup';
 import type { AcoesBackup, AcoesImportacao } from '../definicoes/Seccoes';
 import { FolhaDefinicoes, MenuRapido, type PosicaoMenu, type Seccao } from '../definicoes/Definicoes';
-import { acertarSaldo, aplicarBackup, chave, cifrarBackup, criarBackup, decifrarBackup, eBackupCifrado, dia, saldoDaConta, type Estado, inicioDoMes, lerBackup, type LeituraBackup, MESES, type Movimento, nomeFicheiroBackup, PREFIXO_REAL } from '../dados';
+import { aplicarBackup, chave, cifrarBackup, criarBackup, decifrarBackup, eBackupCifrado, dia, type Estado, inicioDoMes, lerBackup, type LeituraBackup, MESES, type Movimento, nomeFicheiroBackup, PREFIXO_REAL } from '../dados';
 import { aviso as avisoVeterinario, definir as definirLembretes, todos as todosLembretes } from '../veterinario/lembretes';
 import { useDados } from '../estado/useDados';
 import { aspetosCategorias } from '../movimentos/categorias';
@@ -473,7 +473,7 @@ export function App() {
       const jaHavia = repetidos ? ` (${repetidos} já existiam aqui)` : '';
       if (!novos.length) { setMensagemBackup(`Não há movimentos novos para juntar${jaHavia}.`); return; }
       const n = novos.length === 1 ? '1 movimento novo' : `${novos.length} movimentos novos`;
-      if (!window.confirm(`Juntar ${n}${jaHavia}? Os saldos das contas deste telemóvel não mudam.`)) return;
+      if (!window.confirm(`Juntar ${n}${jaHavia}?`)) return;
       const lote = novoLote();
       setEstado((s) => aplicarJuncao(s, prepararJuncao(s.transactions, novos).novos, lote));
       setMensagemBackup(`Juntados ${n}.`);
@@ -499,10 +499,10 @@ export function App() {
   const avisarImportacao = useRef<(m: string) => void>(() => {});
   const apiImportacao: ApiImportacao = {
     obter: () => {
-      const e = estadoAtual.current, hoje = new Date();
+      const e = estadoAtual.current;
       return {
         tx: e.transactions.filter((m) => !m.skipped), cats: e.categories, inc: e.incomeCategories, sal: e.salaries,
-        acc: e.accounts.map((a) => ({ id: a.id, name: a.name, balance: a.balance || 0, cur: saldoDaConta(a, e.transactions, hoje).atual })),
+        acc: e.accounts.map((a) => ({ id: a.id, name: a.name })),
       };
     },
     regrasPessoais: () => regrasPessoais(estadoAtual.current),
@@ -514,13 +514,6 @@ export function App() {
       lista[mes] = valor;
       return { ...s, salaries: { ...s.salaries, [ano]: { ...doAno, [pessoa]: lista } } };
     }),
-    acertarSaldo: (id, saldo) => {
-      const e = estadoAtual.current, conta = e.accounts.find((a) => a.id === id);
-      if (!conta) return null;
-      const nova = acertarSaldo(conta, e.transactions, saldo, new Date());
-      setEstado((s) => ({ ...s, accounts: s.accounts.map((a) => (a.id === id ? nova : a)) }));
-      return conta;
-    },
     reporConta: (c) => setEstado((s) => ({ ...s, accounts: s.accounts.map((a) => (a.id !== c.id ? a : c.name ? c : { ...a, balance: c.balance })) })),
     tipoVisual: (tipo, categoria) => tipoVisual(tipo, categoria),
     dizer: (t) => { avisarImportacao.current(t); setImportacoes((n) => n + 1); },
@@ -542,12 +535,8 @@ export function App() {
   const juntarJarvis = (content: string) => setMensagens((m) => [...m, { role: 'assistant' as const, content }].slice(-100));
   const contextoJarvis = (): ContextoJarvis => ({
     estado: semSaltados(estadoAtual.current), mes, agora, eur: (v) => formatarEuros(v, ocultos),
-    saldoAtual: (c) => saldoDaConta(c, estadoAtual.current.transactions, new Date()).atual,
     movimentoEditado: (antes, depois) => salarioNaTabela(antes, depois),
-    saldoNoFim: (c, m) => {
-      const e = estadoAtual.current, hoje = new Date();
-      return saldoDaConta(c, previsaoDoMes(e.transactions, e.annualExpenses, hoje, m).movimentos, hoje, m).atual;
-    },
+    previsao: (m) => previsaoDoMes(estadoAtual.current.transactions, estadoAtual.current.annualExpenses, new Date(), m).movimentos,
     mudarMovimentos, mudarContas: (f) => setEstado((s) => ({ ...s, accounts: f(s.accounts) })),
     definirSalario: apiImportacao.definirSalario, vibrar, criarBackup: descarregarBackup,
     vet: { todos: todosLembretes, ordenados: lembretesOrdenados, feito: lembreteFeito, info: infoLembrete },

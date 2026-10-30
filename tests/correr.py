@@ -53,15 +53,14 @@ class App:
           for(const k in (x||{}))localStorage.setItem(k,typeof x[k]==='string'?x[k]:JSON.stringify(x[k]))}""", [dados, extra, sem_backup_aviso, PREFIXO])
         await p.goto(self.url); await p.wait_for_timeout(1800)
 
-    async def saldos(self):
-        """Saldos das contas no Resumo (no fim do mês escolhido), por nome da conta."""
+    async def gastos(self):
+        """Gastos do mês escolhido (caixa «Gastos» do Resumo)."""
         p = self.page
-        if not await p.query_selector('.ffsaldos'):
+        if not await p.query_selector('.page-current .summary-intro'):
             await p.evaluate("window.ffGoPg('resumo')"); await p.wait_for_timeout(500)
-            if not await p.query_selector('.ffsaldos'):
-                await p.click('.segmented button:text-is("Resumo")'); await p.wait_for_timeout(300)
-        ler = """Object.fromEntries([...document.querySelectorAll('.ffsaldos article')]
-          .map(a=>[a.querySelector('span').textContent, a.querySelector('strong').textContent.replace(/\\u00a0/g,' ')]))"""
+            if not await p.query_selector('.page-current .summary-intro'):
+                await p.click('.page-current .segmented button:text-is("Resumo")'); await p.wait_for_timeout(300)
+        ler = "document.querySelector('.page-current .summary-intro + .summary-grid strong').textContent.replace(/\\u00a0/g,' ')"
         antes = await p.evaluate(ler)
         for _ in range(12):  # os valores sobem até ao total (animação dos números): espera que parem
             await p.wait_for_timeout(250)

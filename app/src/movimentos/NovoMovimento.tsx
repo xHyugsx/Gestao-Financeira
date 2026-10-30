@@ -153,7 +153,6 @@ export function NovoMovimento({ aberto, aoMudar, estado, escolhas: e, mudarEscol
               </select>
             </label>
           ) : null}
-          <label className="checkbox-row"><input name="affectsBalance" type="checkbox" defaultChecked /> Atualiza o saldo da conta escolhida</label>
           <label className="checkbox-row"><input type="checkbox" checked={e.revolut} onChange={(x) => mudar({ revolut: x.target.checked })} /> Transferência para Revolut</label>
           {e.revolut ? (
             <div className="form-grid">
