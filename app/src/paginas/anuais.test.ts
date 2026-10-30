@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Movimento } from '../dados';
-import { anuaisPrevistas, despesasAnuais, estadoAnual, movimentoDoPagamento, renovar, renovarPagas, totalProximos12 } from './anuais';
+import { anuaisPrevistas, despesasAnuais, estadoAnual, movimentoDoPagamento, renovar, renovarPagas, totalProximos12, valorAnual } from './anuais';
 
 const a = (id: number, name: string, value: number, month: number, year: number) => ({ id, name, value, month, year });
 const HOJE = new Date(2026, 9, 21, 12);  // 21 de outubro de 2026
@@ -53,3 +53,29 @@ describe('despesas anuais', () => {
   });
 });
 
+
+describe('despesas anuais de valor variável', () => {
+  const v = (value: number, extra = {}) => ({ id: 1, name: 'Seguro casa', value, month: 10, year: 2026, variable: true, ...extra });
+  const pago = (amount: number, date: string): Movimento => ({ id: date, title: 'Seguro casa', detail: 'x', amount, date, movementType: 'expense' });
+
+  it('aceita valor 0 («a definir») e usa como estimativa o último pagamento com o mesmo título', () => {
+    expect(despesasAnuais([v(0), { ...v(0), variable: false }]).length).toBe(1);
+    expect(valorAnual(v(0))).toBe(0);
+    expect(valorAnual(v(280))).toBe(280);
+    expect(valorAnual(v(280), [pago(-301.5, '2025-10-04'), pago(-290, '2024-10-02')])).toBe(301.5);
+    expect(valorAnual({ ...v(280), variable: false }, [pago(-301.5, '2025-10-04')])).toBe(280);
+  });
+
+  it('total, pagamento e previsão com a estimativa; sem estimativa fica fora da previsão', () => {
+    const mov = [pago(-310, '2025-10-04')];
+    expect(totalProximos12([v(0)], HOJE, mov)).toBe(310);
+    expect(movimentoDoPagamento(v(0), mov, HOJE, 9).amount).toBe(-310);
+    expect(anuaisPrevistas([v(0)], HOJE, '2026-12-31', mov).map((m) => m.amount)).toEqual([-310]);
+    expect(anuaisPrevistas([v(0)], HOJE, '2026-12-31', [])).toEqual([]);
+  });
+
+  it('paga «por fora» com qualquer valor e continua variável no ano seguinte', () => {
+    const r = renovarPagas([v(100)], [pago(-450, '2026-10-02')], HOJE) as ReturnType<typeof v>[];
+    expect(r[0]).toMatchObject({ year: 2027, variable: true });
+  });
+});

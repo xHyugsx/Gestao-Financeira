@@ -58,3 +58,30 @@ async def t_anual_paga_por_fora(app):
     anuais = await p.evaluate("P=>JSON.parse(localStorage.getItem(P+'v3')).annualExpenses.map(e=>[e.name,e.year])", 'financas-familiar:')
     verificar(['Seguro casa', 2027] in anuais, f'pago pelo «+», o seguro da casa devia passar para 2027: {anuais}')
     verificar(not app.erros, f'erros: {app.erros}')
+
+
+async def t_anual_de_valor_variavel(app):
+    await app.page.emulate_media(reduced_motion='reduce')
+    await app.abrir({**DADOS, 'transactions': [{'id': 1, 'title': 'Seguro saúde', 'amount': -240, 'date': '2025-12-03', 'detail': '3 dezembro · Saúde', 'movementType': 'expense'}]})
+    p = app.page
+    await abrir_anuais(app)
+    await p.fill('.page-current form input[name=name]', 'Água anual')
+    verificar(await p.get_attribute('.page-current form input[name=value]', 'required') is not None, 'sem «variável», o valor é obrigatório')
+    await p.check('.page-current form input[name=variable]')
+    await p.fill('.page-current form input[name=month]', '2026-12')
+    await p.click('.page-current form button[type=submit]'); await p.wait_for_timeout(500)
+    await p.fill('.page-current form input[name=name]', 'Seguro saúde'); await p.check('.page-current form input[name=variable]')
+    await p.fill('.page-current form input[name=value]', '200'); await p.fill('.page-current form input[name=month]', '2026-12')
+    await p.click('.page-current form button[type=submit]'); await p.wait_for_timeout(500)
+    d = await app.page.evaluate("P=>JSON.parse(localStorage.getItem(P+'v3')).annualExpenses.filter(e=>e.variable)", 'financas-familiar:')
+    verificar([(e['name'], e['value'], e['month'], e['year']) for e in d] == [('Água anual', 0, 12, 2026), ('Seguro saúde', 200, 12, 2026)], f'guardadas: {d}')
+    linha = lambda n: p.evaluate(f"""(()=>{{const a=[...document.querySelectorAll('.page-current .transaction-list article')].find(x=>x.querySelector('h3').textContent==='{n}');
+      return [a.querySelector('.ffanual-variavel')?.textContent||'', a.querySelector('strong').textContent.replace(/\\u00a0/g,' ')]}})()""")
+    verificar(await linha('Água anual') == ['Valor a definir', '—'], f'sem estimativa: {await linha("Água anual")}')
+    verificar(await linha('Seguro saúde') == ['Valor a definir', '≈ −240,00 €'], f'estimativa pelo último pagamento: {await linha("Seguro saúde")}')
+    verificar(await p.evaluate(RESUMO) == ['960,00 €', '80,00 €'], f'total com a estimativa (300 + 420 + 240): {await p.evaluate(RESUMO)}')
+    await p.click('.page-current button[aria-label="Passar a valor fixo: Seguro saúde"]'); await p.wait_for_timeout(300)
+    verificar(await linha('Seguro saúde') == ['', '−240,00 €'], f'passa a fixo com a estimativa: {await linha("Seguro saúde")}')
+    await p.click('.page-current button[aria-label="Passar a valor variável: Seguro saúde"]'); await p.wait_for_timeout(300)
+    verificar((await linha('Seguro saúde'))[0] == 'Valor a definir', 'volta a variável')
+    verificar(not app.erros, f'erros: {app.erros}')

@@ -4,7 +4,7 @@ import { dia, type Estado, inicioDoMes, MESES, type Movimento } from '../dados';
 import { categoriaDespesa } from '../movimentos/categorias';
 import { porConfirmar } from '../movimentos/recorrentes';
 import { diasDoMes, doMes, fechoDoMes, textoDe } from './calculos';
-import { despesasAnuais, estadoAnual } from './anuais';
+import { despesasAnuais, estadoAnual, valorAnual } from './anuais';
 import { recorrentesDoMes } from './subscricoes';
 
 const soma = (l: Movimento[]) => l.reduce((s, m) => s + Math.abs(m.amount), 0);
@@ -30,8 +30,8 @@ export function fraseDoDia(estado: Pick<Estado, 'transactions'> & Partial<Pick<E
   const anuais = despesasAnuais(estado.annualExpenses ?? []).filter((e) => estadoAnual(e, hoje) === 'por pagar');
   if (anuais.length) {
     const nomes = anuais.map((e) => e.name.trim()), lista = nomes.length > 1 ? `${nomes.slice(0, -1).join(', ')} e ${nomes.at(-1)}` : nomes[0];
-    const total = anuais.reduce((s, e) => s + e.value, 0);
-    return `${anuais.length === 1 ? 'Este mês há uma despesa anual por pagar' : `Este mês há ${anuais.length} despesas anuais por pagar`}: ${lista} (≈ ${euros(total)}).`;
+    const total = anuais.reduce((s, e) => s + valorAnual(e, l), 0);
+    return `${anuais.length === 1 ? 'Este mês há uma despesa anual por pagar' : `Este mês há ${anuais.length} despesas anuais por pagar`}: ${lista} (${total ? `≈ ${euros(total)}` : 'valor a definir'}).`;
   }
   const gastoAte = (mes: Date, ate: number) => soma(consumo(doMes(l, mes)).filter((m) => Number(m.date.slice(8, 10)) <= ate));
   const frases: string[] = [];

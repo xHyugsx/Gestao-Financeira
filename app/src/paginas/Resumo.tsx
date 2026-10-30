@@ -10,7 +10,7 @@ import { RoboVazio } from '../ui/RoboVazio';
 import { Segmentado } from '../ui/Segmentado';
 import { AnoEmRevista } from './AnoEmRevista';
 import { categoriasDoMes, doMes, fechoDoMes, percentagem, receitas, variacao } from './calculos';
-import { type DespesaAnual, despesasAnuais, estadoAnual, movimentoDoPagamento, renovar, totalProximos12 } from './anuais';
+import { type DespesaAnual, despesasAnuais, estadoAnual, movimentoDoPagamento, renovar, totalProximos12, valorAnual } from './anuais';
 import { recorrentesDoMes } from './subscricoes';
 
 export type SeccaoResumo = 'resumo' | 'recorrentes' | 'anuais' | 'fecho' | 'salarios';
@@ -44,6 +44,7 @@ interface Props {
 
 export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mudarPeriodo, mudarEstado, abrirMovimento = () => {}, todos = estado.transactions }: Props) {
   const [revista, setRevista] = useState(false);
+  const [anualVariavel, setAnualVariavel] = useState(false);
   const eur = (v: number) => formatarEuros(v, ocultos);
   const movimentos = estado.transactions;
   const hoje = new Date();
@@ -160,7 +161,10 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
     abrirMovimento(m);
   };
   const despesasAnuaisSeccao = () => {
-    const total = totalProximos12(anuais, hoje);
+    const total = totalProximos12(anuais, hoje, movimentos);
+    // Valor variável: troca entre fixo e «a definir todos os anos»; ao passar a fixo fica com a estimativa atual
+    const trocarTipo = (e: DespesaAnual) => mudarAnuais((l) => l.map((x) => (x.id !== e.id ? x
+      : e.variable ? { ...x, variable: undefined, value: valorAnual(e, movimentos) } : { ...x, variable: true })));
     const ordenadas = [...anuais].sort((a, b) => a.year - b.year || a.month - b.month);
     return (
       <>
@@ -179,11 +183,18 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
                     <span className="transaction-icon transaction-icon-car"><Icone nome="calendar-clock" aria-hidden="true" /></span>
                     <div className="min-w-0">
                       <h3>{e.name}</h3>
-                      <p>Previsto: {MESES[e.month - 1]} {e.year}{estadoE !== 'prevista' ? <span className={`tx-acc ffanual-estado ffanual-estado-${cls}`}>{ROTULO_ANUAL[estadoE]}</span> : null}</p>
+                      <p>Previsto: {MESES[e.month - 1]} {e.year}{estadoE !== 'prevista' ? <span className={`tx-acc ffanual-estado ffanual-estado-${cls}`}>{ROTULO_ANUAL[estadoE]}</span> : null}{e.variable ? <span className="tx-acc ffconfirmar ffanual-variavel">Valor a definir</span> : null}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
-                    <strong className="amount-negative">−{eur(e.value)}</strong>
+                    {e.variable
+                      ? <strong className="amount-negative ffanual-estimativa">{valorAnual(e, movimentos) ? `≈ −${eur(valorAnual(e, movimentos))}` : '—'}</strong>
+                      : <strong className="amount-negative">−{eur(e.value)}</strong>}
+                    {!e.variable || valorAnual(e, movimentos) ? (
+                      <Botao variante="ghost" tamanho="icone" aria-label={`${e.variable ? 'Passar a valor fixo' : 'Passar a valor variável'}: ${e.name}`} title={e.variable ? 'Passar a valor fixo' : 'Passar a valor variável'} onClick={() => trocarTipo(e)}>
+                        <Icone nome="arrow-right-left" />
+                      </Botao>
+                    ) : null}
                     <Botao variante="ghost" tamanho="icone" aria-label={`Eliminar ${e.name}`} onClick={() => mudarAnuais((l) => l.filter((x) => x.id !== e.id))}>
                       <Icone nome="trash-2" />
                     </Botao>
@@ -204,17 +215,20 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
           onSubmit={(ev) => {
             ev.preventDefault();
             const f = new FormData(ev.currentTarget);
-            const nome = String(f.get('name') || '').trim(), valor = lerValor(f.get('value'));
+            const nome = String(f.get('name') || '').trim(), texto = String(f.get('value') || '').trim(), valor = texto ? lerValor(texto) : 0;
             const [ano, mesPrevisto] = String(f.get('month') || anoMesInput(new Date())).split('-').map(Number);
-            if (nome && valor && ano && mesPrevisto) {
-              mudarEstado((s) => ({ ...s, annualExpenses: [...s.annualExpenses, { id: Date.now(), name: nome, value: Math.abs(valor), month: mesPrevisto, year: ano }] }));
+            // Valor variável: o valor é opcional (estimativa); todos os anos aparece «Valor a definir»
+            if (nome && Number.isFinite(valor) && (valor || anualVariavel) && ano && mesPrevisto) {
+              mudarEstado((s) => ({ ...s, annualExpenses: [...s.annualExpenses, { id: Date.now(), name: nome, value: Math.abs(valor), month: mesPrevisto, year: ano, ...(anualVariavel ? { variable: true } : {}) }] }));
             }
             ev.currentTarget.reset();
+            setAnualVariavel(false);
           }}
         >
           <h3>Nova despesa anual</h3>
           <label className="grid gap-1 text-xs">Descrição<input name="name" required placeholder="Ex.: IUC - Clio" className="rounded-md border border-border bg-background px-3 py-2" /></label>
-          <label className="grid gap-1 text-xs">Valor (€)<input name="value" required inputMode="decimal" placeholder="0,00" className="rounded-md border border-border bg-background px-3 py-2" /></label>
+          <label className="grid gap-1 text-xs">{anualVariavel ? 'Valor estimado (€, opcional)' : 'Valor (€)'}<input name="value" required={!anualVariavel} inputMode="decimal" placeholder="0,00" className="rounded-md border border-border bg-background px-3 py-2" /></label>
+          <label className="checkbox-row text-xs"><input type="checkbox" name="variable" checked={anualVariavel} onChange={(x) => setAnualVariavel(x.target.checked)} /> Valor variável (a definir todos os anos)</label>
           <label className="grid gap-1 text-xs">
             Mês previsto
             <input name="month" type="month" required defaultValue={anoMesInput(new Date(hoje.getFullYear(), hoje.getMonth() + 1, 1))} className="rounded-md border border-border bg-background px-3 py-2" />
