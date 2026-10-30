@@ -137,7 +137,7 @@ export function recorrenciaNaSerie(lista: Movimento[], antes: Movimento | undefi
 }
 
 /**
- * Cópias que a app ainda vai criar depois de hoje e até `ate` ("AAAA-MM-DD", inclusive), para a previsão do saldo
+ * Cópias que a app ainda vai criar depois de hoje e até `ate` ("AAAA-MM-DD", inclusive), para a previsão dos gastos
  * dos meses futuros. Seguem a mesma cadeia de datas das cópias reais; nos de valor variável usam a estimativa.
  */
 export function recorrentesPrevistos(movimentos: Movimento[], hoje: Date, ate: string): Movimento[] {

@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { anoMes, type Conta, type Estado, gastos, inicioDoMes, MESES, type Movimento, saldoDaConta, type Salarios } from '../dados';
+import { type Estado, gastos, inicioDoMes, MESES, type Movimento, type Salarios } from '../dados';
 import { ArtigoMovimento } from '../movimentos/Movimento';
-import { reporMes, valorRecorrente } from '../movimentos/recorrentes';
+import { reporMes } from '../movimentos/recorrentes';
 import { lerValor } from '../movimentos/regras';
 import { Botao } from '../ui/Botao';
 import { formatarEuros, formatarPercentagem } from '../ui/formatos';
@@ -9,15 +9,13 @@ import { Icone } from '../ui/Icone';
 import { RoboVazio } from '../ui/RoboVazio';
 import { Segmentado } from '../ui/Segmentado';
 import { AnoEmRevista } from './AnoEmRevista';
-import { categoriasDoMes, doMes, evolucaoDoSaldo, fechoDoMes, percentagem, pontosDaLinha, receitas, variacao } from './calculos';
+import { categoriasDoMes, doMes, fechoDoMes, percentagem, receitas, variacao } from './calculos';
 import { type DespesaAnual, despesasAnuais, estadoAnual, movimentoDoPagamento, renovar, totalProximos12 } from './anuais';
-import { previsaoDoMes } from './previsao';
 import { recorrentesDoMes } from './subscricoes';
 
 export type SeccaoResumo = 'resumo' | 'recorrentes' | 'anuais' | 'fecho' | 'salarios';
 export type PeriodoResumo = 'mes' | 'trimestre' | 'ano';
 
-const CONTAS_POR_OMISSAO: [Conta, Conta] = [{ id: 'principal', name: 'Principal', balance: 0 }, { id: 'revolut', name: 'Revolut Conjunta', balance: 0 }];
 const anoMesInput = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 
 /**
@@ -54,20 +52,7 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
   const recebido = receitas(doMesAtual);
   const evolucao = variacao(gasto, gastoAnterior);
   const maior = categoriasDoMes(estado, mes, 'despesas')[0];
-  const contas = [
-    estado.accounts.find((c) => c.id === 'principal') ?? CONTAS_POR_OMISSAO[0],
-    estado.accounts.find((c) => c.id === 'revolut') ?? CONTAS_POR_OMISSAO[1],
-    ...estado.accounts.filter((c) => c.id !== 'principal' && c.id !== 'revolut'),
-  ];
   const anuais = despesasAnuais(estado.annualExpenses);
-  // Mês futuro: a previsão conta também os recorrentes que a app ainda vai criar e as despesas anuais por pagar
-  const { recorrentes: previstos, anuais: anuaisFuturas, movimentos: comPrevistos } = previsaoDoMes(todos, estado.annualExpenses, hoje, mes);
-  const pagamentosPrevistos = previstos.filter((m) => m.movementType !== 'income' && m.affectsBalance !== false);
-  const nRec = pagamentosPrevistos.length, nAnuais = anuaisFuturas.length;
-  const textoPrevistos = [nRec ? (nRec === 1 ? '1 recorrente' : `${nRec} recorrentes`) : '', nAnuais ? (nAnuais === 1 ? '1 despesa anual' : `${nAnuais} despesas anuais`) : '']
-    .filter(Boolean).join(' e ') + (nRec && nAnuais ? ' previstos' : nAnuais ? (nAnuais === 1 ? ' prevista' : ' previstas') : nRec === 1 ? ' previsto' : ' previstos');
-  const totalPrevisto = pagamentosPrevistos.reduce((s, m) => s + valorRecorrente(m), 0) + anuaisFuturas.reduce((s, m) => s + Math.abs(m.amount), 0);
-  const receitasPrevistas = previstos.filter((m) => m.movementType === 'income' && m.affectsBalance !== false);
 
   const resumo = () => (
     <>
@@ -89,37 +74,6 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
         <article><span>Gastos</span><strong className="amount-negative">{eur(gasto)}</strong></article>
         <article><span>Receitas</span><strong className="amount-positive">{eur(recebido)}</strong></article>
       </section>
-      <div className="view-heading ffsaldos-titulo">
-        <p className="eyebrow">{anoMes(mes) < anoMes(hoje) ? `Fim de ${MESES[mes.getMonth()]}` : anoMes(mes) > anoMes(hoje) ? `Previsão para o fim de ${MESES[mes.getMonth()]}` : 'Hoje'}</p><h2>Saldos das contas</h2>
-      </div>
-      <section className="summary-grid ffsaldos">
-        {contas.map((c) => {
-          const v = saldoDaConta(c, comPrevistos, hoje, mes).atual;
-          // evolução do saldo nos últimos 12 meses (escondida com os valores ocultos)
-          const serie = ocultos ? [] : evolucaoDoSaldo(c, comPrevistos, hoje, mes);
-          const pontos = pontosDaLinha(serie, 150, 30);
-          const linha = pontos.map(([x, y]) => `${x},${y}`).join(' ');
-          const ultimo = pontos[pontos.length - 1];
-          return (
-            <article key={`${c.id}-${anoMes(mes)}`}>
-              <span>{c.name}</span><strong className={v < 0 ? 'amount-negative' : 'amount-positive'}>{eur(v)}</strong>
-              {pontos.length > 1 ? (
-                <svg className="ffspark" viewBox="0 0 150 30" role="img" aria-label={`Evolução do saldo nos últimos ${pontos.length} meses`}>
-                  <polygon className="ffspark-area" points={`${pontos[0]![0]},30 ${linha} ${ultimo![0]},30`} />
-                  <polyline className="ffspark-linha" points={linha} />
-                  <circle className="ffspark-ponto" cx={ultimo![0]} cy={ultimo![1]} r="2.2" />
-                </svg>
-              ) : null}
-            </article>
-          );
-        })}
-      </section>
-      {nRec || nAnuais || receitasPrevistas.length ? (
-        <p className="ffprevistos">
-          {nRec || nAnuais ? `Inclui ${textoPrevistos} até ao fim de ${MESES[mes.getMonth()]} (≈ ${eur(totalPrevisto)}).` : ''}
-          {receitasPrevistas.length ? `${nRec || nAnuais ? ' ' : ''}${nRec || nAnuais ? 'E' : 'Inclui'} ${receitasPrevistas.length === 1 ? '1 receita recorrente prevista' : `${receitasPrevistas.length} receitas recorrentes previstas`} (≈ +${eur(receitasPrevistas.reduce((s, m) => s + valorRecorrente(m), 0))}).` : ''}
-        </p>
-      ) : null}
       {gastoAnterior > 0 ? (
         <section className={evolucao <= 0 ? 'insight-card insight-good' : 'insight-card'}>
           <Icone nome="trending-up" />

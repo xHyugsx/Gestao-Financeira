@@ -1,4 +1,4 @@
-// Previsão do saldo no fim de um mês futuro (Resumo e Jarvis): os movimentos que já existem mais os recorrentes que a
+// Previsão dos gastos de um mês futuro (Jarvis): os movimentos que já existem mais os recorrentes que a
 // app ainda vai criar e as despesas anuais por pagar até ao fim desse mês. Nada disto é gravado.
 import { anoMes, type Movimento } from '../dados';
 import { recorrentesPrevistos } from '../movimentos/recorrentes';

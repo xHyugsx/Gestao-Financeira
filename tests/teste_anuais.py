@@ -1,4 +1,4 @@
-"""Despesas anuais: só os próximos 12 meses, «por pagar» / «em atraso», registar o pagamento ou renovar, e previsão do saldo."""
+"""Despesas anuais: só os próximos 12 meses, «por pagar» / «em atraso», registar o pagamento ou renovar, e previsão dos gastos."""
 from correr import verificar
 
 A = lambda i, n, v, m, a: {'id': i, 'name': n, 'value': v, 'month': m, 'year': a}
@@ -40,12 +40,10 @@ async def t_anuais_estados_total_e_acoes(app):
 async def t_anuais_na_previsao(app):
     await app.page.emulate_media(reduced_motion='reduce')
     await app.abrir(DADOS)
-    p = app.page
-    await p.click('button[aria-label="Mês seguinte"]'); await p.click('button[aria-label="Mês seguinte"]'); await p.wait_for_timeout(800)
-    saldos = await app.saldos()
-    verificar(saldos.get('Principal') == '280,00 €', f'previsão de novembro: seguro da casa (por pagar) e do carro: {saldos}')
-    nota = (await p.text_content('.page-current .ffprevistos') or '').replace(' ', ' ')
-    verificar('2 despesas anuais previstas até ao fim de novembro (≈ 720,00 €)' in nota, f'nota: {nota}')
+    r = (await app.jarvis('Previsão dos gastos em novembro')).replace('\u00a0', ' ')
+    verificar(r == 'Previsão dos gastos em novembro: ≈ 420,00 € (420,00 € de recorrentes e despesas anuais previstos).', f'seguro do carro: {r}')
+    r = (await app.jarvis('Previsão dos gastos em outubro')).replace('\u00a0', ' ')
+    verificar(r == 'Ainda não há gastos previstos para outubro.', r)
     verificar(not app.erros, f'erros: {app.erros}')
 
 

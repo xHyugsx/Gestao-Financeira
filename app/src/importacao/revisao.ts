@@ -10,7 +10,7 @@ const MESES_CURTOS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 's
 const PERGUNTAS = ['Transferência entre contas', 'Carregamento de conta', 'Poupança', 'Receita', 'Ignorar'];
 const SEPARADORES: [string, string][] = [['ask', 'Por confirmar'], ['all', 'Todos'], ['exp', 'Despesas'], ['inc', 'Receitas'], ['sal', 'Salários'], ['tr', 'Transferências'], ['rev', 'Por rever'], ['ign', 'Ignorados']];
 
-export interface ContaImportacao { id: string; name: string; balance: number; cur: number }
+export interface ContaImportacao { id: string; name: string }
 
 /** O que a importação precisa da app (dados atuais e alterações). */
 export interface ApiImportacao {
@@ -20,8 +20,7 @@ export interface ApiImportacao {
   removerLote: (lote: string) => void;
   juntarCategorias: (l: string[]) => void;
   definirSalario: (ano: string, pessoa: string, mes: number, valor: number) => void;
-  /** Acerta o saldo da conta para o saldo do extrato; devolve a conta como estava (para desfazer). */
-  acertarSaldo: (id: string, saldo: number) => Conta | null;
+  /** Repõe a conta como estava (desfazer uma importação antiga que acertou o saldo). */
   reporConta: (c: Conta) => void;
   tipoVisual: (tipo: 'income' | 'expense', categoria: string) => string;
   dizer: (texto: string) => void;
@@ -35,7 +34,7 @@ const gravar = (k: string, v: unknown) => { try { localStorage.setItem(k, JSON.s
 
 interface Sessao {
   ext: Extrato; items: Item[]; cats: string[]; inc: string[]; acc: ContaImportacao[]; skipped: number;
-  tab: string; accId: string; setBal: boolean; remember: boolean; scroll?: number; api: ApiImportacao;
+  tab: string; accId: string; remember: boolean; scroll?: number; api: ApiImportacao;
 }
 let S: Sessao | null = null;
 let ultimoExtrato: Extrato | null = null;
@@ -49,7 +48,7 @@ function resumo(s: Sessao): string {
 function abrir(ext: Extrato, api: ApiImportacao) {
   const d = api.obter();
   const c = classificar(ext, d, api.regrasPessoais(), ler<Memorizadas>(MEMORIZADAS, {}));
-  S = { ext, items: c.items, cats: c.cats, inc: d.inc, acc: d.acc, skipped: c.skipped, tab: c.items.some((o) => o.k === 'ask' && !o.ch) ? 'ask' : 'all', accId: 'principal', setBal: false, remember: true, api };
+  S = { ext, items: c.items, cats: c.cats, inc: d.inc, acc: d.acc, skipped: c.skipped, tab: c.items.some((o) => o.k === 'ask' && !o.ch) ? 'ask' : 'all', accId: 'principal', remember: true, api };
   desenhar();
 }
 
@@ -63,7 +62,7 @@ function desenhar() {
     const r = root;
     requestAnimationFrame(() => r.classList.add('in'));
   }
-  const I = s.items, pend = I.filter((o) => o.k === 'ask' && !o.ch).length, on = I.filter((o) => o.on), conta = s.acc.find((a) => a.id === s.accId) || s.acc[0]!;
+  const I = s.items, pend = I.filter((o) => o.k === 'ask' && !o.ch).length, on = I.filter((o) => o.on);
   const L = I.filter((o) => s.tab === 'all' || (s.tab === 'rev' ? o.k === 'exp' && o.c === 'Outros' : o.k === s.tab));
   let h = '', mesAtual = '';
   for (const o of L) {
@@ -80,7 +79,6 @@ function desenhar() {
   const despesas = on.filter((o) => o.k === 'exp');
   root.innerHTML = `<div class="ffst-hd"><div class="ffst-t"><h2>Importar extrato · ${escapar(s.ext.bank)}</h2><button class="ffst-x" aria-label="Fechar">✕</button></div><p>${resumo(s)}</p>`
     + `<div class="ffst-opt"><label>Conta na app <select class="ffst-acc">${s.acc.map((a) => `<option value="${escapar(a.id)}"${a.id === s.accId ? ' selected' : ''}>${escapar(a.name)}</option>`).join('')}</select></label>`
-    + (s.ext.balance != null ? `<label><input type="checkbox" class="ffst-bal"${s.setBal ? ' checked' : ''}> Acertar o saldo de ${escapar(conta.name)} para <b>${euros(s.ext.balance)}</b> (saldo do extrato)</label>` : '')
     + `<label><input type="checkbox" class="ffst-rem"${s.remember ? ' checked' : ''}> Lembrar as minhas escolhas nos próximos extratos</label></div>`
     + `<div class="ffst-tabs">${SEPARADORES.filter(([t]) => t === 'all' || t === 'rev' || I.some((o) => o.k === t)).map(([t, nome]) => `<button data-t="${t}" class="${t === s.tab ? 'on' : ''}">${t === 'ask' ? (pend ? `Por confirmar (${pend})` : 'Por confirmar ✓') : nome}</button>`).join('')}</div></div>`
     + `<div class="ffst-list">${h || '<p class="ffst-empty">Nada nesta vista.</p>'}</div>`
@@ -90,8 +88,6 @@ function desenhar() {
   lista.addEventListener('scroll', () => { s.scroll = lista.scrollTop; });
   root.querySelector<HTMLElement>('.ffst-x')!.onclick = fechar;
   root.querySelector<HTMLSelectElement>('.ffst-acc')!.onchange = (e) => { s.accId = (e.target as HTMLSelectElement).value; desenhar(); };
-  const bal = root.querySelector<HTMLInputElement>('.ffst-bal');
-  if (bal) bal.onchange = (e) => { s.setBal = (e.target as HTMLInputElement).checked; };
   root.querySelector<HTMLInputElement>('.ffst-rem')!.onchange = (e) => { s.remember = (e.target as HTMLInputElement).checked; };
   root.querySelector<HTMLElement>('.ffst-tabs')!.onclick = (e) => { const b = (e.target as Element).closest<HTMLElement>('[data-t]'); if (b) { s.tab = b.dataset.t!; s.scroll = 0; desenhar(); } };
   lista.onchange = (e) => {
@@ -111,7 +107,7 @@ function fechar() {
   setTimeout(() => r.remove(), 250);
 }
 
-// `bal` tem o mesmo formato da app atual ({ id, old }) e, na app nova, a conta inteira (saldo e acertos por dia)
+// `bal`: conta como estava antes de uma importação que acertou o saldo (só nas importações anteriores à v2.36.0)
 interface Desfazer { batch: string; sal: [string, string, number, number][]; bal: { id: string; old: number; conta?: Conta } | null; n: number }
 
 function importar() {
@@ -147,18 +143,14 @@ function importar() {
   if (novas.length) api.juntarCategorias(novas);
   if (tx.length) api.juntarMovimentos(tx);
   for (const x of sal) api.definirSalario(x[0], x[1], x[2], x[4]);
-  if (s.setBal && s.ext.balance != null) {
-    const antes = api.acertarSaldo(conta, s.ext.balance);
-    if (antes) desfazer.bal = { id: antes.id, old: antes.balance ?? 0, conta: antes };
-  }
   gravar(ULTIMA, desfazer);
   const nome = d.acc.find((x) => x.id === conta)?.name || 'Principal';
   fechar();
-  api.dizer(`Importação concluída ✅ ${tx.length} movimentos em ${nome}${sal.length ? ` · ${sal.length} salários registados` : ''}${desfazer.bal ? ` · saldo acertado para ${euros(s.ext.balance!)}` : ''}.\nOs movimentos não alteraram o saldo da conta. Escreve «desfazer importação» para anular.`);
+  api.dizer(`Importação concluída ✅ ${tx.length} movimentos em ${nome}${sal.length ? ` · ${sal.length} salários registados` : ''}.\nEscreve «desfazer importação» para anular.`);
   S = null;
 }
 
-/** Desfaz a última importação (movimentos, salários e saldo). */
+/** Desfaz a última importação (movimentos e salários). */
 export function desfazerImportacao(api: ApiImportacao): string {
   const u = ler<Desfazer | null>(ULTIMA, null);
   if (!u) return 'Não há nenhuma importação para desfazer.';
@@ -166,7 +158,7 @@ export function desfazerImportacao(api: ApiImportacao): string {
   for (const x of u.sal || []) api.definirSalario(x[0], x[1], x[2], x[3]);
   if (u.bal) api.reporConta(u.bal.conta ?? { id: u.bal.id, balance: u.bal.old } as Conta);
   try { localStorage.removeItem(ULTIMA); } catch { /* sem armazenamento */ }
-  return `Importação anulada ↩️ Removi ${u.n} movimentos${(u.sal || []).length ? ', repus os salários' : ''}${u.bal ? ' e o saldo anterior' : ''}.`;
+  return `Importação anulada ↩️ Removi ${u.n} movimentos${(u.sal || []).length ? ' e repus os salários' : ''}.`;
 }
 
 export const haImportacaoParaDesfazer = () => !!ler<Desfazer | null>(ULTIMA, null);

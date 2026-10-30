@@ -14,7 +14,7 @@ async def t_valor_variavel_por_confirmar(app):
     linha = '.page-current .transaction-list article[aria-label="Editar Luz"]'
     verificar(await p.query_selector(f'{linha} .ffconfirmar'), 'falta a etiqueta «Valor por confirmar»')
     verificar('Falta confirmar o valor de Luz' in (await p.text_content('.ffdica') or ''), 'a frase do dia não lembra o valor por confirmar')
-    verificar((await app.saldos()).get('Principal') == '914,00 €', 'o valor por confirmar não deve mexer no saldo')
+    verificar(await app.gastos() == '0,00 €', f'o valor por confirmar não conta nos gastos: {await app.gastos()}')
     await p.click('.segmented button:text-is("Recorrentes")'); await p.wait_for_timeout(500)
     rec = await p.evaluate("""[...document.querySelectorAll('.page-current .transaction-list article')].map(a=>
       [a.querySelector('h3').textContent, a.querySelector('.ffrec-dir strong').textContent.replace(/\\u00a0/g,' '), a.querySelector('.ffrec-dir small').textContent])""")
@@ -31,7 +31,7 @@ async def t_valor_variavel_por_confirmar(app):
     luz = [m for m in await app.movimentos() if m['id'] == 3][0]
     verificar(luz['amount'] == -51.3 and luz['recurring'] == 'sem', f'movimento confirmado: {luz}')
     verificar(not await p.query_selector(f'{linha} .ffconfirmar'), 'a etiqueta devia desaparecer depois de confirmar')
-    verificar((await app.saldos()).get('Principal') == '862,70 €', 'depois de confirmar, o valor conta no saldo')
+    verificar(await app.gastos() == '51,30 €', f'depois de confirmar, o valor conta nos gastos: {await app.gastos()}')
     verificar(not app.erros, f'erros: {app.erros}')
 
 

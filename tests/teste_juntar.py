@@ -1,4 +1,4 @@
-"""Juntar os movimentos de outro telemóvel a partir do backup dele: só entram os novos, os saldos não mudam e pode desfazer-se."""
+"""Juntar os movimentos de outro telemóvel a partir do backup dele: só entram os novos, as contas não mudam e pode desfazer-se."""
 import datetime, json, pathlib, tempfile
 from correr import verificar, PREFIXO
 from teste_protecao import definicoes, movimentos
@@ -31,11 +31,9 @@ async def juntar(app, caminho, aceitar=True):
     await p.set_input_files('input[aria-label="Backup do outro telemóvel"]', caminho); await p.wait_for_timeout(800)
 
 
-async def t_juntar_traz_so_os_novos_sem_mexer_nos_saldos(app):
+async def t_juntar_traz_so_os_novos_sem_mexer_nas_contas(app):
     await app.abrir(AQUI)
     p = app.page
-    saldos = await app.saldos()
-    await p.evaluate("window.ffGoPg('principal')"); await p.wait_for_timeout(400)
     await definicoes(app, 'Backup')
     verificar(not await p.query_selector('.setting-row:has-text("Desfazer a última junção")'), 'desfazer aparece sem junções')
     caminho = ficheiro({'app': 'financas-familiar', 'version': 4, 'data': OUTRO, 'jarvisThreads': [], 'vetReminders': []})
@@ -56,7 +54,6 @@ async def t_juntar_traz_so_os_novos_sem_mexer_nos_saldos(app):
 
     await p.go_back(); await p.wait_for_timeout(600)
     verificar(await p.evaluate("[...document.querySelectorAll('.transaction-list h3')].map(e=>e.textContent).includes('Farmácia Fictícia')"), 'a lista não mostra o movimento juntado')
-    verificar(await app.saldos() == saldos, f'os saldos mudaram: {saldos} → {await app.saldos()}')
 
     await definicoes(app, 'Backup')
     p.once('dialog', lambda d: d.accept())

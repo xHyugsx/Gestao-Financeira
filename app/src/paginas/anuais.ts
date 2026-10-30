@@ -1,6 +1,6 @@
 // Despesas anuais (Resumo › Despesas anuais): lista de planeamento à parte dos movimentos (`annualExpenses`).
 // Só contam as dos próximos 12 meses; quando o mês chega ficam «por pagar» e, ao registar o pagamento (ou renovar),
-// passam para o ano seguinte. Entram na previsão do saldo dos meses futuros enquanto não forem pagas.
+// passam para o ano seguinte. Entram na previsão dos gastos dos meses futuros enquanto não forem pagas.
 import { anoMes, dia, type Movimento } from '../dados';
 import { simplificar } from '../movimentos/categorias';
 import { porConfirmar } from '../movimentos/recorrentes';
@@ -75,7 +75,7 @@ export function movimentoDoPagamento(e: DespesaAnual, movimentos: Movimento[], h
 }
 
 /**
- * Despesas anuais por pagar entre este mês e `ate` ("AAAA-MM-DD"), como movimentos previstos para a previsão do saldo
+ * Despesas anuais por pagar entre este mês e `ate` ("AAAA-MM-DD"), como movimentos previstos para a previsão dos gastos
  * dos meses futuros. As em atraso ficam de fora (podem já ter sido pagas sem registo).
  */
 export function anuaisPrevistas(lista: DespesaAnual[], hoje: Date, ate: string): Movimento[] {

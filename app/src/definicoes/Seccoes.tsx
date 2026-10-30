@@ -1,9 +1,8 @@
 // Secções das Definições (Perfil, Categorias, Contas, Aparência, Dados e Backup) — mesmo HTML e regras da app atual.
 import { type ChangeEvent, type FormEvent, type ReactNode, useRef, useState } from 'react';
-import { acertarSaldo, anoMes, type Conta, type Estado, limiteSaldoBaixo, saldoDaConta } from '../dados';
+import { anoMes, type Conta, type Estado } from '../dados';
 import { renomearCategoria } from '../movimentos/categorias';
 import { coresCategorias, corNova } from '../movimentos/cores';
-import { lerValor } from '../movimentos/regras';
 import { Botao } from '../ui/Botao';
 import { Icone } from '../ui/Icone';
 import { montarEspaco } from './espaco';
@@ -177,32 +176,22 @@ export function CategoriasDefinicoes({ estado, mudarEstado, avisar, categoriaRen
   );
 }
 
-const valorTexto = (v: number) => String(Math.round(v * 100) / 100).replace('.', ',');
-
 export function Contas({ estado, mudarEstado, avisar }: { estado: Estado; mudarEstado: Mudar; avisar: (m: string) => void }) {
   const hoje = new Date();
-  // O campo mostra o saldo de hoje; o valor escrito passa a ser o saldo a partir de hoje (pedido do dono)
-  const saldoHoje = (c: Conta) => saldoDaConta(c, estado.transactions, hoje).atual;
+  // Só os nomes: os saldos deixaram de aparecer (v2.36.0); os valores guardados nas contas ficam como estavam
   const guardar = (ev: FormEvent<HTMLFormElement>) => {
     ev.preventDefault();
     avisar('');
     const f = new FormData(ev.currentTarget);
-    const contas = estado.accounts.map((c) => {
-      const nome = String(f.get(`${c.id}-name`) || '').trim(), saldo = lerValor(f.get(`${c.id}-balance`));
-      const aviso = String(f.get(`${c.id}-low`) ?? '').trim(), limite = limiteSaldoBaixo(c), antes = limite == null ? '' : valorTexto(limite);
-      const base = { ...c, name: nome, ...(aviso === antes ? {} : { lowAt: aviso === '' ? null : Math.max(0, lerValor(aviso)) }) };
-      return { conta: base, saldo };
-    });
-    if (contas.some(({ conta, saldo }) => erroNome(conta.name) || !Number.isFinite(saldo) || Math.abs(saldo) > 999999999)) {
-      avisar('Verifique os nomes e saldos das contas.'); return;
-    }
-    mudarEstado((e) => ({ ...e, accounts: contas.map(({ conta, saldo }) => acertarSaldo(conta, e.transactions, saldo, hoje)) }));
+    const contas = estado.accounts.map((c) => ({ ...c, name: String(f.get(`${c.id}-name`) || '').trim() }));
+    if (contas.some((c) => erroNome(c.name))) { avisar('Verifique os nomes das contas.'); return; }
+    mudarEstado((e) => ({ ...e, accounts: e.accounts.map((c) => ({ ...c, name: contas.find((x) => x.id === c.id)?.name ?? c.name })) }));
     avisar('Contas atualizadas.');
   };
   const eliminar = (c: Conta) => {
     const k = estado.transactions.filter((m) => m.account === c.id).length;
     const extra = k ? ` ${k === 1 ? 'O movimento associado passa' : `Os ${k} movimentos associados passam`} para a Principal.` : '';
-    if (!window.confirm(`Eliminar a conta «${c.name}»? O cartão sai da página principal.${extra}`)) return;
+    if (!window.confirm(`Eliminar a conta «${c.name}»?${extra}`)) return;
     mudarEstado((e) => ({
       ...e,
       transactions: e.transactions.map((m) => (m.account === c.id ? { ...m, account: undefined } : m)),
@@ -217,20 +206,16 @@ export function Contas({ estado, mudarEstado, avisar }: { estado: Estado; mudarE
   };
   return (
     <form className="settings-panel movement-form" onSubmit={guardar}>
-      {estado.accounts.map((c) => {
-        const limite = limiteSaldoBaixo(c);
-        return (
-          <fieldset key={`${c.id}-${saldoHoje(c)}`} className="account-editor">
-            <legend>{c.id === 'principal' ? 'Conta principal' : c.id === 'revolut' ? 'Conta secundária' : 'Conta adicional'}</legend>
-            {c.id !== 'principal' && c.id !== 'revolut'
-              ? <Botao type="button" variante="ghost" tamanho="icone" className="account-remove" aria-label={`Eliminar ${c.name}`} onClick={() => eliminar(c)}><Icone nome="trash-2" /></Botao>
-              : null}
-            <label>Nome<input name={`${c.id}-name`} defaultValue={c.name} maxLength={60} required /></label>
-            <label>Saldo<div className="input-suffix"><input name={`${c.id}-balance`} defaultValue={valorTexto(saldoHoje(c))} inputMode="decimal" required /><span>€</span></div></label>
-            <label>Avisar abaixo de<div className="input-suffix"><input name={`${c.id}-low`} defaultValue={limite == null ? '' : valorTexto(limite)} inputMode="decimal" placeholder="Sem aviso" /><span>€</span></div></label>
-          </fieldset>
-        );
-      })}
+      <p className="settings-copy">Escolhe a conta em cada despesa ou receita; os gastos por conta estão na Análise.</p>
+      {estado.accounts.map((c) => (
+        <fieldset key={c.id} className="account-editor">
+          <legend>{c.id === 'principal' ? 'Conta principal' : c.id === 'revolut' ? 'Conta secundária' : 'Conta adicional'}</legend>
+          {c.id !== 'principal' && c.id !== 'revolut'
+            ? <Botao type="button" variante="ghost" tamanho="icone" className="account-remove" aria-label={`Eliminar ${c.name}`} onClick={() => eliminar(c)}><Icone nome="trash-2" /></Botao>
+            : null}
+          <label>Nome<input name={`${c.id}-name`} defaultValue={c.name} maxLength={60} required /></label>
+        </fieldset>
+      ))}
       {estado.accounts.length < 8 ? <Botao type="button" variante="contorno" className="account-add" onClick={nova}><Icone nome="plus" />Nova conta</Botao> : null}
       <Botao type="submit">Guardar contas</Botao>
     </form>
@@ -403,7 +388,7 @@ export function Backup({ ultimo, mensagem, acoes }: { ultimo: string; mensagem: 
         </Botao>
         {linha('upload', 'Restaurar backup', 'Substitui os dados atuais por uma cópia JSON', () => ficheiro.current?.click())}
         <Botao variante="ghost" className="setting-row ffv2-extra" onClick={() => deOutro.current?.click()}>
-          <Icone nome="smartphone" /><span><strong>Juntar movimentos de outro telemóvel</strong><small>Do backup dele, só os que ainda não existem aqui · os saldos não mudam</small></span>
+          <Icone nome="smartphone" /><span><strong>Juntar movimentos de outro telemóvel</strong><small>Do backup dele, só os que ainda não existem aqui</small></span>
         </Botao>
         {acoes.haJuncao ? (
           <Botao variante="ghost" className="setting-row ffv2-extra" onClick={acoes.desfazerJuncao}>
@@ -518,7 +503,7 @@ export function Importacao({ estado, mudarEstado, avisar, acoes }: { estado: Est
           <Icone nome="upload" /><span><strong>Importar extrato</strong><small>Ficheiro XLSX, XLS ou CSV do banco · revês tudo antes de gravar</small></span>
         </Botao>
         <Botao variante="ghost" className="setting-row" disabled={!acoes.haParaDesfazer} onClick={() => acoes.desfazer(avisar)}>
-          <Icone nome="arrow-left" /><span><strong>Desfazer a última importação</strong><small>Remove os movimentos, repõe os salários e o saldo</small></span>
+          <Icone nome="arrow-left" /><span><strong>Desfazer a última importação</strong><small>Remove os movimentos e repõe os salários</small></span>
         </Botao>
       </section>
       <input

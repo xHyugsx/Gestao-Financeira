@@ -120,7 +120,7 @@ export function ApagarRecorrente({ movimento: m, fechar, saltar, parar }: {
       descricao={m ? `«${m.title.trim()}» é o último da série: é dele que sai a cópia seguinte.` : ''}
     >
       <ul className="ffapagar-opcoes">
-        <li><strong>Só este mês:</strong> desaparece das listas e do saldo; a série continua no próximo.</li>
+        <li><strong>Só este mês:</strong> desaparece das listas e dos totais; a série continua no próximo.</li>
         <li><strong>Parar a série:</strong> é apagado e deixa de haver cópias.</li>
       </ul>
       {m ? (
