@@ -1,5 +1,5 @@
 // Rendimento do mês X = salários do mês X−1 (regra de negócio da app).
-import { anoMes, inicioDoMes } from './datas';
+import { anoMes, diaDeVencimento, inicioDoMes } from './datas';
 import type { Dados } from './esquema';
 
 const SALARIO = /salario|vencimento|ordenado/;
@@ -37,4 +37,15 @@ export function rendimentoDoMes(dados: Pick<Dados, 'salaries' | 'transactions'>,
   const valor = salariosDoMes(dados, inicioDoMes(mes, -1));
   const anterior = salariosDoMes(dados, inicioDoMes(mes, -2));
   return { valor, anterior, variacao: anterior ? ((valor - anterior) / anterior) * 100 : null };
+}
+
+/**
+ * Mês do rendimento que a Principal mostra (v2.37.0): o mês escolhido, exceto no mês atual a partir do dia do ordenado
+ * (3.º dia útil a contar do fim do mês), em que já mostra o do mês seguinte — se os salários deste mês já estiverem registados.
+ */
+export function mesDoRendimento(dados: Pick<Dados, 'salaries' | 'transactions'>, mes: Date, hoje: Date): Date {
+  if (anoMes(mes) !== anoMes(hoje)) return mes;
+  const vencimento = diaDeVencimento(mes);
+  if (vencimento == null || hoje.getDate() < vencimento || !salariosDoMes(dados, mes)) return mes;
+  return inicioDoMes(mes, 1);
 }

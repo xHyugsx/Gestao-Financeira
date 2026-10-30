@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   acertarSaldo, agendado, aplicarBackup, diaDeVencimento, feriados, chave, type Conta, criarBackup, dataPorOmissao, estadoInicial, gravarDados, hashPin, lerBackup, lerDados,
-  limiteSaldoBaixo, type Movimento, normalizar, paraGravar, pinValido, PREFIXO_V2, rendimentoDoMes,
+  limiteSaldoBaixo, mesDoRendimento, type Movimento, normalizar, paraGravar, pinValido, PREFIXO_V2, rendimentoDoMes,
   salariosDoMes, saldoDaConta,
 } from './index';
 
@@ -134,6 +134,17 @@ describe('rendimento', () => {
 
   it('sem mês anterior não há variação', () => {
     expect(rendimentoDoMes(dados, new Date(2025, 5, 1)).variacao).toBeNull();
+  });
+
+  it('a partir do dia do ordenado (28 out 2026), com os salários de outubro registados, mostra o rendimento de novembro', () => {
+    const d = { salaries: { '2026': { A: [0, 0, 0, 0, 0, 0, 0, 0, 0, 1500, 0, 0] } }, transactions: [] };
+    const outubro = new Date(2026, 9, 1), am = (x: Date) => `${x.getFullYear()}-${x.getMonth() + 1}`;
+    expect(am(mesDoRendimento(d, outubro, new Date(2026, 9, 27, 23)))).toBe('2026-10');
+    expect(am(mesDoRendimento(d, outubro, new Date(2026, 9, 28, 8)))).toBe('2026-11');
+    expect(rendimentoDoMes(d, mesDoRendimento(d, outubro, new Date(2026, 9, 30))).valor).toBe(1500);
+    expect(am(mesDoRendimento({ salaries: {}, transactions: [] }, outubro, new Date(2026, 9, 30)))).toBe('2026-10');
+    expect(am(mesDoRendimento(d, new Date(2026, 8, 1), new Date(2026, 9, 30)))).toBe('2026-9');
+    expect(am(mesDoRendimento(d, new Date(2026, 10, 1), new Date(2026, 9, 30)))).toBe('2026-11');
   });
 });
 

@@ -1,4 +1,4 @@
-import { agendado, anoMes, type Estado, MESES, type Movimento, rendimentoDoMes } from '../dados';
+import { agendado, anoMes, type Estado, MESES, mesDoRendimento, type Movimento, rendimentoDoMes } from '../dados';
 import { aspetosCategorias, simplificar } from '../movimentos/categorias';
 import { LinhaMovimento } from '../movimentos/Movimento';
 import { diaEMes } from '../movimentos/regras';
@@ -31,7 +31,10 @@ export function Principal({ estado, mes, ocultos, lista, mudarLista, vibrar, abr
   const { accounts: contas, transactions: movimentos } = estado;
   const hoje = new Date();
   const eur = (v: number) => formatarEuros(v, ocultos);
-  const rendimento = rendimentoDoMes(estado, mes);
+  // No dia do ordenado, o círculo passa a mostrar o rendimento do mês seguinte (salários deste mês)
+  const mesRendimento = mesDoRendimento(estado, mes, hoje);
+  const rendimento = rendimentoDoMes(estado, mesRendimento);
+  const rotuloRendimento = anoMes(mesRendimento) === anoMes(mes) ? 'Rendimento mensal' : `Rendimento de ${MESES[mesRendimento.getMonth()]}`;
   const desceu = rendimento.anterior ? rendimento.valor < rendimento.anterior : false;
   const frase = !ocultos && anoMes(mes) === anoMes(hoje) ? fraseDoDia({ transactions: todos, annualExpenses: estado.annualExpenses }, hoje) : null;
 
@@ -57,9 +60,9 @@ export function Principal({ estado, mes, ocultos, lista, mudarLista, vibrar, abr
 
   return (
     <main className="finance-grid">
-      <section className="ffhero" aria-label="Rendimento mensal">
+      <section className="ffhero" aria-label={rotuloRendimento}>
         <div className="ffhero-ring">
-          <p>Rendimento mensal</p>
+          <p>{rotuloRendimento}</p>
           <strong className="ffhero-valor">{eur(rendimento.valor)}</strong>
           {rendimento.variacao !== null ? (
             <span className={desceu ? 'amount-negative' : 'amount-positive'}>
