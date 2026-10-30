@@ -62,3 +62,27 @@ async def t_temas_oceano_e_floresta(app):
     dados = json.loads(await p.evaluate("P=>localStorage.getItem(P+'v3')", PREFIXO))
     verificar(dados['appearance'].get('theme') == 'floresta', f"não gravou: {dados['appearance']}")
     verificar(not app.erros, f'erros: {app.erros}')
+
+
+async def t_cor_das_despesas(app):
+    await app.abrir({'transactions': [{'id': 1, 'title': 'Padaria', 'amount': -3, 'date': '2026-09-20', 'detail': '20 setembro · Alimentação', 'movementType': 'expense'}]})
+    p = app.page
+    cor = lambda: p.evaluate("getComputedStyle(document.querySelector('.page-current .transaction-list strong.amount-negative')).color")
+    var = lambda v: p.evaluate(f"(()=>{{const e=document.createElement('i');e.style.color='var({v})';document.body.append(e);const c=getComputedStyle(e).color;e.remove();return c}})()")
+    coral, vivo = await var('--despesa-coral'), await var('--negative')
+    verificar(await cor() == coral and coral != vivo, f'por omissão, coral suave (não o vermelho vivo): {await cor()} / {coral} / {vivo}')
+    tom_categoria = await p.evaluate("getComputedStyle(document.querySelector('.page-current .transaction-icon')).color")
+    await aparencia(app)
+    nomes = await p.evaluate("[...document.querySelectorAll('.ffcor-despesa span')].map(e=>e.textContent)")
+    verificar(nomes == ['Coral suave', 'Rosa', 'Laranja', 'Vermelho vivo', 'Sem cor'], f'opções: {nomes}')
+    await p.click('.ffcor-despesa button[data-cor="laranja"]'); await p.wait_for_timeout(300)
+    dados = json.loads(await p.evaluate("P=>localStorage.getItem(P+'v3')", PREFIXO))
+    verificar(dados['appearance'].get('expenseColor') == 'laranja', f"não gravou: {dados['appearance']}")
+    await p.reload(); await p.wait_for_timeout(1500)
+    verificar(await cor() == await var('--despesa-laranja'), f'laranja depois de reabrir: {await cor()}')
+    verificar(await p.evaluate("getComputedStyle(document.querySelector('.page-current .transaction-icon')).color") == tom_categoria, 'as cores das categorias não podem mudar')
+    await aparencia(app)
+    await p.click('.ffcor-despesa button[data-cor="vermelho"]'); await p.wait_for_timeout(300)
+    await p.go_back(); await p.wait_for_timeout(300); await p.go_back(); await p.wait_for_timeout(600)
+    verificar(await cor() == vivo, f'«Vermelho vivo» é o de antes: {await cor()} / {vivo}')
+    verificar(not app.erros, f'erros: {app.erros}')

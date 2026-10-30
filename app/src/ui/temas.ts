@@ -23,3 +23,27 @@ export function aplicarTema(tema: Tema | null): void {
   if (!tema || tema === 'cosmico') delete raiz.dataset.tema;
   else raiz.dataset.tema = tema;
 }
+
+/**
+ * Cor dos valores das despesas (Definições › Aparência; `appearance.expenseColor`, v2.39.0). Sem valor = coral suave
+ * (o vermelho vivo de antes cansava a vista). Aplicada em <html data-despesa>; só mexe nos valores, não nas categorias.
+ */
+export const CORES_DESPESA = [
+  { id: 'coral', nome: 'Coral suave' },
+  { id: 'rosa', nome: 'Rosa' },
+  { id: 'laranja', nome: 'Laranja' },
+  { id: 'vermelho', nome: 'Vermelho vivo' },
+  { id: 'neutra', nome: 'Sem cor' },
+] as const;
+
+export type CorDespesa = (typeof CORES_DESPESA)[number]['id'];
+
+export function corDespesaDe(appearance: { expenseColor?: unknown }): CorDespesa {
+  return CORES_DESPESA.some((c) => c.id === appearance.expenseColor) ? (appearance.expenseColor as CorDespesa) : 'coral';
+}
+
+export function aplicarCorDespesa(cor: CorDespesa): void {
+  const raiz = document.documentElement;
+  if (cor === 'coral') delete raiz.dataset.despesa;
+  else raiz.dataset.despesa = cor;
+}
