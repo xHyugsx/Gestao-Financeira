@@ -40,6 +40,22 @@ describe('movimentos recorrentes', () => {
     const seguro = { ...renda, recurringEvery: 12, date: '2025-09-28' };
     expect(gerarRecorrentes([seguro], new Date(2026, 8, 28), id)!.map((m) => m.date)).toEqual(['2026-09-28', '2025-09-28']);
   });
+
+  it('criado já «a definir» (mensal, dia 29): todos os meses nasce uma cópia por confirmar no dia 29', () => {
+    const internet: Movimento = { id: 7, title: 'Internet', detail: '29 outubro · Casa', amount: -0, date: '2026-10-29', movementType: 'expense', recurring: 'sem', recurringEvery: 1 };
+    expect(porConfirmar(internet)).toBe(true);
+    expect(gerarRecorrentes([internet], new Date(2026, 10, 28), id)).toBeNull();
+    const l = gerarRecorrentes([{ ...internet, amount: -42 }], new Date(2027, 0, 29), id)!;
+    expect(l.map((m) => [m.date, m.amount, porConfirmar(m)])).toEqual([['2027-01-29', 0, true], ['2026-12-29', 0, true], ['2026-11-29', 0, true], ['2026-10-29', -42, false]]);
+  });
+
+  it('anual de valor variável: no ano seguinte volta a nascer «a definir», mesmo depois de confirmado', () => {
+    const iuc: Movimento = { id: 8, title: 'IUC', detail: '15 março · Carro', amount: -95, date: '2026-03-15', movementType: 'expense', recurring: 'sem', recurringEvery: 12 };
+    const l = gerarRecorrentes([iuc], new Date(2027, 2, 15), id)!;
+    expect(l.map((m) => [m.date, m.amount])).toEqual([['2027-03-15', 0], ['2026-03-15', -95]]);
+    const confirmado = l.map((m) => (m.date === '2027-03-15' ? { ...m, amount: -101 } : m));
+    expect(gerarRecorrentes(confirmado, new Date(2028, 2, 15), id)![0]).toMatchObject({ date: '2028-03-15', amount: 0, recurring: 'sem', recurringEvery: 12 });
+  });
 });
 
 describe('cores das categorias', () => {
