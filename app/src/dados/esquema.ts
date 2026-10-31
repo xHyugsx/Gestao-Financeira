@@ -65,6 +65,8 @@ export interface Aparencia {
   autoHide: string;
   /** Tema da app (só na app nova): 'aurora', 'por-do-sol' ou 'dourado'; sem valor = Cósmico. */
   theme?: string;
+  /** Cor dos valores das despesas (só na app nova, v2.39.0): 'rosa', 'laranja', 'vermelho' ou 'neutra'; sem valor = coral suave. */
+  expenseColor?: string;
   [extra: string]: unknown;
 }
 

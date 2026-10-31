@@ -120,3 +120,19 @@ html[data-tema="dourado"] .calendar-day-active { background: linear-gradient(135
 .fftema-floresta i { background: conic-gradient(#84cc16, #22c55e, #14b8a6, #bef264, #84cc16); }
 .fftema-oceano strong { font-family: 'Outfit', sans-serif; } .fftema-floresta strong { font-family: 'Playfair Display', serif; }
 .fftema-aurora strong { font-family: 'Outfit', sans-serif; } .fftema-por-do-sol strong { font-family: 'Nunito', sans-serif; } .fftema-dourado strong { font-family: 'Playfair Display', serif; }
+
+/* ===== Cor dos valores das despesas (v2.39.0): coral suave por omissão, à escolha em Definições › Aparência.
+   Variável própria (--despesa) para não mudar as cores das categorias, que usam --negative. ===== */
+:root {
+  --despesa-coral: oklch(76% .12 30); --despesa-rosa: oklch(78% .13 340); --despesa-laranja: oklch(81% .12 65);
+  --despesa-vermelho: var(--negative); --despesa-neutra: var(--foreground); --despesa: var(--despesa-coral);
+}
+:root[data-despesa="rosa"] { --despesa: var(--despesa-rosa); }
+:root[data-despesa="laranja"] { --despesa: var(--despesa-laranja); }
+:root[data-despesa="vermelho"] { --despesa: var(--despesa-vermelho); }
+:root[data-despesa="neutra"] { --despesa: var(--despesa-neutra); }
+html .amount-negative, html .ffst-am.n { color: var(--despesa); }
+.ffcor-despesa { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .45rem; }
+.ffcor-despesa button { display: flex; flex-direction: column; align-items: flex-start; gap: .15rem; padding: .55rem .65rem; border-radius: .8rem; border: 1px solid var(--border); background: var(--card); color: var(--muted-foreground); font-size: .7rem; text-align: left; }
+.ffcor-despesa button[aria-pressed="true"] { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary) inset; }
+.ffcor-despesa b { font-family: var(--font-display); font-size: .82rem; font-weight: 700; white-space: nowrap; }

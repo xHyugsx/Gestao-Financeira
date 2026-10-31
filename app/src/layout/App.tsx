@@ -49,7 +49,7 @@ import { type ListaMovimentos, Principal } from '../paginas/Principal';
 import { Botao } from '../ui/Botao';
 import { Icone } from '../ui/Icone';
 import { useAnimacaoNumeros } from './animacaoNumeros';
-import { aplicarTema, temaDe } from '../ui/temas';
+import { aplicarCorDespesa, aplicarTema, corDespesaDe, temaDe } from '../ui/temas';
 import { saudacao, svgDoCeu } from './ceu';
 import { COR_MAIS, PAGINAS, PAGINAS_MAIS } from './paginas';
 
@@ -136,6 +136,8 @@ export function App() {
   const aparencia = estado.appearance;
   const tema = temaDe(aparencia);
   useEffect(() => { aplicarTema(bloqueada ? null : tema); }, [tema, bloqueada]);
+  const corDespesa = corDespesaDe(aparencia);
+  useEffect(() => { aplicarCorDespesa(corDespesa); }, [corDespesa]);
 
   vibracao.ligada = aparencia.haptics !== false;
   const vibrar = useCallback((padrao: number | number[]) => {

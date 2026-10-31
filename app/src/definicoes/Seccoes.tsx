@@ -6,7 +6,7 @@ import { coresCategorias, corNova } from '../movimentos/cores';
 import { Botao } from '../ui/Botao';
 import { Icone } from '../ui/Icone';
 import { montarEspaco } from './espaco';
-import { TEMAS as TEMAS_APP, temaDe } from '../ui/temas';
+import { CORES_DESPESA, corDespesaDe, TEMAS as TEMAS_APP, temaDe } from '../ui/temas';
 import { SENHA_MIN } from '../dados';
 import { type ConfigDrive, enderecoDeRetorno, type FicheiroDrive } from '../dados/drive';
 import { type Animal, animaisDe } from '../veterinario/animais';
@@ -250,6 +250,16 @@ export function Aparencia({ estado, mudarEstado }: { estado: Estado; mudarEstado
         ))}
       </div>
       </>) : null}
+      <div className="settings-divider" />
+      <h3>Cor das despesas</h3>
+      <div className="ffcor-despesa" role="group" aria-label="Cor das despesas">
+        {CORES_DESPESA.map((c) => (
+          <button key={c.id} type="button" data-cor={c.id} aria-pressed={corDespesaDe(a) === c.id} onClick={() => mudar({ expenseColor: c.id })}>
+            <b style={{ color: `var(--despesa-${c.id})` }}>−12,30 €</b><span>{c.nome}</span>
+          </button>
+        ))}
+      </div>
+      <div className="settings-divider" />
       <label className="range-setting">
         <span><strong>Intensidade do fundo</strong><small>{a.backgroundIntensity}%</small></span>
         <input type="range" min="0" max="100" step="25" value={a.backgroundIntensity} onChange={(ev) => mudar({ backgroundIntensity: Number(ev.target.value) })} />
