@@ -25,7 +25,7 @@ async def t_animais_deduzidos_dos_dados(app):
 async def t_mudar_o_nome_de_um_animal(app):
     await app.abrir(DADOS, LEMBRETES)
     p = app.page
-    await p.click('button[aria-label="Definições"]'); await p.wait_for_timeout(400)
+    await p.click('button[aria-label="Jarvis e definições"]'); await p.wait_for_timeout(400)
     await p.click('.set-menu-item:has-text("Perfil e família")'); await p.wait_for_timeout(500)
     verificar(await p.input_value('[aria-label="Nome do animal 1"]') == 'Nina' and await p.input_value('[aria-label="Sexo do animal 1"]') == 'm',
               'devia começar pelos animais dos lembretes')

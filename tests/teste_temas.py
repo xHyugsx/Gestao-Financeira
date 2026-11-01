@@ -8,7 +8,7 @@ TEMA = "document.documentElement.dataset.tema || ''"
 
 async def aparencia(app):
     p = app.page
-    await p.click('button[aria-label="Definições"]'); await p.wait_for_timeout(400)
+    await p.click('button[aria-label="Jarvis e definições"]'); await p.wait_for_timeout(400)
     await p.click('.set-menu-more'); await p.wait_for_timeout(400)
     await p.click('.settings-list .setting-row:has-text("Aparência")'); await p.wait_for_timeout(400)
 

@@ -4,7 +4,7 @@ from correr import verificar
 async def t_app_abre_sem_erros(app):
     await app.abrir()
     verificar(await app.page.query_selector('.bottom-nav'), 'barra inferior não apareceu')
-    verificar(await app.page.query_selector('.ffhero-ring'), 'círculo do rendimento não apareceu')
+    verificar(await app.page.query_selector('.ffhero-orbita .ffhero-anel'), 'cartão do rendimento não apareceu')
 
 
 async def t_versao_igual_em_app_js_e_version_json(app):

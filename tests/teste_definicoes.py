@@ -9,7 +9,7 @@ PIN_0000 = hashlib.sha256(b'financas-familiar:0000').hexdigest()
 
 async def seguranca(app):
     p = app.page
-    await p.click('button[aria-label="Definições"]'); await p.wait_for_timeout(400)
+    await p.click('button[aria-label="Jarvis e definições"]'); await p.wait_for_timeout(400)
     await p.click('.set-menu-more'); await p.wait_for_timeout(500)
     await p.click('.setting-row:has-text("Segurança")'); await p.wait_for_timeout(500)
 
@@ -111,7 +111,7 @@ async def t_voltar_fecha_as_definicoes(app):
     verificar(await p.query_selector('.settings-list'), '«Voltar» na Segurança não voltou à lista')
     await p.go_back(); await p.wait_for_timeout(600)
     verificar(not await p.query_selector('.settings-sheet'), 'o botão «voltar» do telemóvel não fechou as Definições')
-    await p.click('button[aria-label="Definições"]'); await p.wait_for_timeout(400)
+    await p.click('button[aria-label="Jarvis e definições"]'); await p.wait_for_timeout(400)
     await p.click('.set-menu-item:has-text("Segurança")'); await p.wait_for_timeout(500)
     await p.click('.sheet-back'); await p.wait_for_timeout(600)
     verificar(not await p.query_selector('.settings-sheet'), 'aberta pelo menu rápido, «Voltar» não fechou as Definições')
@@ -119,7 +119,7 @@ async def t_voltar_fecha_as_definicoes(app):
 
 async def seccao(app, nome):
     p = app.page
-    await p.click('button[aria-label="Definições"]'); await p.wait_for_timeout(400)
+    await p.click('button[aria-label="Jarvis e definições"]'); await p.wait_for_timeout(400)
     await p.click('.set-menu-more'); await p.wait_for_timeout(500)
     await p.click(f'.setting-row:has-text("{nome}")'); await p.wait_for_timeout(500)
 

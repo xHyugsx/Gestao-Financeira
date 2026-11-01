@@ -41,8 +41,8 @@ function espacoOcupado(): string {
 
 export interface PosicaoMenu { t: number; r: number; out?: boolean }
 
-export function MenuRapido({ posicao, estado, versao, fechar, abrir }: {
-  posicao: PosicaoMenu; estado: Estado; versao: string; fechar: () => void; abrir: (s?: Seccao) => void;
+export function MenuRapido({ posicao, estado, versao, fechar, abrir, jarvis }: {
+  posicao: PosicaoMenu; estado: Estado; versao: string; fechar: () => void; abrir: (s?: Seccao) => void; jarvis: () => void;
 }) {
   const itens: [Seccao, NomeIcone, string, string][] = [
     ['profile', 'user-round', 'Perfil e família', resumoPerfil(estado)],
@@ -52,7 +52,10 @@ export function MenuRapido({ posicao, estado, versao, fechar, abrir }: {
   ];
   return (
     <div className={`set-menu-overlay${posicao.out ? ' is-out' : ''}`} onClick={(e) => { if (e.target === e.currentTarget) fechar(); }}>
-      <nav className="set-menu" style={{ top: `${posicao.t}px`, right: `${posicao.r}px` }} aria-label="Definições rápidas">
+      <nav className="set-menu" style={{ top: `${posicao.t}px`, right: `${posicao.r}px` }} aria-label="Jarvis e definições">
+        <button type="button" className="set-menu-item set-menu-jarvis" onClick={jarvis}>
+          <i className="set-menu-robo" aria-hidden="true" /><span><strong>Perguntar ao Jarvis</strong><small>Gastos, previsões, registos…</small></span>
+        </button>
         <p className="set-menu-version">{`v. ${versao}`}</p>
         {itens.map(([s, icone, titulo, resumo]) => (
           <button key={s} type="button" className="set-menu-item" onClick={() => abrir(s)}>

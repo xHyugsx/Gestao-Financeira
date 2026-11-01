@@ -5,7 +5,7 @@ MANUAL = {'transactions': [{'id': 1, 'title': 'Mercado', 'amount': -12.3, 'date'
 
 async def anexar(app, ficheiro):
     p = app.page
-    await p.click('.jarvis-fab'); await p.wait_for_timeout(400)
+    await app.abrir_jarvis()
     await p.set_input_files('.jarvis-attach input', ficheiro); await p.wait_for_timeout(1500)
 
 

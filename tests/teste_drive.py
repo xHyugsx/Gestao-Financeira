@@ -76,7 +76,7 @@ async def preparar(app, drive):
 
 async def abrir_backup(app):
     p = app.page
-    await p.click('button[aria-label="Definições"]'); await p.wait_for_timeout(400)
+    await p.click('button[aria-label="Jarvis e definições"]'); await p.wait_for_timeout(400)
     await p.click('.set-menu-more'); await p.wait_for_timeout(400)
     await p.click('.settings-list .setting-row:has-text("Backup")'); await p.wait_for_timeout(500)
 

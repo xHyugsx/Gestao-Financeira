@@ -22,7 +22,7 @@ async def t_salario_recorrente_e_recibo(app):
     ms = sorted(await app.movimentos(), key=lambda m: m['date'])
     verificar([(m['date'], m['amount']) for m in ms] == [('2026-08-27', 1500), ('2026-09-28', 0)], f'cópia no dia do salário (28/09), por confirmar: {ms}')
     verificar(await p.query_selector('.page-current article[aria-label="Editar Salário Rui"] .ffconfirmar'), 'falta «Valor por confirmar» no salário')
-    await p.click('.jarvis-fab'); await p.wait_for_timeout(400)
+    await app.abrir_jarvis()
     await p.set_input_files('.jarvis-attach input', ficheiro(RECIBO)); await p.wait_for_timeout(1200)
     r = (await p.evaluate("[...document.querySelectorAll('.jarvis-msg-ai')].pop().textContent")).replace(' ', ' ')
     verificar('Receita «Salário Rui» de setembro, por confirmar' in r, r)
