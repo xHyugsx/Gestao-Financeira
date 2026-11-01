@@ -8,7 +8,7 @@ DADOS = {'transactions': [MOV(1, 'Mercado Fictício', -12.3), MOV(2, 'Padaria Fi
 
 async def definicoes(app, linha):
     p = app.page
-    await p.click('button[aria-label="Definições"]'); await p.wait_for_timeout(400)
+    await p.click('button[aria-label="Jarvis e definições"]'); await p.wait_for_timeout(400)
     await p.click('.set-menu-more'); await p.wait_for_timeout(400)
     await p.click(f'.settings-list .setting-row:has-text("{linha}")'); await p.wait_for_timeout(400)
 
@@ -48,7 +48,7 @@ async def t_backup_protegido_cria_e_restaura(app):
     verificar('restaurada com sucesso' in await p.inner_text('.settings-message'), 'falta a mensagem de restauro')
 
     await p.go_back(); await p.wait_for_timeout(500)
-    await p.click('.jarvis-fab'); await p.wait_for_timeout(400)
+    await app.abrir_jarvis()
     await p.set_input_files('.jarvis-attach input', str(caminho)); await p.wait_for_timeout(1200)
     r = await p.evaluate("[...document.querySelectorAll('.jarvis-msg-ai')].pop().textContent")
     verificar('protegido com palavra-passe' in r, r)

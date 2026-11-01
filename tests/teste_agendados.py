@@ -14,7 +14,7 @@ async def t_agendados_a_parte_e_nos_gastos_do_mes(app):
     await app.abrir(DADOS)
     p = app.page
     resumo = (await p.text_content('.page-current .ffagendados-resumo') or '').strip()
-    verificar('1 agendado · próximo: Renda, 30 setembro' in resumo, f'resumo dos agendados (só os deste mês): {resumo}')
+    verificar('Agendado' in resumo and 'Renda · 30 setembro' in resumo and '300,00' in resumo.replace('\xa0', ' '), f'bloco do agendado (só os deste mês): {resumo}')
     verificar(await p.evaluate("[...document.querySelectorAll('.page-current .transaction-list article h3')].map(e=>e.textContent)") == ['Supermercado'],
               'os agendados não podem tapar os movimentos recentes')
     await p.click('.page-current .ffagendados-resumo'); await p.wait_for_timeout(500)

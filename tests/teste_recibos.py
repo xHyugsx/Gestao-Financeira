@@ -16,7 +16,7 @@ def ficheiro(texto):
 
 async def anexar(app, caminho):
     p = app.page
-    await p.click('.jarvis-fab'); await p.wait_for_timeout(400)
+    await app.abrir_jarvis()
     await p.set_input_files('.jarvis-attach input', caminho); await p.wait_for_timeout(1200)
     return await p.evaluate("[...document.querySelectorAll('.jarvis-msg-ai')].pop().textContent")
 

@@ -75,7 +75,7 @@ function csvDosMovimentos(movimentos: Estado['transactions']): string {
 interface Transicao { para: string; dir: Direcao; dx: number; volta?: boolean }
 interface Toque { x: number; y: number; t: number; eixo: 'x' | 'y' | null; dx?: number }
 
-const NAO_DESLIZA = "input, textarea, select, [role='slider'], .segmented, .calendar-grid, table, .bottom-nav, [role='dialog']";
+const NAO_DESLIZA = "input, textarea, select, [role='slider'], .segmented, .calendar-grid, table, .bottom-nav, [role='dialog'], .ffmeses";
 const ids = PAGINAS.map((p) => p.id);
 const reduzMovimento = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
@@ -107,6 +107,7 @@ export function App() {
   const [mensagens, setMensagens] = useState<Mensagem[]>(mensagensGuardadas);
   const motor = useRef(new MotorJarvis()).current;
   const fecharJarvisT = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const toqueMeses = useRef<number | null>(null);
   const folhaAberta = useRef(folha);
   folhaAberta.current = folha;
   const [ultimoBackup, setUltimoBackup] = useState(() => { try { return localStorage.getItem(chave('ultimoBackup', PREFIXO)) || ''; } catch { return ''; } });
@@ -685,7 +686,7 @@ export function App() {
     const deslizar = (seletor: string, px: number, ms: number) => document.querySelectorAll<HTMLElement>(seletor).forEach((el) => el.animate?.(
       [{ transform: `translateX(${sentido * px}px)`, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: ms, easing: curva }));
     deslizar('.page-current > *', 36, 340);
-    deslizar('.month-switcher > span, .ffcompacto-mes', 18, 260);
+    deslizar('.month-switcher > span, .ffcompacto-mes, .ffmeses > button', 18, 260);
   }, [desvioMes, bloqueada]);
 
   if (bloqueada) return <EcraBloqueio key="ff-lock" hash={estado.pinHash} aoDesbloquear={() => setBloqueada(false)} />;
@@ -728,7 +729,7 @@ export function App() {
   const conteudo = (id: string) => {
     switch (id) {
       case 'principal':
-        return <Principal estado={visivel} todos={estado.transactions} mes={mes} ocultos={ocultos} lista={lista} mudarLista={setLista} vibrar={vibrar} abrirMovimento={setAEditar} />;
+        return <Principal estado={visivel} todos={estado.transactions} mes={mes} ocultos={ocultos} lista={lista} mudarLista={setLista} vibrar={vibrar} abrirMovimento={setAEditar} abrirJarvis={abrirJarvis} />;
       case 'analise':
         return <Analise estado={visivel} mes={mes} ocultos={ocultos} tipo={tipoAnalise} mudarTipo={setTipoAnalise} />;
       case 'calendario':
@@ -752,6 +753,32 @@ export function App() {
     }
   };
 
+  const abrirJarvis = () => { clearTimeout(fecharJarvisT.current); document.querySelector('.jarvis-overlay')?.classList.remove('is-out'); setJarvis(true); };
+  const mudarMes = (n: number) => { vibrar(8); setDesvioMes((d) => d + n); };
+  // Meses em pílulas na Principal (tocar ou deslizar muda de mês); nas outras páginas, as setas de sempre
+  const pilulasMeses = (
+    <div
+      className="month-switcher ffmeses" aria-label="Selecionar mês"
+      onTouchStart={(e) => { toqueMeses.current = e.touches[0]?.clientX ?? null; }}
+      onTouchEnd={(e) => {
+        const x0 = toqueMeses.current, x1 = e.changedTouches[0]?.clientX;
+        toqueMeses.current = null;
+        if (x0 != null && x1 != null && Math.abs(x1 - x0) > 40) mudarMes(x1 < x0 ? 1 : -1);
+      }}
+    >
+      {[-2, -1, 0, 1, 2].map((k) => {
+        const d = inicioDoMes(mes, k), curto = `${MESES[d.getMonth()]!.slice(0, 3)}${d.getFullYear() !== mes.getFullYear() ? ` ${String(d.getFullYear()).slice(2)}` : ''}`;
+        return k === 0
+          ? <span key="atual" className="ffmeses-atual">{`${MESES[mes.getMonth()]} ${mes.getFullYear()}`}</span>
+          : (
+            <button
+              key={k} type="button" onClick={() => mudarMes(k)}
+              aria-label={k === -1 ? 'Mês anterior' : k === 1 ? 'Mês seguinte' : `${MESES[d.getMonth()]} de ${d.getFullYear()}`}
+            >{curto}</button>
+          );
+      })}
+    </div>
+  );
   const cabecalhoDe = transicao && !transicao.volta ? transicao.para : pagina;
   const nome = (estado.profile?.profileName || '').trim().split(/\s+/)[0];
   const ferramentas = (
@@ -761,11 +788,9 @@ export function App() {
         aria-pressed={ocultos} onClick={() => setOcultos((v) => !v)}
       ><Icone nome={ocultos ? 'eye-off' : 'eye'} /></button>
       <button
-        type="button" className={menu ? 'head-tool head-tool-on' : 'head-tool'} aria-label="Definições" aria-expanded={!!menu}
+        type="button" className={menu ? 'head-tool head-jarvis head-tool-on' : 'head-tool head-jarvis'} aria-label="Jarvis e definições" aria-haspopup="menu" aria-expanded={!!menu}
         onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); setMenu({ t: Math.round(r.bottom + 8), r: Math.max(8, Math.round(window.innerWidth - r.right)) }); }}
-      >
-        <Icone nome="settings" />
-      </button>
+      />
     </div>
   );
 
@@ -824,11 +849,13 @@ export function App() {
             {ferramentas}
           </header>
         )}
-        <div className="month-switcher" aria-label="Selecionar mês">
-          <Botao variante="ghost" tamanho="icone" onClick={() => { vibrar(8); setDesvioMes((d) => d - 1); }} aria-label="Mês anterior"><Icone nome="chevron-left" /></Botao>
-          <span>{`${MESES[mes.getMonth()]} de ${mes.getFullYear()}`}</span>
-          <Botao variante="ghost" tamanho="icone" onClick={() => { vibrar(8); setDesvioMes((d) => d + 1); }} aria-label="Mês seguinte"><Icone nome="chevron-right" /></Botao>
-        </div>
+        {cabecalhoDe === 'principal' ? pilulasMeses : (
+          <div className="month-switcher" aria-label="Selecionar mês">
+            <Botao variante="ghost" tamanho="icone" onClick={() => mudarMes(-1)} aria-label="Mês anterior"><Icone nome="chevron-left" /></Botao>
+            <span>{`${MESES[mes.getMonth()]} de ${mes.getFullYear()}`}</span>
+            <Botao variante="ghost" tamanho="icone" onClick={() => mudarMes(1)} aria-label="Mês seguinte"><Icone nome="chevron-right" /></Botao>
+          </div>
+        )}
         <div className="page-viewport">
           <div key={`pg-${pagina}`} className="page-current" style={estiloAtual as React.CSSProperties}>{conteudo(pagina)}</div>
           {seguinte ? (
@@ -850,18 +877,6 @@ export function App() {
         <Icone nome="plus" />
         {onda ? <span key={onda} className="ffplus-onda" aria-hidden="true" /> : null}
       </Botao>
-      <button
-        type="button" className="jarvis-fab ffjv-fab" aria-label="Abrir Jarvis"
-        onClick={() => { clearTimeout(fecharJarvisT.current); document.querySelector('.jarvis-overlay')?.classList.remove('is-out'); setJarvis(true); }}
-      >
-        <svg className="ffjv-orb o1" viewBox="0 0 32 32" aria-hidden="true">
-          <ellipse cx="16" cy="16" rx="14.5" ry="5.2" fill="none" stroke="#9ff6ff" strokeOpacity=".75" strokeWidth=".7" transform="rotate(25 16 16)" />
-          <circle cx="29.6" cy="12.6" r=".9" fill="#00F0FF" />
-        </svg>
-        <svg className="ffjv-orb o2" viewBox="0 0 32 32" aria-hidden="true">
-          <ellipse cx="16" cy="16" rx="14.5" ry="5.2" fill="none" stroke="#9ff6ff" strokeOpacity=".45" strokeWidth=".7" transform="rotate(-30 16 16)" />
-        </svg>
-      </button>
       <Jarvis
         aberto={jarvis} fechar={fecharJarvis} motor={motor} contexto={contextoJarvis} vocabulario={vocabularioJarvis} lerAnexo={lerAnexo}
         pagina={pagina} nome={nome ?? ''} teclado={teclado} vibrar={vibrar} mensagens={mensagens} mudarMensagens={setMensagens}
@@ -879,6 +894,7 @@ export function App() {
         <MenuRapido
           posicao={menu} estado={visivel} versao={VERSAO} fechar={fecharMenu}
           abrir={(s) => { setMenu(null); abrirFolha(s ? 'direct' : 'list', s); }}
+          jarvis={() => { setMenu(null); abrirJarvis(); }}
         />
       ) : null}
       <nav className="bottom-nav" aria-label="Navegação principal">

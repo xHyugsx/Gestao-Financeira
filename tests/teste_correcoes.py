@@ -129,7 +129,7 @@ async def t_contas_so_com_nomes(app):
               {'id': 'ed', 'name': 'Cartão refeição', 'balance': 146, 'createdAt': '2026-06', 'lowAt': 20, 'adjDays': {'2026-09-01': -4}}]
     await app.abrir({'accounts': contas, 'transactions': [MOV(1, 'Almoço', '2026-09-10', v=-20, account='ed')]})
     p = app.page
-    await p.click('button[aria-label="Definições"]'); await p.wait_for_timeout(400)
+    await p.click('button[aria-label="Jarvis e definições"]'); await p.wait_for_timeout(400)
     await p.click('.set-menu-item:has-text("Contas bancárias")'); await p.wait_for_timeout(500)
     verificar(not await p.query_selector('.settings-panel input[name$="-balance"], .settings-panel input[name$="-low"]'), 'as contas já não têm saldo nem aviso de saldo baixo')
     await p.fill('input[name="ed-name"]', 'Edenred'); await p.click('.settings-panel button[type=submit]'); await p.wait_for_timeout(400)

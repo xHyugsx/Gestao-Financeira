@@ -1,6 +1,7 @@
 // Ponto de entrada da app.
 import '../../css/app.css';
 import './v2.css';
+import './orbita.css';
 import './temas.css';
 import { createRoot } from 'react-dom/client';
 import { iniciarAtualizacoes } from './atualizacoes';

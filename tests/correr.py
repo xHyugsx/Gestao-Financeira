@@ -81,10 +81,16 @@ class App:
             await p.wait_for_timeout(200)
         await p.wait_for_timeout(500); await p.wait_for_load_state('load')
 
+    async def abrir_jarvis(self):
+        """O Jarvis abre pelo robô do topo (menu com «Perguntar ao Jarvis» e as Definições)."""
+        p = self.page
+        await p.click('button[aria-label="Jarvis e definições"]'); await p.wait_for_timeout(400)
+        await p.click('.set-menu-jarvis'); await p.wait_for_timeout(500)
+
     async def jarvis(self, pergunta):
         p = self.page
         if not await p.query_selector('.jarvis-overlay'):
-            await p.click('.jarvis-fab'); await p.wait_for_timeout(500)
+            await self.abrir_jarvis()
         await p.fill('[aria-label="Mensagem para o Jarvis"]', pergunta); await p.keyboard.press('Enter')
         await p.wait_for_timeout(750)
         return await p.evaluate("[...document.querySelectorAll('.jarvis-msg-ai')].pop().textContent")

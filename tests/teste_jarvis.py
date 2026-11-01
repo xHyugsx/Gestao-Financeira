@@ -72,7 +72,7 @@ async def t_limpar_conversa_sem_confirmacao(app):
 async def t_recibo_le_ticket_refeicao(app):
     await app.abrir({'profile': {'profileName': '', 'email': '', 'phone': '', 'members': ['Davi', 'Clara']}})
     p = app.page
-    await p.click('.jarvis-fab'); await p.wait_for_timeout(400)
+    await app.abrir_jarvis()
     await p.set_input_files('.jarvis-attach input', 'tests/dados/recibo_ficticio.txt'); await p.wait_for_timeout(1200)
     r = await p.evaluate("[...document.querySelectorAll('.jarvis-msg-ai')].pop().textContent")
     verificar('1234,56' in r.replace('.', '').replace(' ', '') and '117,60' in r and '712,17' not in r, r)

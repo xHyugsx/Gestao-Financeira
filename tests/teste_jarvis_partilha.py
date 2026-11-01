@@ -32,7 +32,7 @@ async def t_mensagens_novas_com_animacao(app):
     await app.jarvis('Quanto gastei este mês?')
     verificar(await p.evaluate("[...document.querySelectorAll('.jarvis-box-msgs > *')].slice(-2).every(e=>e.className.includes('ffjv-novo'))"), 'as mensagens novas deviam ter animação')
     await p.click('[aria-label="Fechar Jarvis"]'); await p.wait_for_timeout(400)
-    await p.click('.jarvis-fab'); await p.wait_for_timeout(500)
+    await app.abrir_jarvis()
     verificar(not await p.query_selector('.jarvis-box-msgs .ffjv-novo'), 'ao reabrir, as mensagens antigas aparecem sem animação')
     verificar(not app.erros, f'erros: {app.erros}')
 
