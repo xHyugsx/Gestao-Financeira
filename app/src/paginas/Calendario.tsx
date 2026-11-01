@@ -7,6 +7,14 @@ import { formatarEuros } from '../ui/formatos';
 import { calorDoMes, diasDoMes, doMes } from './calculos';
 
 const DIAS_SEMANA = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+const NOMES_DIA = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+
+/** Maior sequência de dias seguidos sem despesas (dias já passados). */
+function maiorSequencia(dias: number[]): number {
+  let melhor = 0, atual = 0, antes = -1;
+  for (const d of dias) { atual = d === antes + 1 ? atual + 1 : 1; antes = d; melhor = Math.max(melhor, atual); }
+  return melhor;
+}
 const LEGENDA: [string, string][] = [['in', 'Receita'], ['out', 'Despesa'], ['rec', 'Recorrente'], ['tr', 'Transferência']];
 
 /** Tipo do símbolo de cada movimento num dia do calendário (▲ receita, ▼ despesa, ○ recorrente, ◆ transferência). */
@@ -39,9 +47,27 @@ export function Calendario({ estado, mes, ocultos, diaEscolhido, escolherDia, as
   // total gasto em cada semana (coluna à direita): as células vão de 7 em 7, a última semana completa-se com vazios
   const semanas = Array.from({ length: Math.ceil(celulas.length / 7) }, (_, k) => celulas.slice(k * 7, k * 7 + 7));
   const totalCurto = (v: number) => (ocultos ? '•••' : `${Math.round(v).toLocaleString('pt-PT')} €`);
+  const nomeDia = (d: number) => NOMES_DIA[new Date(mes.getFullYear(), mes.getMonth(), d).getDay()]!;
+  const sequencia = maiorSequencia(calor.semGastos);
+  const maiorDoDia = calor.maisCaro !== null
+    ? doDia(calor.maisCaro).filter((m) => m.movementType === 'expense').sort((a, b) => a.amount - b.amount)[0] : undefined;
+  const nivelEscolhido = calor.nivel[diaEscolhido] ?? 0;
+  const pontoEscolhido = `${anoMes(mes)}-${String(diaEscolhido).padStart(2, '0')}` > hoje ? 'futuro' : nivelEscolhido ? `q${nivelEscolhido}` : 'sem';
 
   return (
     <main className="detail-view calendar-view">
+      <section className="ffcal-resumos" aria-label="Resumo do mês">
+        <article className="ffbloco">
+          <p className="ffbloco-rot">Sem despesas</p>
+          <strong className="ffbloco-val">{`${calor.semGastos.length} ${calor.semGastos.length === 1 ? 'dia' : 'dias'}`}</strong>
+          <small>{sequencia > 1 ? `o melhor: ${sequencia} seguidos` : calor.semGastos.length ? 'nenhum seguido' : 'todos com despesas'}</small>
+        </article>
+        <article className="ffbloco">
+          <p className="ffbloco-rot">Dia mais caro</p>
+          <strong className="ffbloco-val">{calor.maisCaro !== null ? formatarEuros(calor.gasto[calor.maisCaro]!, ocultos) : '—'}</strong>
+          <small>{calor.maisCaro !== null ? `${nomeDia(calor.maisCaro)}, ${calor.maisCaro}${maiorDoDia ? ` · ${maiorDoDia.title.trim()}` : ''}` : 'sem gastos'}</small>
+        </article>
+      </section>
       <section className="calendar-panel">
         <div className="calendar-weekdays ffcal-com-semana">{DIAS_SEMANA.map((d) => <span key={d}>{d}</span>)}<span className="ffcal-semana-titulo">Total</span></div>
         <div key={anoMes(mes)} className="calendar-grid ffcal-com-semana">
@@ -71,22 +97,17 @@ export function Calendario({ estado, mes, ocultos, diaEscolhido, escolherDia, as
           <span key="sal"><b>€</b>Salário</span>
         </div>
         <div className="ffcal-calor" aria-label="Gasto por dia">
-          <span className="ffcal-titulo">Gasto do dia:</span><span>Pouco</span>{[1, 2, 3, 4].map((n) => <i key={n} className={`ffcal-q${n}`} />)}<span>Muito</span>
+          <span>pouco</span><span className="ffcal-escala">{[1, 2, 3, 4].map((n) => <i key={n} className={`ffcal-q${n}`} />)}</span><span>muito</span>
           <span className="ffcal-zero-leg"><i className="ffcal-zero" />Sem despesas</span>
           {calor.previsto.some(Boolean) ? <span className="ffcal-zero-leg"><i className="ffcal-futuro" />Agendado</span> : null}
         </div>
-        {calor.maisCaro !== null || calor.semGastos.length ? (
-          <p className="ffcal-resumo">
-            {calor.semGastos.length ? `${calor.semGastos.length} ${calor.semGastos.length === 1 ? 'dia' : 'dias'} sem despesas` : 'Todos os dias com despesas'}
-            {calor.maisCaro !== null ? ` · dia mais caro: ${calor.maisCaro} (${formatarEuros(calor.gasto[calor.maisCaro]!, ocultos)})` : ''}
-          </p>
-        ) : null}
       </section>
       <section className="calendar-movements">
         <div className="section-heading">
+          <i className={`ffponto ffponto-${pontoEscolhido}`} aria-hidden="true" />
           <div>
             <p className="eyebrow">{diaEscolhido} de {MESES[mes.getMonth()]}{calor.gasto[diaEscolhido] ? ` · gasto ${formatarEuros(calor.gasto[diaEscolhido]!, ocultos)}` : ''}</p>
-            <h2>Movimentos do dia</h2>
+            <h2>{`${nomeDia(diaEscolhido).charAt(0).toUpperCase()}${nomeDia(diaEscolhido).slice(1)}, ${diaEscolhido}`}</h2>
           </div>
           <strong>{escolhidos.length}</strong>
         </div>

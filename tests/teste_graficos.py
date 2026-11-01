@@ -36,11 +36,12 @@ async def t_donut_destaca_a_fatia_tocada(app):
     verificar(not app.erros, f'erros: {app.erros}')
 
 
-async def t_setas_juntam_as_fatias_pequenas(app):
+async def t_legenda_ao_lado_junta_as_fatias_pequenas(app):
     await abrir_analise(app)
-    textos = await app.page.evaluate("[...document.querySelectorAll('.page-current .donut-callouts text')].map(e=>e.textContent)")
-    verificar('Outras' in textos and 'Saúde' not in textos and 'Educação' not in textos, f'Saúde e Educação (<5%) deviam ir para «Outras»: {textos}')
-    verificar('2%' in textos, f'«Outras» com 2%: {textos}')
+    textos = await app.page.evaluate("[...document.querySelectorAll('.page-current .ffdonut-lado li')].map(e=>e.innerText.replace(/\\s+/g,' '))")
+    verificar(not await app.page.query_selector('.page-current .donut-callouts'), 'as setas do circular saíram (legenda ao lado)')
+    verificar(any(t.startswith('Outras') for t in textos) and not any(t.startswith(('Saúde', 'Educação')) for t in textos), f'Saúde e Educação (<5%) deviam ir para «Outras»: {textos}')
+    verificar('Outras 2%' in textos, f'«Outras» com 2%: {textos}')
 
 
 async def t_barras_mostram_o_valor_e_medias_neutras(app):
@@ -62,3 +63,28 @@ async def t_barras_mostram_o_valor_e_medias_neutras(app):
     verificar(valor == '15 set · 500,00 €', f'valor do dia 15: {valor}')
     verificar('ffbarra-atual' in (await p.locator('.page-current .bar-chart > div').nth(27).get_attribute('class') or ''), 'hoje (28) devia estar realçado')
     verificar(not app.erros, f'erros: {app.erros}')
+
+
+async def t_diario_com_calor_e_barra_cortada(app):
+    await app.page.emulate_media(reduced_motion='reduce')
+    await app.abrir({'transactions': [M(1, '2026-09-01', 'Renda', -600, 'Casa'), M(2, '2026-09-05', 'Mercado', -40, 'Alimentação'), M(3, '2026-09-09', 'Café', -20, 'Lazer')]})
+    p = app.page
+    await p.evaluate("window.ffGoPg('analise')"); await p.wait_for_timeout(700)
+    await p.click('.page-current .segmented button:text-is("Diário")'); await p.wait_for_timeout(400)
+    classes = await p.evaluate("[...document.querySelectorAll('.page-current .bar-chart > div')].map(d=>d.className)")
+    verificar('ffbarra-cortada' in classes[0] and 'ffbarra-q' in classes[0], f'dia 1 muito acima dos outros: barra cortada e com cor: {classes[0]}')
+    verificar('ffbarra-cortada' not in classes[4] and 'ffbarra-q' in classes[4] and 'ffbarra-q' not in classes[1], f'outros dias: {classes[4]} | {classes[1]}')
+    altura = await p.evaluate("document.querySelector('.page-current .bar-chart > div:nth-child(5) > i').style.height")
+    verificar(float(altura.rstrip('%')) > 50, f'com o corte, o dia 5 deixa de ficar raso: {altura}')
+    resumos = await p.evaluate("[...document.querySelectorAll('.page-current .ffresumos-dia .ffbloco-rot')].map(e=>e.textContent)")
+    verificar(resumos == ['Média diária', 'Sem o dia 1'], f'resumos: {resumos}')
+    dias = await p.evaluate("[...document.querySelectorAll('.page-current .ffdias-analise .ffdia b')].map(e=>e.textContent)")
+    verificar(dias == ['Quarta, 9', 'Sábado, 5', 'Terça, 1'], f'dias com o ponto: {dias}')
+    verificar(not app.erros, f'erros: {app.erros}')
+
+
+async def t_contas_numa_barra_dividida(app):
+    await abrir_analise(app)
+    verificar(await app.page.locator('.page-current .ffresumo-mes').count() == 1, 'falta o cartão-resumo do mês')
+    verificar('vs agosto' in (await app.page.text_content('.page-current .ffresumo-mes .ffhero-var') or ''), 'comparação com o mês anterior no cartão')
+    verificar(not await app.page.query_selector('.page-current .ffcontas') or await app.page.locator('.page-current .ffcontas .ffpilha i').count() >= 1, 'barra dividida das contas')

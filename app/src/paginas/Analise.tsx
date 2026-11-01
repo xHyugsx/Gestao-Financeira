@@ -1,10 +1,14 @@
 import { useState } from 'react';
-import { anoMes, dia, type Estado, gastos, inicioDoMes } from '../dados';
+import { anoMes, dia, type Estado, gastos, inicioDoMes, MESES } from '../dados';
+import { aspetosCategorias } from '../movimentos/categorias';
 import { formatarEuros, formatarPercentagem } from '../ui/formatos';
+import { Icone } from '../ui/Icone';
 import { RoboVazio } from '../ui/RoboVazio';
 import { Segmentado } from '../ui/Segmentado';
 import { pessoasDaFamilia } from '../movimentos/pessoas';
-import { caminhoDaFatia, categoriasDoMes, CORES, coresDistintas, diasDoMes, doMes, fatiasComSeta, type GastoConta, gastosPorConta, gastosPorPessoa, legendasDoGrafico, percentagem, receitas, variacao } from './calculos';
+import { caminhoDaFatia, calorDoMes, categoriasDoMes, CORES, coresDistintas, diasDoMes, doMes, fatiasComSeta, type GastoConta, gastosPorConta, gastosPorPessoa, percentagem, receitas, variacao } from './calculos';
+
+const DIAS_SEMANA = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
 
 export type TipoAnalise = 'gastos' | 'receitas' | 'diario';
 const MESES_CURTOS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -28,6 +32,14 @@ export function Analise({ estado, mes, ocultos, tipo, mudarTipo }: Props) {
   const contas = gastosPorConta(estado, mes);
   const porPessoa = gastosPorPessoa(estado, mes, pessoasDaFamilia(estado));
   const mesesDoAno = Array.from({ length: mes.getMonth() + 1 }, (_, i) => new Date(mes.getFullYear(), i, 1));
+  const aspetos = aspetosCategorias(estado, mes);
+  const calor = calorDoMes(movimentos, mes);
+  const mediaMensal = mesesDoAno.map((d) => gastos(doMes(movimentos, d))).reduce((s, v) => s + v, 0) / mesesDoAno.length;
+  const gastosDia = Array.from({ length: dias }, (_, i) => gastos(doMesAtual.filter((m) => Number(m.date.slice(8, 10)) === i + 1)));
+  // Diário: um dia muito acima dos outros (ex.: a renda) fica com a barra cortada, para não deixar as outras rasas
+  const ordenados = [...gastosDia].sort((a, b) => b - a), [maior = 0, segundo = 0] = ordenados;
+  const corte = segundo > 0 && maior > segundo * 2.5 ? segundo * 1.25 : 0;
+  const diaMaisCaro = maior > 0 ? gastosDia.indexOf(maior) + 1 : null;
   // o destaque (fatia ou barra tocada) só vale para o gráfico em que foi escolhido
   const chave = `${tipo}-${anoMes(mes)}`;
   const [toque, setToque] = useState<{ chave: string; fatia?: string; barra?: number }>({ chave: '' });
@@ -43,6 +55,9 @@ export function Analise({ estado, mes, ocultos, tipo, mudarTipo }: Props) {
   const listaDeGastos = (titulo: string, classe: string, linhas: GastoConta[]) => (linhas.length ? (
     <section className={`chart-panel ${classe}`} aria-label={titulo}>
       <div className="section-heading"><h2>{titulo}</h2></div>
+      <div className="ffpilha" aria-hidden="true">
+        {linhas.filter((c) => c.amount > 0).map((c) => <i key={c.id || '-'} className={`tone-${c.tone}`} style={{ flexGrow: c.share }} />)}
+      </div>
       <div className="chart-legend">
         {linhas.map((c) => {
           const v = c.anterior ? variacao(c.amount, c.anterior) : null;
@@ -104,10 +119,11 @@ export function Analise({ estado, mes, ocultos, tipo, mudarTipo }: Props) {
             </div>
           </div>
           {l.length > 0 ? (
-            <svg
-              className="donut-callouts" viewBox="0 0 340 250" aria-hidden="true" style={{ animationDelay: `${l.length * 70 + 250}ms` }}
-              dangerouslySetInnerHTML={{ __html: legendasDoGrafico(fatiasComSeta(l, total), total) }}
-            />
+            <ul className="ffdonut-lado" aria-hidden="true">
+              {fatiasComSeta(l, total).map((e) => (
+                <li key={e.name}><i style={{ background: e.tone === 'outras' ? 'var(--muted-foreground)' : CORES[e.tone] || 'var(--primary)' }} /><span>{e.name}</span><b>{percentagem(e.share)}</b></li>
+              ))}
+            </ul>
           ) : null}
         </div>
         {l.length ? (
@@ -118,7 +134,9 @@ export function Analise({ estado, mes, ocultos, tipo, mudarTipo }: Props) {
               const v = e.anterior ? variacao(e.amount, e.anterior) : null;
               return (
                 <div key={e.name} className={e.name === destaque ? 'ffdestaque' : undefined} aria-pressed={e.name === destaque} {...comoBotao(() => tocarFatia(e.name))}>
-                  <span className={`legend-dot tone-${e.tone}`} />
+                  <span className="ffcat-ic" style={{ '--c': CORES[e.tone] || 'var(--primary)' } as React.CSSProperties}>
+                    <Icone nome={(tipo === 'receitas' ? aspetos.receitas : aspetos.despesas).get(e.name)?.icone ?? 'tags'} />
+                  </span>
                   <span>{e.name}</span>
                   <strong>{eur(e.amount)}</strong>
                   <small>{percentagem(e.share)}</small>
@@ -141,9 +159,9 @@ export function Analise({ estado, mes, ocultos, tipo, mudarTipo }: Props) {
   const barras = () => {
     const diario = tipo === 'diario';
     const valores = diario
-      ? Array.from({ length: dias }, (_, i) => gastos(doMesAtual.filter((m) => Number(m.date.slice(8, 10)) === i + 1)))
+      ? gastosDia
       : mesesDoAno.map((d) => Math.abs(tipo === 'gastos' ? gastos(doMes(movimentos, d)) : receitas(doMes(movimentos, d))));
-    const maximo = Math.max(1, ...valores), n = valores.length;
+    const maximo = diario && corte ? corte : Math.max(1, ...valores), n = valores.length;
     const hoje = dia(new Date());
     return valores.map((v, i) => {
       const rotulo = diario ? (i + 1 === 1 || (i + 1) % 5 === 0 || i + 1 === dias ? String(i + 1) : '') : MESES_CURTOS[mesesDoAno[i]!.getMonth()]!;
@@ -152,10 +170,10 @@ export function Analise({ estado, mes, ocultos, tipo, mudarTipo }: Props) {
       const lado = i < n / 4 ? ' ffesq' : i >= (n * 3) / 4 ? ' ffdir' : '';
       return (
         <div
-          key={i} className={`${atual ? 'ffbarra-atual' : ''}${i === barraTocada ? ' ffbarra-tocada' : ''}`.trim() || undefined}
+          key={i} className={`${atual ? 'ffbarra-atual' : ''}${i === barraTocada ? ' ffbarra-tocada' : ''}${diario && calor.nivel[i + 1] ? ` ffbarra-q${calor.nivel[i + 1]}` : ''}${diario && corte && v > corte ? ' ffbarra-cortada' : ''}`.trim() || undefined}
           aria-label={`${nome}: ${eur(v)}`} aria-pressed={i === barraTocada} {...comoBotao(() => tocarBarra(i))}
         >
-          <i style={{ height: `${Math.max(4, (v / maximo) * 100)}%`, '--i': i } as React.CSSProperties}>
+          <i style={{ height: `${Math.max(4, Math.min(1, v / maximo) * 100)}%`, '--i': i } as React.CSSProperties}>
             {i === barraTocada ? <b className={`ffbarra-valor${lado}`}>{diario ? `${nome} · ${eur(v)}` : eur(v)}</b> : null}
           </i>
           <span>{rotulo}</span>
@@ -176,20 +194,21 @@ export function Analise({ estado, mes, ocultos, tipo, mudarTipo }: Props) {
       />
       {tipo === 'diario' ? null : (
         <>
-          {tipo === 'gastos' ? (
-            <section className="chart-panel">
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '.75rem' }}>
-                <section className="metric-panel expense-panel ffmedias">
-                  <p>Média mensal</p>
-                  <strong>{eur(mesesDoAno.map((d) => gastos(doMes(movimentos, d))).reduce((s, v) => s + v, 0) / mesesDoAno.length)}</strong>
-                </section>
-                <section className="metric-panel expense-panel ffmedias">
-                  <p>Média Diária</p>
-                  <strong>{eur(gasto / dias)}</strong>
-                </section>
+          <section className="ffresumo-mes" aria-label={tipo === 'gastos' ? 'Gastos do mês' : 'Receitas do mês'}>
+            <p className="ffbloco-rot">{`${tipo === 'gastos' ? 'Gastos' : 'Receitas'} em ${MESES[mes.getMonth()]}`}</p>
+            <strong className="ffresumo-valor">{eur(tipo === 'gastos' ? gasto : recebido)}</strong>
+            {tipo === 'gastos' && gastoAnterior ? (
+              <span className={`ffhero-var ${evolucao > 0 ? 'amount-negative' : 'amount-positive'}`}>
+                {`${evolucao > 0 ? '↑' : '↓'} ${formatarPercentagem(evolucao)} vs ${MESES[inicioDoMes(mes, -1).getMonth()]}`}
+              </span>
+            ) : null}
+            {tipo === 'gastos' ? (
+              <div className="ffmedias">
+                <p>Média mensal <strong>{eur(mediaMensal)}</strong></p>
+                <p>Média diária <strong>{eur(gasto / dias)}</strong></p>
               </div>
-            </section>
-          ) : null}
+            ) : null}
+          </section>
           <section className="chart-panel">{grafico()}</section>
           {tipo === 'gastos' ? listaDeGastos('Gastos por conta', 'ffcontas', contas) : null}
           {tipo === 'gastos' ? listaDeGastos('Gastos por pessoa', 'ffcontas ffpessoas', porPessoa) : null}
@@ -200,24 +219,54 @@ export function Analise({ estado, mes, ocultos, tipo, mudarTipo }: Props) {
           <h2>{tipo === 'diario' ? 'Gastos diários' : <>Evolução de {tipo}</>}</h2>
           <span>{eur(tipo === 'receitas' ? recebido : gasto)}</span>
         </div>
-        <div key={chave} className={`bar-chart bar-chart-${tipo} ffbarras${barraTocada !== undefined ? ' ffcom-toque' : ''}`} style={tipo === 'diario' ? { gridTemplateColumns: `repeat(${dias},1fr)`, gap: '1px' } : { gridTemplateColumns: `repeat(${Math.max(9, mesesDoAno.length)},1fr)` }}>
+        <div key={chave} className={`bar-chart bar-chart-${tipo} ffbarras${barraTocada !== undefined ? ' ffcom-toque' : ''}`} style={tipo === 'diario' ? { gridTemplateColumns: `repeat(${dias},1fr)`, gap: '2px' } : { gridTemplateColumns: `repeat(${Math.max(9, mesesDoAno.length)},1fr)` }}>
           {barras()}
+          {tipo !== 'diario' && mesesDoAno.length > 1 ? (() => {
+            const vs = mesesDoAno.map((d) => Math.abs(tipo === 'gastos' ? gastos(doMes(movimentos, d)) : receitas(doMes(movimentos, d))));
+            const media = vs.reduce((s, v) => s + v, 0) / vs.length, max = Math.max(1, ...vs);
+            return media ? <span className="ffmedia-linha" style={{ '--p': media / max } as React.CSSProperties}><b>{`média ${ocultos ? '•••' : `${Math.round(media).toLocaleString('pt-PT')} €`}`}</b></span> : null;
+          })() : null}
         </div>
       </section>
       {tipo === 'diario' ? (
-        <section className="chart-panel">
-          <div className="chart-legend">
-            {porDia.map(([data, v]) => (
-              <div key={data}>
-                <span className="legend-dot tone-violet" />
-                <span>{new Date(`${data}T00:00:00`).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short' })}</span>
-                <strong>{eur(v)}</strong>
-                <small />
-                <em />
-              </div>
-            ))}
-          </div>
-        </section>
+        <>
+          <section className="ffresumos-dia">
+            <article className="ffbloco">
+              <p className="ffbloco-rot">Média diária</p>
+              <strong className="ffbloco-val">{eur(gasto / dias)}</strong>
+              <small>{`${calor.semGastos.length} ${calor.semGastos.length === 1 ? 'dia' : 'dias'} sem despesas`}</small>
+            </article>
+            <article className="ffbloco">
+              {corte && diaMaisCaro ? (
+                <>
+                  <p className="ffbloco-rot">{`Sem o dia ${diaMaisCaro}`}</p>
+                  <strong className="ffbloco-val">{eur((gasto - maior) / Math.max(1, dias - 1))}</strong>
+                  <small>média sem o dia mais caro</small>
+                </>
+              ) : (
+                <>
+                  <p className="ffbloco-rot">Dia mais caro</p>
+                  <strong className="ffbloco-val">{diaMaisCaro ? eur(maior) : '—'}</strong>
+                  <small>{diaMaisCaro ? `dia ${diaMaisCaro}` : 'sem gastos'}</small>
+                </>
+              )}
+            </article>
+          </section>
+          {porDia.length ? (
+            <div className="transaction-list ffdias ffdias-analise">
+              {porDia.map(([data, v]) => {
+                const d = new Date(`${data}T00:00:00`), n = calor.nivel[d.getDate()] ?? 0;
+                return (
+                  <div key={data} className="ffdia">
+                    <i className={`ffponto ffponto-${data > dia(new Date()) ? 'futuro' : n ? `q${n}` : 'sem'}`} aria-hidden="true" />
+                    <b>{`${DIAS_SEMANA[d.getDay()]!.charAt(0).toUpperCase()}${DIAS_SEMANA[d.getDay()]!.slice(1)}, ${d.getDate()}`}</b>
+                    <span className="amount-negative">{eur(-v)}</span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : null}
+        </>
       ) : null}
     </main>
   );
