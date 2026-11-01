@@ -248,3 +248,8 @@ body .calendar-day.ffcal-zero { background: transparent; }
 .calendar-movements .section-heading { flex-wrap: nowrap; display: flex; }
 .calendar-movements .section-heading > strong { flex: none; width: auto; min-width: 1.9rem; height: 1.9rem; padding: 0 .5rem; border-radius: 999px; display: grid; place-items: center; font-size: .8rem; }
 .calendar-panel, .calendar-movements, .chart-panel, .evolution-panel { -webkit-backdrop-filter: none; backdrop-filter: none; }
+
+/* Gastos por pessoa: cores fixas (1.º membro azul, 2.º cor-de-rosa, «Sem pessoa» cinzento) */
+.tone-azul { background: oklch(68% .16 250); } .tone-text-azul { color: oklch(68% .16 250); }
+.tone-rosa { background: oklch(76% .15 350); } .tone-text-rosa { color: oklch(76% .15 350); }
+.tone-cinza { background: oklch(62% .02 270); } .tone-text-cinza { color: oklch(62% .02 270); }

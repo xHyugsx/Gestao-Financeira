@@ -23,6 +23,8 @@ export const CORES: Record<string, string> = {
   indigo: 'oklch(58% .2 275)', sky: 'oklch(78% .12 235)', fuchsia: 'oklch(67% .26 322)', emerald: 'oklch(70% .16 158)',
   // fatias pequenas juntas no gráfico circular
   outras: 'var(--muted-foreground)',
+  // gastos por pessoa (cores fixas, decisão do dono)
+  azul: 'oklch(68% .16 250)', rosa: 'oklch(76% .15 350)', cinza: 'oklch(62% .02 270)',
 };
 
 const ICONE_POR_ID: Record<string, NomeIcone> = Object.fromEntries(CATALOGO_ICONES.map((e) => [e.id, e.icone]));
@@ -218,7 +220,9 @@ export function gastosPorPessoa(estado: Pick<Estado, 'transactions'>, mes: Date,
   if (![...agora.keys(), ...antes.keys()].some(Boolean)) return [];
   const total = [...agora.values()].reduce((s, v) => s + v, 0);
   const nomes = [...new Set([...pessoas, ...agora.keys(), ...antes.keys()].filter(Boolean))];
-  return [...nomes.map((n, i) => ({ id: n, name: n, tone: TONS_CONTAS[i % TONS_CONTAS.length]! })), { id: '', name: 'Sem pessoa', tone: 'blue' }]
+  // Cores fixas (decisão do dono): 1.º membro do perfil azul, 2.º cor-de-rosa, «Sem pessoa» cinzento; os nomes vêm dos dados
+  const TONS_PESSOAS = ['azul', 'rosa', ...TONS_CONTAS];
+  return [...nomes.map((n, i) => ({ id: n, name: n, tone: TONS_PESSOAS[i % TONS_PESSOAS.length]! })), { id: '', name: 'Sem pessoa', tone: 'cinza' }]
     .map((c) => ({ ...c, amount: agora.get(c.id) || 0, anterior: antes.get(c.id) || 0, share: total ? ((agora.get(c.id) || 0) / total) * 100 : 0 }))
     .filter((c) => c.amount > 0 || c.anterior > 0)
     .sort((a, b) => b.amount - a.amount);
