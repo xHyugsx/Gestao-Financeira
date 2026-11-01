@@ -755,7 +755,7 @@ export function App() {
 
   const abrirJarvis = () => { clearTimeout(fecharJarvisT.current); document.querySelector('.jarvis-overlay')?.classList.remove('is-out'); setJarvis(true); };
   const mudarMes = (n: number) => { vibrar(8); setDesvioMes((d) => d + n); };
-  // Meses em pílulas na Principal (tocar ou deslizar muda de mês); nas outras páginas, as setas de sempre
+  // Meses em pílulas em todas as páginas (tocar ou deslizar muda de mês); a barra compacta mantém as setas
   const pilulasMeses = (
     <div
       className="month-switcher ffmeses" aria-label="Selecionar mês"
@@ -849,13 +849,7 @@ export function App() {
             {ferramentas}
           </header>
         )}
-        {cabecalhoDe === 'principal' ? pilulasMeses : (
-          <div className="month-switcher" aria-label="Selecionar mês">
-            <Botao variante="ghost" tamanho="icone" onClick={() => mudarMes(-1)} aria-label="Mês anterior"><Icone nome="chevron-left" /></Botao>
-            <span>{`${MESES[mes.getMonth()]} de ${mes.getFullYear()}`}</span>
-            <Botao variante="ghost" tamanho="icone" onClick={() => mudarMes(1)} aria-label="Mês seguinte"><Icone nome="chevron-right" /></Botao>
-          </div>
-        )}
+        {pilulasMeses}
         <div className="page-viewport">
           <div key={`pg-${pagina}`} className="page-current" style={estiloAtual as React.CSSProperties}>{conteudo(pagina)}</div>
           {seguinte ? (

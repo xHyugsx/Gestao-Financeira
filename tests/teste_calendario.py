@@ -27,8 +27,8 @@ async def t_mapa_de_calor_e_dias_sem_despesas(app):
     verificar('ffcal-q4' in classes['3'] and 'ffcal-q3' in classes['10'] and 'ffcal-q2' in classes['12'], f'níveis: {classes["3"]} | {classes["10"]} | {classes["12"]}')
     verificar('ffcal-zero' in classes['1'] and 'ffcal-zero' in classes['15'] and 'ffcal-zero' in classes['28'], 'faltam os dias sem despesas')
     verificar('ffcal-zero' not in classes['29'] and 'ffcal-q' not in classes['29'], 'dias futuros marcados')
-    resumo = (await p.text_content('.ffcal-resumo')).replace('\xa0', ' ')
-    verificar(resumo == '25 dias sem despesas · dia mais caro: 3 (120,00 €)', resumo)
+    resumo = await p.evaluate("[...document.querySelectorAll('.page-current .ffcal-resumos .ffbloco')].map(b=>b.innerText.replace(/\\u00a0/g,' ').replace(/\\n+/g,' | '))")
+    verificar(resumo == ['SEM DESPESAS | 25 dias | o melhor: 16 seguidos', 'DIA MAIS CARO | 120,00 € | quinta, 3 · M1'], resumo)
     verificar(await p.query_selector('.ffcal-calor .ffcal-q4'), 'falta a legenda do mapa de calor')
 
 

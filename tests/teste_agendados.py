@@ -51,5 +51,6 @@ async def t_calendario_dias_agendados(app):
     verificar('ffcal-futuro' in classes30 and 'ffcal-q' not in classes30, f'dia 30 (renda agendada): {classes30}')
     verificar('ffcal-q' in (await dia(20).get_attribute('class') or ''), 'dia 20 (já gasto) mantém a cor do mapa de calor')
     verificar('Agendado' in (await p.text_content('.page-current .ffcal-calor') or ''), 'falta «Agendado» na legenda')
-    verificar('dia mais caro: 20' in (await p.text_content('.page-current .ffcal-resumo') or ''), 'o dia mais caro não pode ser um agendado')
+    caro = await p.text_content('.page-current .ffcal-resumos .ffbloco:nth-child(2) small') or ''
+    verificar(', 20' in caro, f'o dia mais caro não pode ser um agendado: {caro}')
     verificar(not app.erros, f'erros: {app.erros}')

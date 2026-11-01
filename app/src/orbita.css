@@ -148,3 +148,103 @@ button.ffbloco:active { transform: scale(.97); }
   .ffanel-roda, .ffanel-orbita { animation: none; }
   button.ffbloco:active, .month-switcher.ffmeses > button:active { transform: none; }
 }
+
+/* ===== Etapa 2 (v2.41.0): Análise e Calendário ===== */
+/* Separadores claros, como as pílulas dos meses */
+.segmented { border-radius: 999px; padding: .25rem; background: var(--orb-sup); border-color: var(--orb-linha); }
+.segmented button { border-radius: 999px; font-size: .8rem; font-weight: 600; }
+.segmented .ffseg-pilula { top: .25rem; left: .25rem; border-radius: 999px; background: var(--foreground); box-shadow: none;
+  width: calc((100% - .5rem - .2rem * (var(--cols) - 1)) / var(--cols)); height: calc((100% - .5rem - .2rem * (var(--rows) - 1)) / var(--rows)); }
+.segmented.ffseg-2l .ffseg-pilula { border-radius: .9rem; }
+.segmented.ffseg-2l { border-radius: 1.2rem; }
+.segmented.ffseg-2l button { border-radius: .9rem; }
+.segmented .segment-active, .segmented button.segment-active { color: var(--background); background: transparent; box-shadow: none; }
+
+/* Análise: cartão-resumo do mês */
+.ffresumo-mes { position: relative; padding: 1rem 1.05rem; border-radius: 1.5rem; background: linear-gradient(160deg, var(--orb-sup2), color-mix(in oklab, var(--background) 70%, var(--orb-sup2))); }
+.ffresumo-mes::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: linear-gradient(120deg, color-mix(in oklab, var(--orb-1) 55%, transparent), color-mix(in oklab, var(--orb-2) 35%, transparent) 45%, color-mix(in oklab, var(--orb-3) 45%, transparent));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+.ffresumo-valor { display: block; margin: .3rem 0 .55rem; font-family: var(--font-display); font-size: 2.05rem; font-weight: 600; letter-spacing: -.03em; line-height: 1.05; }
+.ffresumo-mes .ffmedias { display: flex; flex-wrap: wrap; gap: .2rem 1rem; margin-top: .65rem; }
+.ffresumo-mes .ffmedias p { margin: 0; font-size: .74rem; color: var(--orb-suave); }
+.ffresumo-mes .ffmedias strong { font-family: var(--font-display); font-weight: 600; font-size: .8rem; color: inherit; color: var(--foreground); }
+html[data-tema="dourado"] .ffresumo-valor, html[data-tema="floresta"] .ffresumo-valor { font-family: 'Playfair Display', serif; }
+
+/* Circular com a legenda ao lado (sem setas) */
+.chart-panel { border-radius: 1.5rem; background: var(--orb-sup); border-color: var(--orb-linha); }
+.donut-wrap { aspect-ratio: auto; max-width: none; width: 100%; display: flex; align-items: center; gap: .9rem; }
+.donut-wrap .donut { position: relative; top: auto; left: auto; width: 9.6rem; flex: none; }
+.ffdonut-lado { flex: 1; min-width: 0; list-style: none; margin: 0; padding: 0; display: grid; gap: .45rem; animation: ffaparecer .45s ease .3s backwards; }
+.ffdonut-lado li { display: flex; align-items: center; gap: .45rem; font-size: .76rem; }
+.ffdonut-lado i { width: .6rem; height: .6rem; border-radius: .2rem; flex: none; }
+.ffdonut-lado span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ffdonut-lado b { font-family: var(--font-display); font-weight: 600; }
+.donut-wrap.ffcom-destaque .ffdonut-lado { opacity: .35; transition: opacity .25s; }
+
+/* Categorias: ícone, barra com o mês anterior e a variação */
+.ffdonut-legenda { gap: 0; margin-top: .9rem; }
+.ffdonut-legenda > div {
+  grid-template-columns: 2.4rem minmax(0, 1fr) auto auto; grid-template-areas: "ic nome pct valor" "ic barra barra var";
+  column-gap: .6rem; row-gap: .4rem; margin: 0; padding: .6rem .2rem; border-radius: .9rem; font-size: .85rem; border-top: 1px solid var(--orb-linha);
+}
+.ffdonut-legenda > div:first-child { border-top: 0; }
+.ffcat-ic { grid-area: ic; width: 2.4rem; height: 2.4rem; border-radius: .8rem; display: grid; place-items: center; color: var(--c); background: color-mix(in oklab, var(--c) 16%, transparent); }
+.ffcat-ic svg { width: 1.1rem; height: 1.1rem; }
+.ffdonut-legenda > div > span:nth-child(2) { grid-area: nome; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ffdonut-legenda > div > small { grid-area: pct; font-size: .7rem; text-align: left; }
+.ffdonut-legenda > div > strong { grid-area: valor; font-family: var(--font-display); font-weight: 600; font-size: .9rem; text-align: right; }
+.ffdonut-legenda > div > em { grid-area: var; font-size: .7rem; min-width: 3rem; }
+.ffdonut-legenda .ffcomp { grid-area: barra; grid-column: auto; height: 6px; }
+
+/* Por conta e por pessoa: barra dividida e a legenda por baixo */
+.ffpilha { display: flex; gap: 2px; height: .7rem; border-radius: .7rem; overflow: hidden; margin: .2rem 0 .7rem; }
+.ffpilha i { display: block; min-width: 3px; }
+.ffcontas .ffcontas-barra { display: none; }
+.ffcontas .chart-legend > div { font-size: .82rem; }
+.ffcontas .chart-legend strong { font-family: var(--font-display); font-size: .85rem; }
+
+/* Evolução: o mês escolhido realçado e a linha da média */
+.evolution-panel { border-radius: 1.5rem; background: var(--orb-sup); border-color: var(--orb-linha); }
+.ffbarras { position: relative; height: 8.4rem; padding-top: .9rem; }
+.ffbarras > div { grid-template-rows: 1fr .8rem; gap: .3rem; }
+.bar-chart-gastos > div > i, .bar-chart-receitas > div > i { border-radius: .45rem .45rem .15rem .15rem; background: color-mix(in oklab, var(--orb-2) 38%, transparent); }
+.bar-chart-gastos > div.ffbarra-atual > i, .bar-chart-receitas > div.ffbarra-atual > i { background: linear-gradient(var(--orb-3), var(--orb-2) 60%, var(--orb-1)); }
+.ffmedia-linha { position: absolute; left: 0; right: 0; bottom: calc(1.1rem + var(--p) * (100% - 2.0rem)); border-top: 1.5px dashed rgba(255, 255, 255, .38); pointer-events: none; }
+.ffmedia-linha b { position: absolute; right: 0; bottom: .2rem; font-size: .58rem; font-weight: 600; color: var(--orb-suave); }
+
+/* Diário: cor do calor do dia e barra cortada no dia muito acima dos outros */
+.bar-chart-diario > div > i { border-radius: .25rem .25rem .1rem .1rem; background: rgba(255, 255, 255, .1); }
+.bar-chart-diario > div.ffbarra-q1 > i { background: var(--ffq1); } .bar-chart-diario > div.ffbarra-q2 > i { background: var(--ffq2); }
+.bar-chart-diario > div.ffbarra-q3 > i { background: var(--ffq3); } .bar-chart-diario > div.ffbarra-q4 > i { background: var(--ffq4); }
+.bar-chart-diario > div.ffbarra-cortada > i { -webkit-mask: linear-gradient(#000 0 1.1rem, transparent 1.1rem 1.5rem, #000 1.5rem); mask: linear-gradient(#000 0 1.1rem, transparent 1.1rem 1.5rem, #000 1.5rem); }
+.bar-chart-diario > div.ffbarra-atual > i { box-shadow: 0 0 0 1.5px var(--background), 0 0 0 3px var(--foreground); }
+.ffresumos-dia, .ffcal-resumos { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+.ffdias-analise { padding-top: .2rem; }
+
+/* Calendário: quadrados, escala numa barra e o dia escolhido como na Principal */
+.calendar-panel, .calendar-movements { border-radius: 1.5rem; background: var(--orb-sup); border-color: var(--orb-linha); }
+body .calendar-grid { row-gap: .35rem; column-gap: .3rem; }
+body .calendar-day {
+  width: 100%; height: auto; aspect-ratio: 1; border-radius: .75rem; align-items: flex-start; justify-content: flex-start; padding: .3rem .38rem;
+  font-size: .78rem; font-weight: 700; background: rgba(255, 255, 255, .04);
+}
+body .calendar-day > span:first-child { line-height: 1; }
+body .calendar-day .ffdots { position: absolute; right: .3rem; bottom: .3rem; }
+body .calendar-day .calendar-payday { position: absolute; left: .32rem; bottom: .18rem; font-size: .6rem; }
+body .calendar-day.ffcal-zero { background: transparent; }
+.calendar-grid .calendar-day.calendar-day-active { box-shadow: 0 0 0 2px var(--background), 0 0 0 4px #fff !important; }
+.ffcal-calor { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem .7rem; margin-top: .8rem; font-size: .68rem; color: var(--orb-suave); }
+.ffcal-escala { flex: 1; min-width: 8rem; display: flex; height: .45rem; border-radius: .45rem; overflow: hidden; }
+.ffcal-escala i { flex: 1; height: 100%; border-radius: 0; }
+.ffcal-calor .ffcal-zero-leg { display: inline-flex; align-items: center; gap: .3rem; }
+.calendar-movements .section-heading { align-items: center; gap: .6rem; }
+.calendar-movements .section-heading > .ffponto { flex: none; }
+.calendar-movements .section-heading > div { flex: 1; }
+.calendar-movements .section-heading h2 { font-size: .95rem; text-transform: none; letter-spacing: 0; }
+.calendar-movements .transaction-row { border-radius: 1.1rem; background: color-mix(in oklab, var(--orb-sup) 60%, var(--orb-sup2)); }
+.calendar-movements .section-heading { flex-wrap: nowrap; display: flex; }
+.calendar-movements .section-heading > strong { flex: none; width: auto; min-width: 1.9rem; height: 1.9rem; padding: 0 .5rem; border-radius: 999px; display: grid; place-items: center; font-size: .8rem; }
+.calendar-panel, .calendar-movements, .chart-panel, .evolution-panel { -webkit-backdrop-filter: none; backdrop-filter: none; }
