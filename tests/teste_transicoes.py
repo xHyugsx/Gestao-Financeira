@@ -20,13 +20,12 @@ async def t_pilula_desliza_entre_opcoes(app):
     verificar(caixa[0] > x0 and caixa[1], f'a pílula devia ficar por baixo de «Diário»: {caixa}')
     cor = await p.evaluate("getComputedStyle(document.querySelector('.page-current .segmented .segment-active')).color")
     verificar(cor != await p.evaluate("getComputedStyle(document.querySelector('.page-current .segmented button:not(.segment-active)')).color"), 'a opção escolhida devia ter outra cor de letra')
-    # Resumo: separadores em duas linhas
+    # Resumo: separadores numa linha que desliza; o escolhido fica à vista
     await p.evaluate("window.ffGoPg('resumo')"); await p.wait_for_timeout(800)
-    await p.click('.page-current .segmented button:text-is("Despesas anuais")'); await p.wait_for_timeout(600)
-    ok = await p.evaluate("""(()=>{const r=document.querySelector('.page-current .ffseg-pilula').getBoundingClientRect(),
-      b=document.querySelector('.page-current .segmented .segment-active').getBoundingClientRect();
-      return Math.abs(r.x-b.x)<1.5 && Math.abs(r.y-b.y)<1.5 && Math.abs(r.width-b.width)<1.5 && Math.abs(r.height-b.height)<1.5})()""")
-    verificar(ok, 'em duas linhas, a pílula devia ficar por baixo da opção escolhida')
+    await p.click('.page-current .ffchips button:text-is("Salários")'); await p.wait_for_timeout(900)
+    ok = await p.evaluate("""(()=>{const c=document.querySelector('.page-current .ffchips'), b=c.querySelector('.ffchip-on').getBoundingClientRect(), r=c.getBoundingClientRect();
+      return [c.scrollLeft>0, b.left>=r.left-1 && b.right<=r.right+1, c.querySelectorAll('button').length, getComputedStyle(c).flexWrap]})()""")
+    verificar(ok == [True, True, 5, 'nowrap'], f'«Salários» devia ficar à vista na linha de separadores: {ok}')
     verificar(not app.erros, f'erros: {app.erros}')
 
 

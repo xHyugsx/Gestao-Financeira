@@ -152,7 +152,41 @@ export function caminhoDaFatia(de: number, ate: number, R = 50, r = 34): string 
   return `M${p(de, R)}A${R} ${R} 0 ${grande} 1 ${p(ate, R)}L${p(ate, r)}A${r} ${r} 0 ${grande} 0 ${p(de, r)}Z`;
 }
 
-/** Contas do fecho do mês (secção "Fecho de mês" do Resumo). */
+/** Maior sequência de dias seguidos numa lista ordenada de dias (ex.: dias sem despesas). */
+export function maiorSequencia(dias: number[]): number {
+  let melhor = 0, atual = 0, antes = -1;
+  for (const d of dias) { atual = d === antes + 1 ? atual + 1 : 1; antes = d; melhor = Math.max(melhor, atual); }
+  return melhor;
+}
+
+/** Meses do período do Resumo e os do período com que se compara (mês: o anterior; 3 meses: os 3 antes; ano: o mesmo período do ano anterior). */
+export function mesesDoPeriodo(mes: Date, periodo: 'mes' | 'trimestre' | 'ano'): { meses: Date[]; anteriores: Date[] } {
+  if (periodo === 'mes') return { meses: [inicioDoMes(mes)], anteriores: [inicioDoMes(mes, -1)] };
+  if (periodo === 'trimestre') return { meses: [-2, -1, 0].map((k) => inicioDoMes(mes, k)), anteriores: [-5, -4, -3].map((k) => inicioDoMes(mes, k)) };
+  const meses = Array.from({ length: mes.getMonth() + 1 }, (_, i) => new Date(mes.getFullYear(), i, 1));
+  return { meses, anteriores: meses.map((d) => new Date(d.getFullYear() - 1, d.getMonth(), 1)) };
+}
+
+/** Categorias de despesa somadas em vários meses (o «anterior» de cada uma é a soma nos meses de comparação). */
+export function categoriasDoPeriodo(estado: Estado, meses: Date[], anteriores: Date[]): LinhaCategoria[] {
+  const somar = (l: Date[]) => {
+    const r = new Map<string, LinhaCategoria>();
+    for (const d of l) for (const c of categoriasDoMes(estado, d, 'despesas')) { const x = r.get(c.name); r.set(c.name, x ? { ...x, amount: x.amount + c.amount } : { ...c }); }
+    return r;
+  };
+  const agora = somar(meses), antes = somar(anteriores);
+  const total = [...agora.values()].reduce((s, c) => s + c.amount, 0);
+  return [...agora.values()].map((c) => ({ ...c, share: total ? Math.round((c.amount / total) * 1000) / 10 : 0, anterior: antes.get(c.name)?.amount ?? 0 }))
+    .sort((a, b) => b.amount - a.amount);
+}
+
+/** Dias sem despesas em vários meses seguidos e a maior sequência (que pode passar de um mês para o outro). */
+export function diasSemDespesas(movimentos: Movimento[], meses: Date[], hoje = new Date()): { dias: number; seguidos: number } {
+  const dias = meses.flatMap((d) => calorDoMes(movimentos, d, hoje).semGastos.map((n) => Math.round(Date.UTC(d.getFullYear(), d.getMonth(), n) / 864e5)));
+  return { dias: dias.length, seguidos: maiorSequencia(dias) };
+}
+
+/** Contas do fecho do mês (secção «Fecho do Mês» do Resumo). */
 export function fechoDoMes(movimentos: Movimento[], mes: Date) {
   const doMesAtual = doMes(movimentos, mes);
   const entradas = doMesAtual.filter((m) => m.movementType === 'income');

@@ -20,7 +20,7 @@ async def ir(app, pagina):
 
 
 async def segmento(app, texto):
-    await app.page.click(f'.page-current .segmented button:text-is("{texto}")'); await app.page.wait_for_timeout(300)
+    await app.page.click(f'.page-current :is(.segmented, .ffchips) button:text-is("{texto}")'); await app.page.wait_for_timeout(300)
 
 
 async def t_voltar_do_telemovel_volta_a_principal(app):

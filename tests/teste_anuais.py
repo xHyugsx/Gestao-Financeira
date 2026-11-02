@@ -7,13 +7,13 @@ DADOS = {'accounts': [{'id': 'principal', 'name': 'Principal', 'balance': 1000},
          'annualExpenses': [A(1, 'IUC', 150, 3, 2026), A(2, 'Seguro casa', 300, 9, 2026), A(3, 'Seguro carro', 420, 11, 2026), A(4, 'Revisão', 200, 4, 2028)]}
 LER = """[...document.querySelectorAll('.page-current .transaction-list article')].map(a=>
   [a.querySelector('h3').textContent, a.querySelector('.ffanual-estado')?.textContent || '', !!a.querySelector('.ffanual-acoes')])"""
-RESUMO = "[...document.querySelectorAll('.page-current .summary-grid article strong')].map(e=>e.textContent.replace(/\\u00a0/g,' '))"
+RESUMO = "[...document.querySelectorAll('.page-current .ffanu-total, .page-current .ffanu-reserva')].map(e=>e.textContent.replace(/\\u00a0/g,' '))"
 
 
 async def abrir_anuais(app):
     p = app.page
     await p.evaluate("window.ffGoPg('resumo')"); await p.wait_for_timeout(400)
-    await p.click('.segmented button:text-is("Despesas anuais")'); await p.wait_for_timeout(500)
+    await p.click('.page-current .ffchips button:text-is("Despesas anuais")'); await p.wait_for_timeout(500)
 
 
 async def t_anuais_estados_total_e_acoes(app):

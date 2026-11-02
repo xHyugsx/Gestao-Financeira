@@ -253,3 +253,142 @@ body .calendar-day.ffcal-zero { background: transparent; }
 .tone-azul { background: oklch(68% .16 250); } .tone-text-azul { color: oklch(68% .16 250); }
 .tone-rosa { background: oklch(76% .15 350); } .tone-text-rosa { color: oklch(76% .15 350); }
 .tone-cinza { background: oklch(62% .02 270); } .tone-text-cinza { color: oklch(62% .02 270); }
+
+/* ===== Etapa 3 (v2.42.0): Resumo ===== */
+/* Separadores numa linha que desliza */
+.ffchips { position: relative; display: flex; gap: .4rem; overflow-x: auto; scrollbar-width: none; margin: 0 -1rem; padding: .1rem 1rem; scroll-padding: 0 1rem; }
+.ffchips::-webkit-scrollbar { display: none; }
+.ffchip {
+  flex: none; padding: .5rem .85rem; border-radius: 999px; font: inherit; font-size: .8rem; font-weight: 600; white-space: nowrap; cursor: pointer;
+  color: var(--orb-suave); background: var(--orb-sup); border: 1px solid var(--orb-linha); transition: background-color .2s, color .2s;
+}
+.ffchip-on { color: var(--background); background: var(--foreground); border-color: transparent; }
+.ffresumo .transaction-row { border-radius: 1.1rem; background: var(--orb-sup); border-color: var(--orb-linha); -webkit-backdrop-filter: none; backdrop-filter: none; }
+.ffresumo .transaction-row .ffcat-ic { width: 2.3rem; height: 2.3rem; }
+.ffcartao { padding: 1rem 1.05rem; border-radius: 1.5rem; background: var(--orb-sup); border: 1px solid var(--orb-linha); }
+.ffgrupo { display: flex; justify-content: space-between; margin: .4rem .3rem -.35rem; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; color: var(--orb-suave); }
+.ffest { display: inline-block; font-size: .62rem; font-weight: 700; padding: .15rem .5rem; border-radius: 999px; white-space: nowrap; }
+.ffest-pago { color: #6ee7a0; background: rgba(74, 222, 128, .14); }
+.ffest-por-pagar { color: #a5b4fc; background: rgba(129, 140, 248, .16); }
+.ffest-atrasado, .ffanual-estado-em-atraso { color: #fca5a5; background: rgba(248, 113, 113, .16); }
+.ffest-por-confirmar, .ffanual-estado-por-pagar { color: #fbbf24; background: rgba(251, 191, 36, .15); }
+.ffest-agendado { color: #7dd3fc; background: rgba(56, 189, 248, .15); }
+.ffest-saltado { color: var(--orb-suave); background: rgba(255, 255, 255, .07); }
+
+/* Ano em revista em destaque */
+.ffresumo .ffrev-abrir {
+  position: relative; overflow: hidden; gap: .8rem; padding: 1rem; border: 0; border-radius: 1.5rem; color: #fff;
+  background: linear-gradient(125deg, #7c3aed, #db2777 55%, #f59e0b);
+}
+.ffresumo .ffrev-abrir::after { content: ''; position: absolute; right: -2rem; top: -2rem; width: 8.5rem; height: 8.5rem; border-radius: 50%; background: rgba(255, 255, 255, .12); pointer-events: none; }
+.ffrev-ic { flex: none; width: 2.9rem; height: 2.9rem; border-radius: .95rem; display: grid !important; place-items: center; background: rgba(255, 255, 255, .2); }
+.ffrev-ic svg { width: 1.4rem; height: 1.4rem; color: #fff; }
+.ffresumo .ffrev-abrir .ffrev-txt { position: relative; z-index: 1; gap: .15rem; }
+.ffresumo .ffrev-abrir strong { font-family: var(--font-display); font-size: 1.15rem; font-weight: 600; }
+.ffresumo .ffrev-abrir small { font-size: .74rem; color: rgba(255, 255, 255, .9); }
+.ffrev-stories { display: flex !important; gap: .25rem; margin-bottom: .35rem; }
+.ffrev-stories i { width: 1.35rem; height: 3px; border-radius: 3px; background: rgba(255, 255, 255, .45); }
+.ffrev-stories i:first-child { background: #fff; }
+.ffresumo .ffrev-abrir:active { transform: scale(.98); }
+
+/* O mês em números e «O que se destaca» */
+.ffduas { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; margin-top: .5rem; }
+.ffduas p { margin: 0; font-size: .74rem; color: var(--orb-suave); }
+.ffduas strong { display: block; margin-top: .15rem; font-family: var(--font-display); font-size: 1.4rem; font-weight: 600; letter-spacing: -.02em; white-space: nowrap; }
+.ffres-linha { display: flex; justify-content: space-between; align-items: center; gap: .5rem; margin-top: .7rem; }
+.ffres-linha small { font-size: .74rem; color: var(--orb-suave); text-align: right; }
+.ffres-vazio { margin: .6rem 0 0; font-size: .78rem; color: var(--orb-suave); }
+.ffideias .ffbloco-rot { margin-bottom: .3rem; }
+.ffideia { display: flex; align-items: center; gap: .7rem; padding: .7rem 0; border-top: 1px solid var(--orb-linha); }
+.ffideia:nth-child(2) { border-top: 0; padding-top: .3rem; }
+.ffideia p { margin: 0; font-size: .82rem; line-height: 1.38; color: color-mix(in oklab, var(--foreground) 82%, transparent); }
+.ffideia b { color: var(--foreground); font-weight: 700; }
+.ffideia .ffcat-ic { flex: none; width: 2.2rem; height: 2.2rem; }
+
+/* Recorrentes */
+.ffrec-total { display: flex; align-items: baseline; gap: .45rem; margin: 0; }
+.ffrec-total .ffresumo-valor { margin-bottom: .4rem; }
+.ffrec-total span { font-size: .85rem; color: var(--orb-suave); font-weight: 500; }
+.ffrec-cartao .ffpilha { margin: .1rem 0 .6rem; }
+.ffrec-parte-pago { background: #4ade80; } .ffrec-parte-por-pagar { background: #818cf8; } .ffrec-parte-por-confirmar { background: #fbbf24; }
+.ffrec-parte-agendado { background: repeating-linear-gradient(135deg, #38bdf8 0 4px, transparent 4px 7px); }
+.ffrec-leg { display: flex; flex-wrap: wrap; gap: .3rem .9rem; font-size: .72rem; color: var(--orb-suave); }
+.ffrec-leg span { display: inline-flex; align-items: center; gap: .3rem; }
+.ffrec-leg i { width: .55rem; height: .55rem; border-radius: .18rem; }
+.ffrec-leg .ffrec-parte-agendado { background: #38bdf8; }
+.ffrec-cartao .ffmedias { margin-top: .5rem; }
+.ffrec-grupo { display: grid; gap: .7rem; }
+.ffrec-grupo .transaction-list { gap: .45rem; }
+.ffrec-grupo-por-confirmar .transaction-row { box-shadow: inset 0 0 0 1px rgba(251, 191, 36, .35); }
+.ffresumo .ffrec-dir strong { font-family: var(--font-display); font-weight: 600; }
+.ffresumo .ffrec-subiu { color: var(--despesa); font-weight: 700; }
+.ffrec-anual { margin-top: .2rem; }
+
+/* Despesas anuais */
+.ffanu-topo { display: flex; justify-content: space-between; align-items: flex-start; gap: .6rem; }
+.ffanu-topo .ffresumo-valor { margin-bottom: 0; }
+.ffanu-reserva-box { text-align: right; }
+.ffanu-reserva-box strong { display: block; margin-top: .35rem; font-family: var(--font-display); font-size: 1.2rem; font-weight: 600; color: #7dd3fc; white-space: nowrap; }
+.ffsal-cartao .ffanu-reserva-box strong { color: var(--foreground); }
+.ffanu-meses { display: flex; justify-content: space-between; align-items: flex-end; height: 4.2rem; margin-top: .8rem; }
+.ffanu-meses span { display: grid; justify-items: center; align-content: end; gap: .3rem; width: 1.4rem; font-size: .58rem; font-weight: 600; color: color-mix(in oklab, var(--foreground) 42%, transparent); }
+.ffanu-meses i { width: var(--t, .4rem); height: var(--t, .4rem); border-radius: 50%; background: var(--orb-2); }
+.ffanu-meses .ffanu-vazio i { background: rgba(255, 255, 255, .1); }
+.ffanu-meses .ffanu-hoje { color: var(--foreground); }
+.ffanu-meses .ffanu-hoje:not(.ffanu-vazio) i { background: var(--orb-3); box-shadow: 0 0 0 2px var(--orb-sup2), 0 0 0 3.5px var(--foreground); }
+.ffanu-lista { gap: .45rem; }
+.ffresumo .ffanual { grid-template-columns: minmax(0, 1fr) auto auto; column-gap: .35rem; }
+.ffanual-dir { display: grid; justify-items: end; gap: .2rem; }
+.ffanual-dir strong { font-family: var(--font-display); font-weight: 600; white-space: nowrap; }
+.ffanual-botoes { display: flex; }
+.ffanual-botoes button { width: 2rem; height: 2rem; color: var(--orb-suave); }
+.ffresumo .ffanual-acoes { justify-content: flex-start; margin-top: .1rem; }
+.ffanu-form { border-radius: 1.5rem; background: var(--orb-sup); border-color: var(--orb-linha); }
+
+/* Fecho do Mês: resultado e cascata */
+.fffecho-saldo { margin-bottom: .3rem; }
+.fffecho-sub { margin: 0; font-size: .76rem; color: var(--orb-suave); }
+.ffcascata { display: grid; grid-template-columns: repeat(4, 1fr); gap: .55rem; margin-top: .6rem; padding-top: 1.5rem; }
+.ffcascata > div { display: grid; gap: .35rem; justify-items: center; text-align: center; }
+.ffcascata-area { position: relative; width: 100%; height: 8.5rem; display: block !important; }
+.ffcascata-area i {
+  position: absolute; left: 0; right: 0; bottom: var(--b); height: max(var(--h), 4px); border-radius: .6rem; transform-origin: bottom;
+  animation: ffcascata .55s cubic-bezier(.2, .8, .2, 1) calc(var(--k) * 110ms) backwards;
+}
+.ffcascata-area b { position: absolute; left: -.3rem; right: -.3rem; bottom: calc(var(--b) + max(var(--h), 4px) + .3rem); font-family: var(--font-display); font-size: .7rem; font-weight: 600; white-space: nowrap; }
+.ffcascata small { font-size: .64rem; font-weight: 600; line-height: 1.2; color: var(--orb-suave); }
+.ffcascata-rend { background: var(--positive); } .ffcascata-outras { background: color-mix(in oklab, var(--positive) 65%, white); }
+.ffcascata-desp { background: var(--despesa); }
+.ffcascata-res-pos { background: repeating-linear-gradient(135deg, var(--positive) 0 5px, transparent 5px 9px); box-shadow: inset 0 0 0 1.5px var(--positive); }
+.ffcascata-res-neg { background: repeating-linear-gradient(135deg, var(--despesa) 0 5px, transparent 5px 9px); box-shadow: inset 0 0 0 1.5px var(--despesa); }
+@keyframes ffcascata { from { transform: scaleY(0); opacity: 0; } }
+.fffecho-lista { display: grid; gap: .55rem; }
+.fffecho-lista > div { display: flex; justify-content: space-between; align-items: center; font-size: .85rem; }
+.fffecho-lista span { display: inline-flex; align-items: center; gap: .55rem; }
+.fffecho-lista i { width: .6rem; height: .6rem; border-radius: 50%; }
+.fffecho-lista strong { font-family: var(--font-display); font-weight: 600; }
+.fffecho-sub-linha { padding-left: 1.15rem; color: var(--orb-suave); font-size: .8rem !important; }
+.fffecho-despesa { background: var(--despesa); } .fffecho-poupanca { background: #38bdf8; } .fffecho-invest { background: #a78bfa; }
+.fffecho-nota { margin: 0 .3rem; font-size: .72rem; color: var(--orb-suave); }
+
+/* Salários: cartão por pessoa e tabela compacta */
+.ffsal-pessoas { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: .6rem; }
+.ffsal-pessoa .ffbloco-rot { display: flex; align-items: center; gap: .35rem; color: color-mix(in oklab, var(--c) 80%, white); }
+.ffsal-pessoa .ffbloco-rot i { width: .45rem; height: .45rem; border-radius: 50%; background: var(--c); }
+.ffsal-spark { display: flex; align-items: flex-end; gap: 3px; width: 100%; height: 2.2rem; margin-top: .6rem; }
+.ffsal-spark i { flex: 1; border-radius: 3px; background: var(--c); }
+.ffsal-spark .ffsal-zero { background: rgba(255, 255, 255, .08); }
+.ffresumo .salary-table-wrap { border-radius: 1.5rem; background: var(--orb-sup); border-color: var(--orb-linha); padding: .4rem .7rem; }
+.ffresumo .salary-table th, .ffresumo .salary-table td { border-bottom-color: var(--orb-linha); padding: .45rem .3rem; }
+.ffresumo .salary-table thead th { font-size: .62rem; letter-spacing: .08em; text-transform: uppercase; color: var(--orb-suave); font-weight: 700; }
+.ffresumo .salary-table tbody th { text-align: left; font-weight: 500; color: var(--orb-suave); }
+.ffresumo .salary-table input { width: 4.4rem; padding: .25rem .45rem; border-radius: .55rem; border: 0; background: rgba(255, 255, 255, .06); color: inherit; text-align: right; font-family: var(--font-display); }
+.ffresumo .salary-table td { font-family: var(--font-display); }
+.ffresumo .salary-table tr.ffsal-atual th { color: var(--foreground); font-weight: 700; }
+.ffresumo .salary-table tfoot th, .ffresumo .salary-table tfoot td { border-bottom: 0; font-weight: 700; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ffcascata-area i { animation: none; }
+  .ffresumo .ffrev-abrir:active { transform: none; }
+  .ffchip { transition: none; }
+}

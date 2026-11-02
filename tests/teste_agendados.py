@@ -32,11 +32,11 @@ async def t_recorrente_agendado_nos_recorrentes(app):
     await app.abrir(DADOS)
     p = app.page
     await p.evaluate("window.ffGoPg('resumo')"); await p.wait_for_timeout(400)
-    await p.click('.segmented button:text-is("Recorrentes")'); await p.wait_for_timeout(500)
+    await p.click('.page-current .ffchips button:text-is("Recorrentes")'); await p.wait_for_timeout(500)
     rec = await p.evaluate("""[...document.querySelectorAll('.page-current .transaction-list article')].map(a=>
       [a.querySelector('h3').textContent, a.querySelector('.ffrec-dir small').textContent])""")
     verificar(rec == [['Renda', 'Agendado']], f'a renda de 30/09 ainda não saiu do saldo: {rec}')
-    resumo = await p.evaluate("[...document.querySelectorAll('.page-current .summary-grid article strong')].map(e=>e.textContent.replace(/\\u00a0/g,' '))")
+    resumo = await p.evaluate("[...document.querySelectorAll('.page-current .ffrec-v-pago, .page-current .ffrec-v-falta, .page-current .ffrec-v-custo')].map(e=>e.textContent.replace(/\\u00a0/g,' '))")
     verificar(resumo[:2] == ['0,00 €', '300,00 €'], f'pago / falta: {resumo}')
     verificar(not app.erros, f'erros: {app.erros}')
 

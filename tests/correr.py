@@ -56,11 +56,11 @@ class App:
     async def gastos(self):
         """Gastos do mês escolhido (caixa «Gastos» do Resumo)."""
         p = self.page
-        if not await p.query_selector('.page-current .summary-intro'):
+        if not await p.query_selector('.page-current .ffres-gastos'):
             await p.evaluate("window.ffGoPg('resumo')"); await p.wait_for_timeout(500)
-            if not await p.query_selector('.page-current .summary-intro'):
-                await p.click('.page-current .segmented button:text-is("Resumo")'); await p.wait_for_timeout(300)
-        ler = "document.querySelector('.page-current .summary-intro + .summary-grid strong').textContent.replace(/\\u00a0/g,' ')"
+            if not await p.query_selector('.page-current .ffres-gastos'):
+                await p.click('.page-current .ffchips button:text-is("Resumo")'); await p.wait_for_timeout(300)
+        ler = "document.querySelector('.page-current .ffres-gastos').textContent.replace(/\\u00a0/g,' ')"
         antes = await p.evaluate(ler)
         for _ in range(12):  # os valores sobem até ao total (animação dos números): espera que parem
             await p.wait_for_timeout(250)

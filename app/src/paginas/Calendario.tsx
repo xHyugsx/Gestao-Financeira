@@ -4,17 +4,12 @@ import { LinhaMovimento } from '../movimentos/Movimento';
 import { Botao } from '../ui/Botao';
 import { RoboVazio } from '../ui/RoboVazio';
 import { formatarEuros } from '../ui/formatos';
-import { calorDoMes, diasDoMes, doMes } from './calculos';
+import { calorDoMes, diasDoMes, doMes, maiorSequencia } from './calculos';
 
 const DIAS_SEMANA = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 const NOMES_DIA = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
 
 /** Maior sequência de dias seguidos sem despesas (dias já passados). */
-function maiorSequencia(dias: number[]): number {
-  let melhor = 0, atual = 0, antes = -1;
-  for (const d of dias) { atual = d === antes + 1 ? atual + 1 : 1; antes = d; melhor = Math.max(melhor, atual); }
-  return melhor;
-}
 const LEGENDA: [string, string][] = [['in', 'Receita'], ['out', 'Despesa'], ['rec', 'Recorrente'], ['tr', 'Transferência']];
 
 /** Tipo do símbolo de cada movimento num dia do calendário (▲ receita, ▼ despesa, ○ recorrente, ◆ transferência). */

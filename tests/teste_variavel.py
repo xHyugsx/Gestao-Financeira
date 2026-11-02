@@ -15,10 +15,10 @@ async def t_valor_variavel_por_confirmar(app):
     verificar(await p.query_selector(f'{linha} .ffconfirmar'), 'falta a etiqueta «Valor por confirmar»')
     verificar('Falta confirmar o valor de Luz' in (await p.text_content('.ffdica') or ''), 'a frase do dia não lembra o valor por confirmar')
     verificar(await app.gastos() == '0,00 €', f'o valor por confirmar não conta nos gastos: {await app.gastos()}')
-    await p.click('.segmented button:text-is("Recorrentes")'); await p.wait_for_timeout(500)
+    await p.click('.page-current .ffchips button:text-is("Recorrentes")'); await p.wait_for_timeout(500)
     rec = await p.evaluate("""[...document.querySelectorAll('.page-current .transaction-list article')].map(a=>
       [a.querySelector('h3').textContent, a.querySelector('.ffrec-dir strong').textContent.replace(/\\u00a0/g,' '), a.querySelector('.ffrec-dir small').textContent])""")
-    verificar(rec == [['Luz', '≈ 43,00 €', 'Por confirmar']], f'Recorrentes: {rec}')
+    verificar(rec == [['Luz', '≈ 43,00 €', 'Confirmar valor']], f'Recorrentes: {rec}')
 
     await p.evaluate("window.ffGoPg('principal')"); await p.wait_for_timeout(500)
     await p.click(linha); await p.wait_for_timeout(500)
