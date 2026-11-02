@@ -46,6 +46,7 @@ import { NovaDespesaVet, NovoAbastecimento } from '../paginas/JanelasRegisto';
 import { JanelaFotografia, Veterinario, VISTA_VETERINARIO, type VistaVeterinario } from '../paginas/Veterinario';
 import { type PeriodoResumo, Resumo, type SeccaoResumo } from '../paginas/Resumo';
 import { type ListaMovimentos, Principal } from '../paginas/Principal';
+import { fraseDoDia } from '../paginas/frase';
 import { Botao } from '../ui/Botao';
 import { Icone } from '../ui/Icone';
 import { useAnimacaoNumeros } from './animacaoNumeros';
@@ -874,6 +875,7 @@ export function App() {
       <Jarvis
         aberto={jarvis} fechar={fecharJarvis} motor={motor} contexto={contextoJarvis} vocabulario={vocabularioJarvis} lerAnexo={lerAnexo}
         pagina={pagina} nome={nome ?? ''} teclado={teclado} vibrar={vibrar} mensagens={mensagens} mudarMensagens={setMensagens}
+        frase={jarvis && !ocultos ? fraseDoDia({ transactions: estado.transactions, annualExpenses: estado.annualExpenses }, new Date()) : null}
       />
       {folha ? (
         <FolhaDefinicoes

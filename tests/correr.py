@@ -95,6 +95,13 @@ class App:
         await p.wait_for_timeout(750)
         return await p.evaluate("[...document.querySelectorAll('.jarvis-msg-ai')].pop().textContent")
 
+    async def escolher(self, campo, valor, dentro='[role=dialog]'):
+        """Escolhe um valor num grupo de botões de uma folha de registo (a categoria abre o painel de escolha)."""
+        p = self.page
+        if campo == 'category' and not await p.query_selector(f'{dentro} .ffcat-painel'):
+            await p.click(f'{dentro} .ffcat-escolha-abrir'); await p.wait_for_timeout(150)
+        await p.click(f'{dentro} [data-campo="{campo}"] [data-valor="{valor}"] >> nth=0'); await p.wait_for_timeout(120)
+
     async def movimentos(self):
         return await self.page.evaluate("P=>JSON.parse(localStorage.getItem(P+'v3')||'{}').transactions||[]", PREFIXO)
 

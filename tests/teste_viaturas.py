@@ -36,11 +36,11 @@ async def t_registar_abastecimento_com_viatura(app):
     p = app.page
     await p.evaluate("window.ffGoPg('combustivel')"); await p.wait_for_timeout(800)
     await p.click('[aria-label="Adicionar abastecimento"]'); await p.wait_for_timeout(500)
-    escolhas = [await p.input_value(f'[role=dialog] select[name={n}]') for n in ('vehicle', 'fuel', 'person')]
+    escolhas = [await p.input_value(f'[role=dialog] input[name={n}]') for n in ('vehicle', 'fuel', 'person')]
     verificar(escolhas == ['Mota X', 'gasolina', 'Pessoa B'], f'pré-escolhe a última viatura, o seu combustível e a última pessoa: {escolhas}')
-    await p.select_option('[role=dialog] select[name=vehicle]', 'Carro A')
-    verificar(await p.input_value('[role=dialog] select[name=fuel]') == 'gasoleo', 'ao trocar de viatura, o combustível dessa viatura')
-    await p.select_option('[role=dialog] select[name=person]', 'Pessoa A')
+    await app.escolher('vehicle', 'Carro A', '[role=dialog]')
+    verificar(await p.input_value('[role=dialog] input[name=fuel]') == 'gasoleo', 'ao trocar de viatura, o combustível dessa viatura')
+    await app.escolher('person', 'Pessoa A', '[role=dialog]')
     await p.fill('[role=dialog] input[name=amount]', '50')
     await p.click('[role=dialog] button[type=submit]'); await p.wait_for_timeout(500)
     m = (await dados(app))['transactions'][0]
@@ -53,12 +53,12 @@ async def t_viatura_no_mais_e_na_edicao(app):
     await app.abrir(DADOS)
     p = app.page
     await p.click('[aria-label="Adicionar movimento"]'); await p.wait_for_timeout(500)
-    await p.select_option('.movement-dialog select[name=category]', 'Transportes'); await p.wait_for_timeout(200)
-    verificar(not await p.query_selector('.movement-dialog select[name=vehicle]'), 'sem viatura fora do combustível')
-    await p.select_option('.movement-dialog select[name=category]', 'Combustível'); await p.wait_for_timeout(200)
+    await app.escolher('category', 'Transportes', '.movement-dialog'); await p.wait_for_timeout(200)
+    verificar(not await p.query_selector('.movement-dialog [data-campo=\"vehicle\"]'), 'sem viatura fora do combustível')
+    await app.escolher('category', 'Combustível', '.movement-dialog'); await p.wait_for_timeout(200)
     await p.fill('.movement-dialog input[name=title]', 'Galp'); await p.fill('.movement-dialog input[name=amount]', '20')
-    await p.select_option('.movement-dialog select[name=vehicle]', 'Carro B'); await p.wait_for_timeout(100)
-    verificar(await p.input_value('.movement-dialog select[name=fuel]') == 'gasolina', 'combustível do Carro B')
+    await app.escolher('vehicle', 'Carro B', '.movement-dialog'); await p.wait_for_timeout(100)
+    verificar(await p.input_value('.movement-dialog input[name=fuel]') == 'gasolina', 'combustível do Carro B')
     await p.click('.movement-dialog button[type=submit]'); await p.wait_for_timeout(700)
     m = (await dados(app))['transactions'][0]
     verificar([m.get('vehicle'), m.get('fuel')] == ['Carro B', 'gasolina'], f'pelo «+»: {m}')
@@ -66,9 +66,9 @@ async def t_viatura_no_mais_e_na_edicao(app):
     await p.evaluate("window.ffGoPg('combustivel')"); await p.wait_for_timeout(800)
     await p.click('.page-current .fuel-view .transaction-list [data-id="4"]')
     await p.wait_for_timeout(500)
-    verificar(await p.input_value('[role=dialog] select[name=vehicle]') == '', 'o antigo começa sem viatura')
-    await p.select_option('[role=dialog] select[name=vehicle]', 'Mota X'); await p.wait_for_timeout(100)
-    verificar(await p.input_value('[role=dialog] select[name=fuel]') == 'gasolina', 'combustível da mota')
+    verificar(await p.input_value('[role=dialog] input[name=vehicle]') == '', 'o antigo começa sem viatura')
+    await app.escolher('vehicle', 'Mota X', '[role=dialog]'); await p.wait_for_timeout(100)
+    verificar(await p.input_value('[role=dialog] input[name=fuel]') == 'gasolina', 'combustível da mota')
     await p.click('[role=dialog] button[type=submit]'); await p.wait_for_timeout(600)
     d = {x['id']: x for x in (await dados(app))['transactions']}
     verificar([d[4].get('vehicle'), d[4].get('fuel')] == ['Mota X', 'gasolina'], f'editado: {d[4]}')
