@@ -1,105 +1,138 @@
-# Plano — APK da app «Finanças»
+# Plano — APK nativa da app «Finanças»
 
-Estado de partida: **v2.47.0** (reformulação «Órbita» concluída), publicada em
-`https://xhyugsx.github.io/Gestao-Financeira/`. Uso exclusivo do dono (instalação manual, sem Play Store).
+- **Objetivo (dono, 02/11/2026):** passar da app web (PWA) para uma **APK Android** de uso exclusivo do dono, sem Play Store e sem distribuição. A APK deve **ir além** do que o navegador permite: **notificações** e outras funções de uma app nativa.
+- **Ponto de partida:** **v2.47.0**, com a reformulação «Órbita» concluída. A APK tem de ficar **igual** a esta versão (aspeto, comportamento e dados) antes de se acrescentar funções novas.
 
-## 1. Recolha de dados (02/11/2026)
+## 1. Recolha de dados
 
-| Ponto | Situação atual | Relevância para a APK |
+| Ponto | Situação atual (PWA) | Na APK nativa |
 |---|---|---|
-| Endereço | `xhyugsx.github.io/Gestao-Financeira/` (site de projeto) | A verificação da TWA tem de estar na **raiz** do domínio (`/.well-known/assetlinks.json`) → precisa do repositório `xHyugsx.github.io` |
-| Manifesto | `start_url ./index.html`, `scope ./`, `standalone`, retrato, ícones 192/512/maskable, atalhos «Nova despesa» e «Jarvis» | Reaproveitado tal como está |
-| Dados | `localStorage` (chaves em CLAUDE.md §3) | Na TWA são **os mesmos** do Chrome; numa app autónoma começam vazios |
-| Impressão digital | WebAuthn (`bloqueio/biometria.ts`, ligado ao `pinHash`) | Funciona na TWA; numa WebView não |
-| Google Drive | OAuth no navegador (`dados/drive.ts`, `tratarRespostaGoogle`) | Funciona na TWA; numa WebView o Google bloqueia (`disallowed_useragent`) |
-| Partilha e downloads | `navigator.share` (Ano em revista) e descarga do backup (`lembreteBackup.ts`, `App.tsx`) | Funcionam na TWA; numa WebView precisam de plugins |
-| Outros | vibração, Web Audio, `storage.persist`, service worker, aviso «Nova versão» | Funcionam na TWA |
-| Compilação | GitHub Actions (`testes.yml`); os executores Ubuntu já têm JDK e Android SDK | A APK é compilada no Actions e fica numa *Release* |
+| Código | React + Vite + TS em `app/`, montado em `_site/` por `scripts/montar-site.mjs` | O **mesmo código** vai dentro da APK; o GitHub Pages continua a funcionar em paralelo |
+| Dados | `localStorage` com as chaves de CLAUDE.md §3 | Mesmas chaves e mesmo formato, mas noutra origem (`https://localhost`): começa vazia e passa-se tudo com **Restaurar backup** (já existe) |
+| Bloqueio | PIN (`pinHash`) e impressão digital por WebAuthn (`bloqueio/biometria.ts`) | O PIN fica igual. A impressão digital passa a ser **nativa** (BiometricPrompt), porque a WebView não tem WebAuthn |
+| Imagem desfocada nos recentes | Truque web | **Nativo**: `FLAG_SECURE`, o ecrã não aparece nos recentes nem em capturas |
+| Google Drive | OAuth no navegador (`dados/drive.ts`) | O Google bloqueia o login dentro de WebViews. Passa a **login nativo** (ID de cliente Android); as chamadas ao Drive ficam iguais |
+| Partilhar (Ano em revista) | `navigator.share` (`paginas/cartaoRevista.ts`) | Plugin `@capacitor/share` com a imagem gravada na cache |
+| Descarregar backup | Download do navegador (`lembreteBackup.ts`, `App.tsx`) | Gravar em Documentos (`@capacitor/filesystem`) e/ou abrir «Partilhar» |
+| Abrir ficheiros (PDF, extratos, backups) | `<input type=file>` | Funciona na WebView do Capacitor |
+| Vibração | `navigator.vibrate` (`ui/vibracao.ts`) | `@capacitor/haptics`, com vibração mais fina |
+| Barra de estado | `meta theme-color` (`ui/temas.ts`) | `@capacitor/status-bar` com a mesma cor por tema |
+| Bloqueio ao voltar à app | `visibilitychange` | `@capacitor/app` (`appStateChange`) |
+| Atalhos do ícone | `shortcuts` do manifesto (`?acao=despesa|jarvis`) | Atalhos estáticos do Android que abrem o mesmo `?acao=` |
+| Atualizações | Service worker e aviso «Nova versão disponível» | Sem service worker. O aviso consulta a **última Release** do GitHub e abre o download da APK nova |
+| Sons, animações, temas, Jarvis, importação, PDF | Web | Ficam iguais |
+| Armazenamento persistente | `navigator.storage.persist` | Desnecessário: os dados da app só se apagam se o dono os limpar ou desinstalar |
+| Compilação | GitHub Actions (`testes.yml`) | Workflow novo `apk.yml`: JDK e Android SDK já existem no executor Ubuntu; a APK assinada vai para uma **Release** |
 
-## 2. Decisão: TWA (recomendado) e plano B
+## 2. Abordagem
 
-**Caminho A — TWA (Trusted Web Activity)**: a APK abre a app publicada através do Chrome, em ecrã inteiro.
-- ✅ Ficam os **dados atuais**, a impressão digital, o Drive, a partilha e as **atualizações automáticas** (cada publicação no GitHub Pages chega à APK, sem reinstalar).
-- ✅ Pouco código novo, sem mexer na app nem nos dados.
-- ⚠️ Precisa do Chrome no telemóvel e do site no ar (offline continua a funcionar pelo service worker).
+- **Capacitor** (versão estável mais recente, com as versões fixadas), na pasta `android/` do repositório.
+- **Uma só base de código:** uma camada `app/src/nativo/` decide em tempo de execução (`Capacitor.isNativePlatform()`) se usa o plugin nativo ou a versão web. A PWA no GitHub Pages continua igual, e os testes Playwright também.
+- **Pacote:** `io.github.xhyugsx.financas`, nome «Finanças», ícone e ecrã inicial com os ícones atuais.
+- **Versões:** `versionName` = `app/versao.json`, `versionCode` = número derivado (ex.: 2.47.0 → 24700). Cada entrega gera uma APK nova na Release; o aviso «Nova versão» na app leva até ela.
+- **Repositório público:** a chave de assinatura e as palavras-passe ficam **só** nos segredos do GitHub e numa cópia do dono, nunca no código.
 
-**Caminho B — Capacitor (autónoma)**: a app vai dentro da APK. Só avançar se o dono o pedir explicitamente.
-- Começa vazia: restaurar um backup.
-- Exige adaptações:
-  - impressão digital nativa, com um plugin de biometria e um novo registo;
-  - Drive com login nativo (ID de cliente Android com a SHA-1 da chave);
-  - partilha e ficheiros com `@capacitor/share` e `@capacitor/filesystem`;
-  - desligar o service worker;
-  - aviso de versão nova a apontar para a Release.
-- Cada versão nova é uma APK nova para instalar.
-- Estimativa: **3 a 4 vezes** o trabalho do caminho A.
+## 3. Fases
 
-## 3. Passos do caminho A
+Cada fase fica estável, testada e com merge, para se poder parar entre fases quando o limite apertar.
 
-Cada fase deixa o repositório num estado estável, para se poder parar entre fases.
+### Fase 0 — Preparação (curta)
+1. Gerar a chave de assinatura (`keytool`, RSA 2048, 30 anos).
+2. O dono cola 4 segredos em Settings › Secrets › Actions: `APK_KEYSTORE` (base64), `APK_KEYSTORE_PASS`, `APK_KEY_ALIAS`, `APK_KEY_PASS`.
+3. O dono guarda uma cópia da chave fora do GitHub: sem ela não se consegue atualizar a APK sem a desinstalar.
 
-### Fase 1 — Projeto Android (no repositório, pasta `android/`)
-1. Gerar o projeto TWA com o Bubblewrap (`@bubblewrap/cli`), sem interação, a partir de `android/twa-manifest.json`:
-   - `packageId`: `io.github.xhyugsx.financas`
-   - `host`: `xhyugsx.github.io`, `startUrl`: `/Gestao-Financeira/index.html`
-   - nome e cores: «Finanças», `#05091F`, ecrã inicial com o ícone 512
-   - atalhos «Nova despesa» e «Jarvis», `orientation: portrait`, `display: standalone`
-   - `fallbackType: customtabs`, `enableNotifications: false`
-   - `appVersionName` = versão de `app/versao.json`, `appVersionCode` = número inteiro crescente
-2. Pôr no projeto o código gerado (Gradle); **nunca** a chave de assinatura.
+### Fase 1 — APK base, igual à v2.47.0
+1. Instalar `@capacitor/core`, `@capacitor/cli` e `@capacitor/android`; `capacitor.config.ts` com `webDir: '_site'` e `androidScheme: 'https'`.
+2. Não registar o service worker na versão nativa.
+3. `apk.yml`:
+   - montar `_site`;
+   - `npx cap sync android`;
+   - `./gradlew assembleRelease`;
+   - assinar e verificar com `apksigner verify`;
+   - publicar `financas-vX.YY.Z.apk` numa Release.
+4. **Resultado:** APK instalável que já funciona (restaurar backup, PIN, todas as páginas).
 
-### Fase 2 — Chave de assinatura e Actions
-1. Gerar a chave (`keytool`, RSA 2048, validade de 30 anos).
-2. O dono guarda-a em **Settings › Secrets › Actions**:
-   - `APK_KEYSTORE` (em base64)
-   - `APK_KEYSTORE_PASS`
-   - `APK_KEY_ALIAS`
-   - `APK_KEY_PASS`
-3. Guardar também uma cópia fora do GitHub: sem ela não é possível atualizar a APK.
-4. Workflow novo `.github/workflows/apk.yml`:
-   - corre à mão (`workflow_dispatch`) e quando `android/` muda;
-   - compila com `./gradlew assembleRelease`, assina com os segredos e verifica com `apksigner verify`;
-   - publica `financas-vX.YY.Z.apk` numa **Release** do GitHub.
-5. Mostrar a impressão SHA-256 da chave no registo do Actions (`apksigner verify --print-certs`). Este valor é público e pode aparecer.
+### Fase 2 — Adaptações nativas (para ficar «no mesmo estado»)
+1. Impressão digital: plugin de biometria (BiometricPrompt).
+   - Guarda o registo **ligado ao `pinHash`**, como hoje.
+   - Na APK nativa, o registo de WebAuthn não serve: pede-se um registo novo.
+2. Ecrã privado: `FLAG_SECURE`, com o plugin *privacy screen*.
+3. Partilha e backup em ficheiro (`share` + `filesystem`); vibração (`haptics`); barra de estado (`status-bar`); ecrã inicial (`splash-screen`); bloqueio ao voltar (`app`).
+4. Atalhos do ícone «Nova despesa» e «Jarvis».
+5. Aviso «Nova versão disponível» a partir da Release do GitHub (API pública, sem servidor).
+6. Google Drive com login nativo:
+   - O dono cria um ID de cliente **Android** no Google Cloud (pacote + SHA-1 da chave, que eu indico) e continua com o âmbito `drive.file`.
+   - `docs/GOOGLE-DRIVE.md` fica atualizado.
+   - As cópias atuais no Drive continuam a servir para restaurar.
 
-### Fase 3 — Verificação do domínio (tira a barra do endereço)
-1. Criar o repositório público **`xHyugsx.github.io`** (página de utilizador, pode ficar vazio). Só o dono, ou eu com autorização.
-2. Acrescentar:
-   - `.nojekyll`, para o GitHub Pages publicar pastas começadas por ponto;
-   - `.well-known/assetlinks.json` com `io.github.xhyugsx.financas` e a SHA-256 da chave.
-3. Confirmar com a API do Google: `digitalassetlinks.googleapis.com/v1/statements:list?source.web.site=https://xhyugsx.github.io&relation=delegate_permission/common.handle_all_urls`.
-4. Confirmar que `xhyugsx.github.io/Gestao-Financeira/` continua igual: o repositório de utilizador não substitui os sites de projeto.
+### Fase 3 — Mudança para a APK (com o dono)
+1. Na PWA: **Criar backup** (e Drive).
+2. Ativar «Instalar apps desconhecidas» e instalar a APK.
+3. Restaurar o backup, registar a impressão digital e ligar o Drive.
+4. Verificar com a lista do §5. Só depois deixar de usar a PWA.
+5. Usar as duas em paralelo faz os dados divergirem. Para passar movimentos de uma para a outra existe «Juntar movimentos».
 
-### Fase 4 — Testes
-- Automáticos: `npm run verificar` e `python tests/correr.py` (a app não muda, devem continuar verdes) e `apksigner verify` no Actions.
-- No telemóvel (dono), por esta ordem:
-  1. **Criar backup** na app atual.
-  2. Ativar «Instalar apps desconhecidas» para o navegador ou para os Ficheiros.
-  3. Instalar a APK da Release.
-  4. Confirmar: abre sem barra do endereço, os **movimentos aparecem**, o PIN e a impressão digital funcionam, os atalhos do ícone funcionam, Drive, partilha, sons, temas, barra de estado na cor do tema, e funciona offline em modo de avião.
-  5. Só depois, se quiser, desinstalar a app antiga do Chrome. Os dados ficam no Chrome, mas o backup do passo 1 é a garantia.
+### Fase 4 — Notificações (a primeira função nova)
+- `@capacitor/local-notifications`: notificações agendadas **no próprio telemóvel**, sem servidor nem Firebase.
+- A app recalcula e reagenda as notificações sempre que abre e sempre que os dados mudam.
+- Permissões: notificações (Android 13+) e alarmes exatos (Android 12+).
+- Tocar na notificação abre a página certa.
+- Propostas (o dono escolhe e aprova com maquetas):
+  - recorrentes **a pagar hoje / atrasados**;
+  - **valor por confirmar** (ex.: salário no dia do ordenado);
+  - **despesas anuais** no mês previsto;
+  - **lembretes veterinários** (hoje só aparecem ao abrir a app);
+  - **lembrete de backup**;
+  - **resumo semanal / fecho do mês**;
+  - aviso de **gasto fora do normal** no dia.
+- Em Definições › Notificações: ligar ou desligar cada tipo e escolher a hora.
 
-### Fase 5 — Documentação e entrega
-- CLAUDE.md: nova secção «APK» (pacote, onde está a chave, como se gera, a regra «a chave nunca no repositório»).
-- `docs/APK.md`: guia curto para o dono (instalar, atualizar, o que fazer se mudar de telemóvel).
-- Versão: não é preciso mudar `app/versao.json` (a app não muda). Se for preciso mudar alguma coisa na app, segue as regras habituais.
+### Fase 5+ — Outras funções nativas (uma alínea de cada vez, com maquetas)
+| Ideia | O que dá | Esforço |
+|---|---|---|
+| **Widget** no ecrã inicial | Rendimento, gastos do mês, botão «+» | Médio/alto (código Kotlin) |
+| **Receber ficheiros** («Partilhar com Finanças») | Enviar o PDF do recibo ou o extrato diretamente de outra app | Baixo/médio |
+| **Backup automático** | Cópia diária num ficheiro e/ou no Drive, sem abrir a app | Médio |
+| **Câmara** | Fotografar talões e animais diretamente | Baixo |
+| **Notificações do banco** | Ler as notificações da app do banco e propor a despesa já preenchida | Alto; dados sensíveis, ficam só no telemóvel |
+| **Tile nas definições rápidas** | Nova despesa com um toque | Baixo/médio |
 
-## 4. Riscos e cuidados
+## 4. Testes
+- **Web (sem mudanças):** `npm run verificar` e `python tests/correr.py` continuam verdes. A camada `nativo/` tem testes unitários com os plugins simulados.
+- **APK no Actions:** compilação, `apksigner verify` e, se o tempo o permitir, um teste rápido num emulador (a app abre e mostra o bloqueio).
+- **Compatibilidade dos dados:** teste que restaura um backup fictício na versão nativa e compara as chaves do `localStorage`.
 
+## 5. Lista de verificação no telemóvel (dono)
+- [ ] Ícone, nome, ecrã inicial e barra de estado na cor do tema
+- [ ] PIN, impressão digital e bloqueio ao voltar
+- [ ] Imagem tapada nos recentes
+- [ ] Movimentos, páginas, temas, sons e animações iguais
+- [ ] Atalhos do ícone
+- [ ] Criar e restaurar backup (normal e protegido); Google Drive
+- [ ] Importar extrato e recibo
+- [ ] Partilhar o Ano em revista
+- [ ] Modo de avião
+- [ ] Aviso «Nova versão disponível»
+
+## 6. Riscos
 | Risco | Cuidado |
 |---|---|
-| Perder a chave de assinatura | Cópia fora do GitHub. Se se perder: desinstalar e instalar uma APK nova; os dados ficam no Chrome |
-| Barra do endereço visível | `assetlinks.json` errado ou `.nojekyll` em falta; confirmar com a API (Fase 3) |
-| Cor da barra de estado | O `theme-color` dinâmico pode não ser seguido pela TWA em todas as versões do Chrome. Testar; a cor de partida fica `#05091F` |
-| Repositório público | Só vão para o GitHub o `assetlinks.json` (dados públicos) e o projeto Android, **sem** a chave nem as palavras-passe |
-| Chrome desatualizado ou ausente | A TWA abre como separador personalizado (`customtabs`), que continua a funcionar |
-| Desinstalar a app do Chrome antes do tempo | Fazer só depois de confirmar os dados na APK (Fase 4) |
+| Perder a chave de assinatura | Cópia do dono fora do GitHub. Sem ela, para atualizar é preciso desinstalar, o que apaga os dados: backup antes |
+| Desinstalar a APK apaga os dados | Lembrete de backup (e, mais tarde, backup automático) |
+| Drive exige um ID de cliente Android | Passos guiados em `docs/GOOGLE-DRIVE.md` |
+| Notificações atrasadas pela poupança de bateria | Alarmes exatos; sugerir tirar a app da otimização de bateria |
+| Repositório público | Só vai para o GitHub o código. Chave, palavras-passe e dados nunca |
+| Duas versões a divergir (PWA e APK) | Mudança num só dia (Fase 3) |
 
-## 5. O que o dono tem de fazer
-1. Criar o repositório `xHyugsx.github.io`, ou autorizar-me a criá-lo.
-2. Colar os 4 segredos da chave em Settings › Secrets › Actions (eu digo os valores).
-3. Guardar a cópia da chave.
-4. Instalar a APK e fazer os testes no telemóvel (Fase 4).
+## 7. O que o dono tem de fazer
+1. Fase 0: colar os segredos e guardar a cópia da chave.
+2. Fase 2: criar o ID de cliente Android do Google Drive (com o meu guia).
+3. Fase 3: instalar, restaurar e verificar.
+4. Fase 4+: escolher as notificações e as funções, e aprovar as maquetas.
 
-## 6. Estimativa
-Caminho A: uma sessão média, sobretudo à espera do Actions. As Fases 1 e 2 são a maior parte; as Fases 3 a 5 são curtas.
+## 8. Estimativa
+- Fases 0 e 1: uma sessão curta.
+- Fase 2: uma sessão média.
+- Fase 4: uma sessão média.
+- Cada função da Fase 5: uma sessão.
+- Começar pelas Fases 0 a 2 deixa a APK **igual à v2.47.0**.
