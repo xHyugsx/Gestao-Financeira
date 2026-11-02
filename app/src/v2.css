@@ -32,7 +32,6 @@
 .ffv2-sugestao { display: block; margin-top: -.35rem; font-size: .72rem; color: var(--muted-foreground); }
 
 /* ===== página Principal: valor do rendimento sem cor de subida/descida (a percentagem já o indica) ===== */
-.ffhero-ring strong.ffhero-valor { color: #f4f1ff; text-shadow: 0 0 18px rgba(139, 92, 246, .55), 0 0 6px rgba(0, 240, 255, .25); }
 
 /* ===== página Principal: frase do dia (Jarvis) ===== */
 .ffdica {
@@ -97,19 +96,10 @@ i.ffd-in, i.ffd-out, i.ffd-rec, i.ffd-tr {
 .ffcal-resumo { margin: .5rem 0 0; text-align: center; font-size: .72rem; color: var(--muted-foreground); }
 
 /* ===== Resumo: recorrentes e subscrições ===== */
-.ffrec-barra { height: 6px; border-radius: 6px; background: rgba(255, 255, 255, .08); overflow: hidden; margin: -.2rem 0 .2rem; }
-.ffrec-barra b { display: block; height: 100%; background: linear-gradient(90deg, #00f0ff, #8b5cf6 60%, #ec4899); transform-origin: left; animation: ffcontas-encher .8s cubic-bezier(.22, 1, .36, 1) both; }
 .ffrec-dir { display: grid; justify-items: end; gap: .2rem; }
 .ffrec-dir small { font-size: .62rem; font-weight: 600; padding: .1rem .45rem; border-radius: 999px; }
-.ffrec-pago { color: #34d399; background: rgba(52, 211, 153, .14); }
-.ffrec-por-pagar { color: #a5b4fc; background: rgba(129, 140, 248, .16); }
-.ffrec-atrasado { color: #fb7185; background: rgba(244, 63, 94, .16); }
-.ffrec-por-confirmar { color: #fbbf24; background: rgba(251, 191, 36, .14); }
-.ffrec-agendado { color: var(--cosmic-blue); background: color-mix(in oklab, var(--cosmic-blue) 16%, transparent); }
 .ffrec-estimado { opacity: .75; }
-.ffrec-ic-pago { color: #34d399; } .ffrec-ic-por-pagar { color: #a5b4fc; } .ffrec-ic-atrasado { color: #fb7185; } .ffrec-ic-por-confirmar { color: #fbbf24; } .ffrec-ic-agendado { color: var(--cosmic-blue); }
 .ffrec-subiu { color: #fb7185; }
-@media (prefers-reduced-motion: reduce) { .ffrec-barra b { animation: none; } }
 .segmented.ffseg-2l { grid-auto-flow: row; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
 /* ===== Resumo: ano em revista («stories») ===== */
@@ -193,8 +183,6 @@ i.ffd-in, i.ffd-out, i.ffd-rec, i.ffd-tr {
 
 /* Recorrentes: mês saltado («só este mês»), com «Repor» */
 .ffrec-saltado { opacity: .7; }
-.ffrec-saltado-rotulo { color: var(--muted-foreground); background: color-mix(in oklab, var(--muted-foreground) 14%, transparent); }
-.ffrec-ic-saltado { color: var(--muted-foreground); }
 
 /* Análise: gráfico circular em SVG (cada fatia entra a seguir à anterior; tocar destaca) */
 .donut-wrap .donut { position: absolute; }
@@ -204,14 +192,11 @@ i.ffd-in, i.ffd-out, i.ffd-rec, i.ffd-tr {
 @keyframes ffdonut-entrar { from { opacity: 0; transform: rotate(-35deg) scale(.86); } }
 .ffcom-destaque .ffdonut-fatia:not(.ffdestaque) { opacity: .25; }
 .ffdonut-fatia.ffdestaque { transform: scale(1.06); }
-.donut-callouts { transition: opacity .25s; animation: ffaparecer .45s ease backwards; }
-.donut-wrap.ffcom-destaque .donut-callouts { opacity: .25; }
 @keyframes ffaparecer { from { opacity: 0; } }
 .ffdonut-nome { max-width: 5.4rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; justify-self: center; }
 .ffdonut-legenda > div { cursor: pointer; margin: -.2rem -.35rem; padding: .2rem .35rem; border-radius: .4rem; transition: opacity .25s, background-color .25s; -webkit-tap-highlight-color: transparent; }
 .ffdonut-legenda.ffcom-destaque > div:not(.ffdestaque) { opacity: .4; }
 .ffdonut-legenda > div.ffdestaque { background: rgba(255, 255, 255, .06); }
-.metric-panel.ffmedias strong { color: var(--foreground); }
 
 /* Análise: barras crescem em sequência; o mês escolhido (ou hoje) fica realçado; tocar mostra o valor */
 .ffbarras > div { position: relative; cursor: pointer; -webkit-tap-highlight-color: transparent; }
@@ -225,7 +210,7 @@ i.ffd-in, i.ffd-out, i.ffd-rec, i.ffd-tr {
 .ffbarra-valor.ffesq { left: 0; transform: none; }
 .ffbarra-valor.ffdir { left: auto; right: 0; transform: none; }
 @media (prefers-reduced-motion: reduce) {
-  .ffdonut-fatia, .donut-callouts, .ffbarras i, .ffbarra-valor { animation: none; }
+  .ffdonut-fatia, .ffbarras i, .ffbarra-valor { animation: none; }
 }
 
 /* Separadores: a pílula da opção escolhida desliza entre as opções */

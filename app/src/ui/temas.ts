@@ -22,7 +22,14 @@ export function aplicarTema(tema: Tema | null): void {
   const raiz = document.documentElement;
   if (!tema || tema === 'cosmico') delete raiz.dataset.tema;
   else raiz.dataset.tema = tema;
+  // barra de estado do Android na cor do fundo do tema (v2.47.0)
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', COR_DA_BARRA[tema ?? 'cosmico']);
 }
+
+/** Cor da barra de estado do Android em cada tema (a do fundo). */
+export const COR_DA_BARRA: Record<Tema, string> = {
+  cosmico: '#05091F', aurora: '#03141c', 'por-do-sol': '#1c0816', dourado: '#0b0a08', oceano: '#04101f', floresta: '#06120a',
+};
 
 /**
  * Cor dos valores das despesas (Definições › Aparência; `appearance.expenseColor`, v2.39.0). Sem valor = coral suave
