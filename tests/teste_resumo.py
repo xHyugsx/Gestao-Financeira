@@ -63,3 +63,24 @@ async def t_salarios_por_pessoa(app):
     verificar(await p.locator('.page-current .ffsal-pessoa:first-child .ffsal-spark i.ffsal-zero').count() == 4, 'meses sem salário em cinzento')
     verificar((await p.evaluate(TEXTO('tr.ffsal-atual th')))[0] == 'Setembro', 'o mês escolhido fica realçado na tabela')
     verificar(not app.erros, f'erros: {app.erros}')
+
+
+async def t_valores_seguem_o_periodo(app):
+    await app.page.emulate_media(reduced_motion='reduce')
+    await app.abrir(DADOS)
+    p = app.page
+    await p.evaluate("window.ffGoPg('resumo')"); await p.wait_for_timeout(800)
+    await p.click('.page-current .segmented button:text-is("Últimos 3 meses")'); await p.wait_for_timeout(500)
+    verificar((await p.evaluate(TEXTO('.ffres-mes .ffbloco-rot')))[0].lower() == 'julho a setembro em números', await p.evaluate(TEXTO('.ffres-mes .ffbloco-rot')))
+    verificar(await app.gastos() == '1410,00 €', f'agosto + setembro: {await app.gastos()}')
+    verificar((await p.evaluate(TEXTO('.ffres-receitas')))[0] == '1050,00 €', 'receitas dos 3 meses')
+    verificar(await p.locator('.page-current .ffres-linha .ffhero-var').count() == 0, 'sem gastos nos 3 meses antes, não há comparação')
+    ideias = await p.evaluate(TEXTO('.ffideia p'))
+    verificar(ideias[0] == 'A maior categoria é Casa: 1000,00 € (71% dos gastos).', ideias)
+    verificar(ideias[1].startswith('85 dias sem despesas — o melhor foram 35 seguidos'), f'julho (31) + agosto (29) + setembro até hoje (25); 1/07 a 4/08 seguidos: {ideias}')
+    await p.click('.page-current .segmented button:text-is("Este ano")'); await p.wait_for_timeout(500)
+    verificar((await p.evaluate(TEXTO('.ffres-mes .ffbloco-rot')))[0].lower() == '2026 até setembro em números', await p.evaluate(TEXTO('.ffres-mes .ffbloco-rot')))
+    verificar(await app.gastos() == '1410,00 €', f'janeiro a setembro: {await app.gastos()}')
+    await p.click('.page-current .segmented button:text-is("Este mês")'); await p.wait_for_timeout(500)
+    verificar(await app.gastos() == '810,00 €', 'de volta ao mês')
+    verificar(not app.erros, f'erros: {app.erros}')

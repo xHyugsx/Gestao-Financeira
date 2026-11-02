@@ -12,7 +12,7 @@ import { Segmentado } from '../ui/Segmentado';
 import type { NomeIcone } from '../ui/icones';
 import { vibrarCurto } from '../ui/vibracao';
 import { AnoEmRevista } from './AnoEmRevista';
-import { calorDoMes, categoriasDoMes, CORES, doMes, fechoDoMes, maiorSequencia, receitas, variacao } from './calculos';
+import { categoriasDoPeriodo, CORES, diasSemDespesas, doMes, fechoDoMes, mesesDoPeriodo, receitas, variacao } from './calculos';
 import { type DespesaAnual, despesasAnuais, estadoAnual, movimentoDoPagamento, renovar, totalProximos12, valorAnual } from './anuais';
 import { type EstadoRecorrente, recorrentesDoMes } from './subscricoes';
 
@@ -69,14 +69,8 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
   const eur = (v: number) => formatarEuros(v, ocultos);
   const movimentos = estado.transactions;
   const hoje = new Date();
-  const doMesAtual = doMes(movimentos, mes);
-  const gasto = gastos(doMesAtual), gastoAnterior = gastos(doMes(movimentos, inicioDoMes(mes, -1)));
-  const recebido = receitas(doMesAtual);
-  const evolucao = variacao(gasto, gastoAnterior);
-  const categorias = categoriasDoMes(estado, mes, 'despesas');
-  const maior = categorias[0];
   const anuais = despesasAnuais(estado.annualExpenses);
-  const nomeMes = MESES[mes.getMonth()]!, mesAnterior = MESES[inicioDoMes(mes, -1).getMonth()]!;
+  const nomeMes = MESES[mes.getMonth()]!;
 
   // o separador escolhido fica sempre à vista na linha que desliza
   useEffect(() => {
@@ -86,14 +80,23 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
   }, [seccao]);
 
   const resumo = () => {
-    const calor = calorDoMes(movimentos, mes, hoje);
-    const seguidos = maiorSequencia(calor.semGastos);
+    // os valores seguem o período escolhido (mês, os 3 meses até ao escolhido, ou o ano até ao mês escolhido)
+    const { meses, anteriores } = mesesDoPeriodo(mes, periodo);
+    const juntar = (l: Date[]) => l.flatMap((d) => doMes(movimentos, d));
+    const doPeriodo = juntar(meses);
+    const gasto = gastos(doPeriodo), gastoAnterior = gastos(juntar(anteriores)), recebido = receitas(doPeriodo);
+    const evolucao = variacao(gasto, gastoAnterior);
+    const categorias = categoriasDoPeriodo(estado, meses, anteriores), maior = categorias[0];
+    const semDespesas = diasSemDespesas(movimentos, meses, hoje), seguidos = semDespesas.seguidos;
+    const ano = mes.getFullYear(), ate = MESES[mes.getMonth()]!;
+    const contra = periodo === 'mes' ? MESES[inicioDoMes(mes, -1).getMonth()]! : periodo === 'trimestre' ? '3 meses antes' : String(ano - 1);
+    const face = periodo === 'mes' ? `face a ${contra}` : periodo === 'trimestre' ? 'face aos 3 meses anteriores' : `face ao mesmo período de ${ano - 1}`;
     // categoria que mais pesou na subida (ou na descida) face ao mês anterior
     const destaque = gastoAnterior > 0 && evolucao !== 0
       ? [...categorias].sort((a, b) => (evolucao > 0 ? (b.amount - b.anterior) - (a.amount - a.anterior) : (a.amount - a.anterior) - (b.amount - b.anterior)))[0]
       : undefined;
     const mudou = destaque && (evolucao > 0 ? destaque.amount > destaque.anterior : destaque.amount < destaque.anterior) ? destaque : undefined;
-    const rotulo = periodo === 'mes' ? maiuscula(nomeMes) : periodo === 'trimestre' ? '3 meses' : String(mes.getFullYear());
+    const rotulo = periodo === 'mes' ? maiuscula(nomeMes) : periodo === 'trimestre' ? `${maiuscula(MESES[meses[0]!.getMonth()]!)} a ${ate}` : mes.getMonth() < 11 ? `${ano} até ${ate}` : String(ano);
     return (
       <>
         <button type="button" className="ffrev-abrir" onClick={() => setRevista(true)}>
@@ -104,7 +107,7 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
           valor={periodo} rotulo="Período do resumo" aoMudar={mudarPeriodo}
           opcoes={[{ valor: 'mes', rotulo: 'Este mês' }, { valor: 'trimestre', rotulo: 'Últimos 3 meses' }, { valor: 'ano', rotulo: 'Este ano' }]}
         />
-        <section className="ffresumo-mes ffres-mes" aria-label="Resumo do mês">
+        <section className="ffresumo-mes ffres-mes" aria-label="Resumo do período">
           <p className="ffbloco-rot">{rotulo} em números</p>
           <div className="ffduas">
             <div><p>Gastos</p><strong className="amount-negative ffres-gastos">{eur(gasto)}</strong></div>
@@ -113,11 +116,11 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
           {gasto || gastoAnterior ? (
             <div className="ffres-linha">
               {gastoAnterior > 0 ? (
-                <span className={`ffhero-var ${evolucao > 0 ? 'amount-negative' : 'amount-positive'}`}>{`${evolucao > 0 ? '↑' : evolucao < 0 ? '↓' : '='} ${formatarPercentagem(evolucao)} vs ${mesAnterior}`}</span>
+                <span className={`ffhero-var ${evolucao > 0 ? 'amount-negative' : 'amount-positive'}`}>{`${evolucao > 0 ? '↑' : evolucao < 0 ? '↓' : '='} ${formatarPercentagem(evolucao)} vs ${contra}`}</span>
               ) : <span />}
               {maior && maior.amount > 0 ? <small>{`${Math.round(maior.share)}% em ${maior.name}`}</small> : null}
             </div>
-          ) : <p className="ffres-vazio">Ainda não há movimentos registados neste mês.</p>}
+          ) : <p className="ffres-vazio">{`Ainda não há movimentos registados ${periodo === 'mes' ? 'neste mês' : 'neste período'}.`}</p>}
         </section>
         {gasto > 0 ? (
           <section className="ffcartao ffideias" aria-label="O que se destaca">
@@ -126,8 +129,8 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
               <div className="ffideia">
                 <IconeCor nome={evolucao > 0 ? 'trending-up' : 'trending-down'} tom={evolucao > 0 ? 'var(--despesa)' : 'var(--positive)'} />
                 <p>
-                  {evolucao === 0 ? <>Os gastos estão <b>iguais</b> aos de {mesAnterior}.</>
-                    : <>Os gastos <b>{evolucao > 0 ? 'aumentaram' : 'diminuíram'} {formatarPercentagem(evolucao)}</b> face a {mesAnterior}</>}
+                  {evolucao === 0 ? <>Os gastos <b>não mudaram</b> {face}.</>
+                    : <>Os gastos <b>{evolucao > 0 ? 'aumentaram' : 'diminuíram'} {formatarPercentagem(evolucao)}</b> {face}</>}
                   {mudou ? <> — sobretudo em <b>{mudou.name}</b> ({mudou.anterior ? `${mudou.amount > mudou.anterior ? '+' : '−'}${formatarPercentagem(variacao(mudou.amount, mudou.anterior))}` : 'nova'}).</> : evolucao ? '.' : null}
                 </p>
               </div>
@@ -138,10 +141,10 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
                 <p>A maior categoria é <b>{maior.name}: {eur(maior.amount)}</b> ({Math.round(maior.share)}% dos gastos).</p>
               </div>
             ) : null}
-            {anoMes(mes) <= anoMes(hoje) ? (
+            {anoMes(meses[0]!) <= anoMes(hoje) ? (
               <div className="ffideia">
                 <IconeCor nome="calendar-days" tom="green" />
-                <p><b>{calor.semGastos.length} {calor.semGastos.length === 1 ? 'dia' : 'dias'} sem despesas</b>{seguidos > 1 ? <> — o melhor foram {seguidos} seguidos.</> : '.'}</p>
+                <p><b>{semDespesas.dias} {semDespesas.dias === 1 ? 'dia' : 'dias'} sem despesas</b>{seguidos > 1 ? <> — o melhor foram {seguidos} seguidos.</> : '.'}</p>
               </div>
             ) : null}
           </section>
