@@ -37,6 +37,8 @@ describe('quem fez a despesa', () => {
     const l = [m(1, '2026-10-01', -60, 'Pessoa A'), m(2, '2026-10-02', -30, 'Pessoa B'), m(3, '2026-10-03', -10), m(4, '2026-09-03', -20, 'Pessoa B'), m(5, '2026-10-04', 500, 'Pessoa A')];
     const r = gastosPorPessoa({ transactions: l }, new Date(2026, 9, 1), ['Pessoa A', 'Pessoa B']);
     expect(r.map((c) => [c.name, c.amount, Math.round(c.share), c.anterior])).toEqual([['Pessoa A', 60, 60, 0], ['Pessoa B', 30, 30, 20], ['Sem pessoa', 10, 10, 0]]);
+    expect(r.map((c) => c.tone)).toEqual(['azul', 'rosa', 'cinza']);
+    expect(gastosPorPessoa({ transactions: l }, new Date(2026, 9, 1), ['Pessoa B', 'Pessoa A']).find((c) => c.name === 'Pessoa B')!.tone).toBe('azul');
     expect(gastosPorPessoa({ transactions: [m(1, '2026-10-01', -60)] }, new Date(2026, 9, 1), ['Pessoa A'])).toEqual([]);
   });
 });
