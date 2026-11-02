@@ -32,6 +32,9 @@ export interface Movimento {
   importBatch?: string;
   /** Quem fez a despesa (nome de um membro do perfil; só na app nova). */
   person?: string;
+  /** Viatura do abastecimento (nome de uma viatura do perfil) e combustível ('gasolina' | 'gasoleo') (v2.43.0). */
+  vehicle?: string;
+  fuel?: string;
   /** Lote da junção com o backup de outro telemóvel (só na app nova). */
   mergeBatch?: string;
   kind?: string;
@@ -75,6 +78,8 @@ export interface Perfil {
   email: string;
   phone: string;
   members: string[];
+  /** Viaturas da família (v2.43.0): nome e tipo ('carro' | 'mota'). */
+  vehicles?: { name: string; type: string }[];
   [extra: string]: unknown;
 }
 

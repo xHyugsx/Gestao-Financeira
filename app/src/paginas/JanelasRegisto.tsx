@@ -1,6 +1,9 @@
 // Janelas do botão "+" nas páginas Combustível e Veterinário (mesmos campos e regras da app atual).
-import type { FormEvent } from 'react';
-import { dia, type Movimento } from '../dados';
+import { type FormEvent, useMemo } from 'react';
+import { dia, type Estado, type Movimento } from '../dados';
+import { CamposCombustivel } from '../movimentos/CamposCombustivel';
+import { pessoasDaFamilia, ultimaPessoa } from '../movimentos/pessoas';
+import { camposCombustivel } from '../movimentos/viaturas';
 import { diaEMes, lerValor } from '../movimentos/regras';
 import { Botao } from '../ui/Botao';
 import { Dialogo } from '../ui/Dialogo';
@@ -33,7 +36,11 @@ interface PropsJanela { aberto: boolean; aoMudar: (a: boolean) => void; aoGuarda
 export function novoAbastecimento(f: FormData, hoje: Date): Movimento | null {
   const valor = lerValor(f.get('amount')), data = String(f.get('date') || dia(hoje)), posto = String(f.get('station') || '').trim();
   if (!Number.isFinite(valor) || valor <= 0) return null;
-  return { id: Date.now(), title: posto ? `Combustível — ${posto}` : 'Combustível', detail: `${diaEMes(data)} · Combustível`, amount: -valor, kind: 'car', movementType: 'expense', date: data };
+  const pessoa = String(f.get('person') || '').trim();
+  return {
+    id: Date.now(), title: posto ? `Combustível — ${posto}` : 'Combustível', detail: `${diaEMes(data)} · Combustível`, amount: -valor, kind: 'car', movementType: 'expense', date: data,
+    ...Object.fromEntries(Object.entries(camposCombustivel(f)).filter(([, v]) => v)), ...(pessoa ? { person: pessoa } : {}),
+  };
 }
 
 /** Despesa veterinária a partir do formulário (`null` se o valor não for válido). */
@@ -51,7 +58,9 @@ const submeter = (criar: (f: FormData, hoje: Date) => Movimento | null, aoGuarda
   if (m) aoGuardar(m);
 };
 
-export function NovoAbastecimento({ aberto, aoMudar, aoGuardar }: PropsJanela) {
+export function NovoAbastecimento({ aberto, aoMudar, aoGuardar, estado }: PropsJanela & { estado: Estado }) {
+  const pessoas = useMemo(() => pessoasDaFamilia(estado), [estado]);
+  const pessoa = useMemo(() => ultimaPessoa(estado.transactions, pessoas), [estado.transactions, pessoas]);
   return (
     <Dialogo folha aberto={aberto} aoMudar={aoMudar} className="movement-dialog" titulo="Novo abastecimento" descricao="Registe um gasto de combustível.">
       <form className="movement-form" onSubmit={submeter(novoAbastecimento, aoGuardar)}>
@@ -59,6 +68,15 @@ export function NovoAbastecimento({ aberto, aoMudar, aoGuardar }: PropsJanela) {
           <label>Data<input name="date" type="date" defaultValue={dia(new Date())} required /></label>
           <CampoValor />
         </div>
+        {aberto ? <CamposCombustivel estado={estado} /> : null}
+        {pessoas.length ? (
+          <label>Quem fez
+            <select name="person" defaultValue={pessoa}>
+              <option value="">—</option>
+              {pessoas.map((p) => <option key={p} value={p}>{p}</option>)}
+            </select>
+          </label>
+        ) : null}
         <label>Posto<input name="station" placeholder="Ex.: Galp (opcional)" /></label>
         <Acoes cancelar={() => aoMudar(false)} />
       </form>

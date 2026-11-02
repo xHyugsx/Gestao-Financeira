@@ -10,6 +10,7 @@ import { CORES_DESPESA, corDespesaDe, TEMAS as TEMAS_APP, temaDe } from '../ui/t
 import { SENHA_MIN } from '../dados';
 import { type ConfigDrive, enderecoDeRetorno, type FicheiroDrive } from '../dados/drive';
 import { type Animal, animaisDe } from '../veterinario/animais';
+import { type TipoViatura, viaturasDe } from '../movimentos/viaturas';
 import { definir as definirLembretes, todos as todosLembretes } from '../veterinario/lembretes';
 import type { RegraPessoal } from '../importacao/classificacao';
 import { ACOES, comRegras, regrasPessoais } from '../importacao/config';
@@ -75,6 +76,7 @@ export function Perfil({ estado, mudarEstado, avisar }: { estado: Estado; mudarE
       </div>
       <p className="text-xs text-muted-foreground">Toca num nome para o editar.</p>
       <Animais estado={estado} mudarEstado={mudarEstado} avisar={avisar} />
+      <Viaturas estado={estado} mudarEstado={mudarEstado} avisar={avisar} />
     </form>
   );
 }
@@ -118,6 +120,47 @@ function Animais({ estado, mudarEstado, avisar }: { estado: Estado; mudarEstado:
       </div>
       <Botao type="button" variante="contorno" onClick={() => setLinhas((l) => [...l, { name: '', sex: 'm', antes: '' }])}><Icone nome="plus" />Novo animal</Botao>
       <Botao type="button" onClick={guardar}>Guardar animais</Botao>
+    </section>
+  );
+}
+
+interface LinhaViatura { name: string; type: TipoViatura; antes: string }
+
+/** Viaturas da família (v2.43.0): nome e tipo; mudar o nome atualiza os abastecimentos já registados. */
+function Viaturas({ estado, mudarEstado, avisar }: { estado: Estado; mudarEstado: Mudar; avisar: (m: string) => void }) {
+  const [linhas, setLinhas] = useState<LinhaViatura[]>(() => viaturasDe(estado).map((v) => ({ ...v, antes: v.name })));
+  const mudar = (i: number, o: Partial<LinhaViatura>) => setLinhas((l) => l.map((x, k) => (k === i ? { ...x, ...o } : x)));
+  const guardar = () => {
+    const limpas = linhas.map((v) => ({ ...v, name: v.name.trim() })).filter((v) => v.name);
+    const nomes = limpas.map((v) => v.name.toLocaleLowerCase('pt-PT'));
+    if (nomes.some((n, i) => nomes.indexOf(n) !== i)) { avisar('Há duas viaturas com o mesmo nome.'); return; }
+    const trocas = new Map(limpas.filter((v) => v.antes && v.antes !== v.name).map((v) => [v.antes, v.name]));
+    mudarEstado((e) => ({
+      ...e,
+      profile: { ...e.profile, vehicles: limpas.map(({ name, type }) => ({ name, type })) },
+      transactions: trocas.size ? e.transactions.map((m) => (typeof m.vehicle === 'string' && trocas.has(m.vehicle) ? { ...m, vehicle: trocas.get(m.vehicle) } : m)) : e.transactions,
+    }));
+    setLinhas(limpas.map((v) => ({ ...v, antes: v.name })));
+    avisar('Viaturas guardadas.');
+  };
+  return (
+    <section className="ffv2-extra ffv2-viaturas">
+      <div className="settings-divider" />
+      <h3>Viaturas</h3>
+      <div className="editable-list">
+        {linhas.map((v, i) => (
+          <div key={i} className="ffv2-regra">
+            <input aria-label={`Nome da viatura ${i + 1}`} value={v.name} maxLength={30} placeholder="Nome" onChange={(e) => mudar(i, { name: e.target.value })} />
+            <select aria-label={`Tipo da viatura ${i + 1}`} value={v.type} onChange={(e) => mudar(i, { type: e.target.value as TipoViatura })}>
+              <option value="carro">Carro</option><option value="mota">Mota</option>
+            </select>
+            <Botao type="button" variante="ghost" tamanho="icone" aria-label={`Apagar a viatura ${i + 1}`} onClick={() => setLinhas((l) => l.filter((_, k) => k !== i))}><Icone nome="trash-2" /></Botao>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-muted-foreground">Os abastecimentos dos carros somam-se à parte dos da mota, na página Combustível.</p>
+      <Botao type="button" variante="contorno" onClick={() => setLinhas((l) => [...l, { name: '', type: 'carro', antes: '' }])}><Icone nome="plus" />Nova viatura</Botao>
+      <Botao type="button" onClick={guardar}>Guardar viaturas</Botao>
     </section>
   );
 }

@@ -10,6 +10,8 @@ import { DIA_DO_SALARIO, PERIODICIDADES } from './recorrentes';
 import { novoMovimento } from './regras';
 import { pessoasDaFamilia, ultimaPessoa } from './pessoas';
 import { categoriaSugerida, titulosAnteriores } from './sugestoes';
+import { CamposCombustivel } from './CamposCombustivel';
+import { eCategoriaCombustivel } from './viaturas';
 
 /** Escolhas do formulário que a app atual mantém entre aberturas (tipo e categoria) ou repõe ao abrir. */
 export interface EscolhasNovo {
@@ -117,6 +119,7 @@ export function NovoMovimento({ aberto, aoMudar, estado, escolhas: e, mudarEscol
             </div>
           </>
         )}
+        {aberto && e.tipo === 'expense' && !e.revolut && eCategoriaCombustivel(lista.includes(e.categoria) ? e.categoria : lista[0] ?? '') ? <CamposCombustivel estado={estado} /> : null}
         {e.tipo === 'expense' && !e.revolut && pessoas.length ? (
           <label className="ffv2-extra">Quem fez
             <select name="person" defaultValue={pessoaSugerida}>

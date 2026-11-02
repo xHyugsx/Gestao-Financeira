@@ -927,7 +927,7 @@ export function App() {
         aspetos={aspetosCategorias(visivel, mes)} aoGuardar={guardarNovo}
       />
       <NovaDespesaVet aberto={despesaVet} aoMudar={setDespesaVet} aoGuardar={guardarRegisto} animal={vistaVet.animal} />
-      <NovoAbastecimento aberto={abastecimento} aoMudar={setAbastecimento} aoGuardar={guardarRegisto} />
+      <NovoAbastecimento aberto={abastecimento} aoMudar={setAbastecimento} aoGuardar={guardarRegisto} estado={visivel} />
       <EditarMovimento movimento={aEditar} fechar={() => setAEditar(null)} estado={visivel} aoGuardar={guardarEdicao} aoEliminar={eliminar} />
       <ApagarRecorrente movimento={aApagarSerie} fechar={() => setAApagarSerie(null)} saltar={saltarMes} parar={apagar} />
       <DuplicadoRecorrente

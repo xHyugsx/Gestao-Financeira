@@ -6,6 +6,8 @@ import { formatarEuros } from '../ui/formatos';
 import { Icone } from '../ui/Icone';
 import { categoriaDoDetalhe } from './categorias';
 import { pessoasDaFamilia } from './pessoas';
+import { CamposCombustivel } from './CamposCombustivel';
+import { eCategoriaCombustivel } from './viaturas';
 import { DIA_DO_SALARIO, PERIODICIDADES, porConfirmar, valorRecorrente, valoresDaSerie } from './recorrentes';
 import { diaEMes } from './regras';
 import { categoriasParaEditar, movimentoEditado } from './regras';
@@ -22,6 +24,7 @@ function Formulario({ m, estado, aoGuardar, aoEliminar }: { m: Movimento } & Pic
   const [recorrente, setRecorrente] = useState(!!m.recurring);
   const pessoas = pessoasDaFamilia(estado);
   const atual = categoriaDoDetalhe(m);
+  const [categoria, setCategoria] = useState(atual);
   // Valor variável por confirmar: campo vazio e o valor da última vez à mão
   const pendente = porConfirmar(m);
   const ultimo = pendente ? valoresDaSerie(estado.transactions, m).at(-1) : undefined;
@@ -54,10 +57,11 @@ function Formulario({ m, estado, aoGuardar, aoEliminar }: { m: Movimento } & Pic
       ) : null}
       {/* Lista de escolha (a app atual tinha um campo de texto com sugestões) */}
       <label>Categoria
-        <select name="category" defaultValue={atual}>
+        <select name="category" value={categoria} onChange={(x) => setCategoria(x.target.value)}>
           {categoriasParaEditar(m, estado.categories, estado.incomeCategories, atual).map((c) => <option key={c}>{c}</option>)}
         </select>
       </label>
+      {m.movementType === 'expense' && !m.revolut && (eCategoriaCombustivel(categoria) || eCategoriaCombustivel(m.title) || m.vehicle) ? <CamposCombustivel estado={estado} viatura={String(m.vehicle ?? '')} combustivel={typeof m.fuel === 'string' ? m.fuel : ''} /> : null}
       {m.movementType === 'expense' && !m.revolut && (pessoas.length || m.person) ? (
         <label className="ffv2-extra">Quem fez
           <select name="person" defaultValue={m.person || ''}>

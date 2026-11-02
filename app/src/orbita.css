@@ -398,3 +398,14 @@ body .calendar-day.ffcal-zero { background: transparent; }
   .ffresumo .ffrev-abrir:active { transform: none; }
   .ffchip { transition: none; }
 }
+
+/* Combustível (v2.43.0): carros e mota à parte */
+.fffuel-carros .ffpilha { margin: 0 0 .55rem; }
+.fffuel-linhas { display: grid; gap: .3rem; }
+.fffuel-linhas p { display: flex; justify-content: space-between; align-items: center; margin: 0; font-size: .82rem; }
+.fffuel-linhas span { display: inline-flex; align-items: center; gap: .45rem; }
+.fffuel-linhas i { width: .55rem; height: .55rem; border-radius: 50%; }
+.fffuel-linhas strong { font-family: var(--font-display); font-weight: 600; }
+.fffuel-outros .ffbloco small { white-space: normal; }
+.fffuel-dica { margin: 0 .3rem; font-size: .74rem; color: var(--orb-suave); }
+.tx-acc.ffviatura { color: #7dd3fc; background: rgba(56, 189, 248, .14); }
