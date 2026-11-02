@@ -7,7 +7,9 @@ import { Icone } from '../ui/Icone';
 import { RoboVazio } from '../ui/RoboVazio';
 import { Segmentado } from '../ui/Segmentado';
 import { animais, classeDoAnimal, simboloDoAnimal } from '../veterinario/animais';
-import { montar } from '../veterinario/lembretes';
+import { info, montar, ordenados } from '../veterinario/lembretes';
+
+const TONS_VET = ['#22d3ee', '#fbbf24', '#f472b6', '#a78bfa', '#4ade80', '#fb923c'];
 import { doMes } from './calculos';
 
 export type PeriodoVet = 'mes' | 'ano';
@@ -51,51 +53,65 @@ export function Veterinario({ estado, mes, ocultos, vista, mudarVista, abrirMovi
   const doAno = (m: Movimento) => m.date.startsWith(`${mes.getFullYear()}-`);
   const rotuloFoto = (a: string) => `${fotos[a] ? 'Alterar' : 'Adicionar'} fotografia de ${a}`;
 
+  const sexo = (a: string) => classeDoAnimal(a) === 'f' ? '♀' : classeDoAnimal(a) === 'm' ? '♂' : '';
+  const proximo = (a: string) => ordenados().find((r) => r.pet === a);
+  const contagem = (d: number) => (d < 0 ? { n: String(-d), t: -d === 1 ? 'dia de atraso' : 'dias de atraso', cls: 'late' } : d === 0 ? { n: 'Hoje', t: '', cls: 'late' } : { n: String(d), t: d === 1 ? 'dia' : 'dias', cls: d <= 7 ? 'soon' : 'ok' });
+
   const umAnimal = (animal: string) => {
     const lista = (vista.periodo === 'ano' ? estado.transactions.filter(doAno) : doMes(estado.transactions, mes))
       .filter((m) => m.pet === animal).sort((a, b) => b.date.localeCompare(a.date));
     const total = soma(lista);
-    const porCategoria = lista.reduce<Record<string, number>>((acc, m) => {
+    const porCategoria = Object.entries(lista.reduce<Record<string, number>>((acc, m) => {
       const c = (m.vetCategory as string) || 'Outros';
       acc[c] = (acc[c] || 0) + Math.abs(m.amount);
       return acc;
-    }, {});
+    }, {})).sort((a, b) => b[1] - a[1]);
+    const r = proximo(animal), c = r ? contagem(info(r).days) : null;
+    const doAnoTodo = estado.transactions.filter((m) => m.pet === animal && doAno(m));
     return (
       <>
         <Botao variante="ghost" className="vet-back" onClick={() => mudarVista({ animal: null })}><Icone nome="chevron-left" /> Todos os animais</Botao>
-        <div className="view-heading"><p className="eyebrow">Veterinário</p><h2>{animal}</h2></div>
+        <section className={`ffvet-hero ffvet-hero-${classeDoAnimal(animal)}`}>
+          {fotos[animal] ? <img src={fotos[animal]} alt={`Fotografia de ${animal}`} /> : <span className="ffvet-hero-pata"><Icone nome="paw-print" aria-hidden="true" /></span>}
+          <div className="ffvet-hero-nome"><h2>{animal}</h2><small>{`${sexo(animal)}${sexo(animal) ? ' · ' : ''}${doAnoTodo.length} ${doAnoTodo.length === 1 ? 'cuidado registado' : 'cuidados registados'} em ${mes.getFullYear()}`}</small></div>
+          {animais().includes(animal) ? (
+            <Botao variante="ghost" tamanho="icone" className="ffvet-hero-foto" onClick={() => mudarVista({ fotografia: animal })} aria-label={rotuloFoto(animal)}><Icone nome="image-plus" /></Botao>
+          ) : null}
+        </section>
         <Segmentado
           valor={vista.periodo} rotulo="Período veterinário" aoMudar={(periodo) => mudarVista({ periodo })}
           opcoes={[{ valor: 'mes', rotulo: 'Mês' }, { valor: 'ano', rotulo: 'Ano' }]}
         />
-        <section className="vet-total">
-          {animais().includes(animal) ? (
-            <Botao variante="ghost" className="vet-detail-photo" onClick={() => mudarVista({ fotografia: animal })} aria-label={rotuloFoto(animal)}>
-              <Retrato nome={animal} foto={fotos[animal]} />
-              <span className="photo-edit-badge"><Icone nome="image-plus" /></span>
-            </Botao>
-          ) : <span className="pet-portrait"><Icone nome="paw-print" /></span>}
-          <div>
-            <small>Total do {vista.periodo === 'mes' ? 'mês' : 'ano'}</small>
-            <strong className="amount-negative">{eur(total)}</strong>
-            <p>{lista.length} {lista.length === 1 ? 'despesa' : 'despesas'}</p>
-          </div>
+        <section className="ffcal-resumos ffvet-blocos">
+          <article className="ffbloco vet-total">
+            <p className="ffbloco-rot">{vista.periodo === 'mes' ? `Em ${MESES[mes.getMonth()]}` : `Em ${mes.getFullYear()}`}</p>
+            <strong className="ffbloco-val amount-negative">{eur(total)}</strong>
+            <small>{`${lista.length} ${lista.length === 1 ? 'despesa' : 'despesas'}`}</small>
+          </article>
+          <article className={`ffbloco ffvet-proximo${c ? ` ffvet-${c.cls}` : ''}`}>
+            <p className="ffbloco-rot">Próximo cuidado</p>
+            <strong className="ffbloco-val">{c ? `${c.n}${c.t ? ` ${c.t.split(' ')[0]}` : ''}` : '—'}</strong>
+            <small>{r ? `${info(r).label.toLowerCase()} · ${info(r).short}` : 'sem lembretes'}</small>
+          </article>
         </section>
-        {Object.keys(porCategoria).length > 0 ? (
-          <section className="vet-breakdown">
-            <h3>Por categoria</h3>
-            {Object.entries(porCategoria).map(([c, v]) => (
-              <div key={c}><span>{c}</span><strong>{eur(v)}</strong><progress max={total} value={v} aria-label={`${c}: ${eur(v)}`} /></div>
+        {porCategoria.length ? (
+          <section className="ffcartao ffvet-tipos" aria-label="Por tipo de cuidado">
+            <p className="ffbloco-rot">Por tipo de cuidado</p>
+            {porCategoria.map(([cat, v], k) => (
+              <div key={cat} className="ffvet-tipo">
+                <p><span><i style={{ background: TONS_VET[k % TONS_VET.length] }} />{cat}</span><strong>{eur(v)}</strong></p>
+                <i className="ffcat-barra"><b style={{ transform: `scaleX(${v / porCategoria[0]![1]})`, background: TONS_VET[k % TONS_VET.length] }} /></i>
+              </div>
             ))}
           </section>
         ) : null}
         <section className="transactions-panel">
-          <div className="section-heading"><h2>Despesas</h2></div>
+          <div className="section-heading"><h2>Despesas</h2><span className="fffuel-conta">{lista.length}</span></div>
           <div className="transaction-list">
             {lista.length ? lista.map((m) => (
               <ArtigoMovimento key={m.id} movimento={m} aoAbrir={abrirMovimento}>
                 <div className="transaction-main">
-                  <span className="transaction-icon transaction-icon-health"><Icone nome="heart-pulse" aria-hidden="true" /></span>
+                  <span className="ffcat-ic" style={{ '--c': '#22d3ee' } as React.CSSProperties}><Icone nome="heart-pulse" aria-hidden="true" /></span>
                   <TextoMovimento movimento={m} contas={estado.accounts} />
                 </div>
                 <strong className="amount-negative">−{eur(Math.abs(m.amount))}</strong>
@@ -113,19 +129,19 @@ export function Veterinario({ estado, mes, ocultos, vista, mudarVista, abrirMovi
       <>
         <section className="pet-grid">
           {animais().map((a) => (
-            <article key={a} className="pet-card">
+            <article key={a} className={`pet-card ffvet-cartao ffvet-cartao-${classeDoAnimal(a)}`}>
               <div className="pet-photo-area">
                 <Retrato nome={a} foto={fotos[a]} />
                 <Botao variante="secundario" tamanho="icone" className="pet-photo-edit" onClick={() => mudarVista({ fotografia: a })} aria-label={rotuloFoto(a)}>
                   <Icone nome="image-plus" />
                 </Botao>
               </div>
+              {sexo(a) ? <span className="ffvet-sexo" aria-hidden="true">{sexo(a)}</span> : null}
               <Botao variante="ghost" className="pet-card-open" onClick={() => mudarVista({ animal: a })}>
                 <span className="pet-card-copy">
                   <strong>{a}</strong>
                   <b className="amount-negative">{eur(soma(doMes(estado.transactions, mes).filter((m) => m.pet === a)))}</b>
-                  <small>Este mês · Ano {mes.getFullYear()}: {eur(soma(estado.transactions.filter((m) => m.pet === a && doAno(m))))}</small>
-                  <em>Ver despesas <Icone nome="chevron-right" /></em>
+                  <small>{`este mês · ${eur(soma(estado.transactions.filter((m) => m.pet === a && doAno(m))))} em ${mes.getFullYear()}`}</small>
                 </span>
               </Botao>
             </article>
@@ -134,13 +150,16 @@ export function Veterinario({ estado, mes, ocultos, vista, mudarVista, abrirMovi
         <div key="ffvet" className="ffvet-host" ref={(el) => { if (el && !montados.has(el)) { montados.add(el); montar(el); } }} />
         <section className="transactions-panel vet-month-list">
           <div className="section-heading">
-            <h2>{`Despesas veterinárias · ${MESES[mes.getMonth()]}`}</h2>
+            <h2>{MESES[mes.getMonth()]}</h2>
             <strong className="amount-negative">{eur(soma(lista))}</strong>
           </div>
-          <Segmentado
-            valor={vista.filtro} rotulo="Filtrar por animal" aoMudar={(filtro) => mudarVista({ filtro })}
-            opcoes={[{ valor: '', rotulo: 'Todos' }, ...animais().map((a) => ({ valor: a, rotulo: a }))]}
-          />
+          <div className="ffescolhas ffvet-filtro" role="radiogroup" aria-label="Filtrar por animal">
+            {[{ valor: '', rotulo: 'Todos' }, ...animais().map((a) => ({ valor: a, rotulo: a }))].map((o) => (
+              <button key={o.valor} type="button" role="radio" aria-checked={vista.filtro === o.valor} className={`ffescolha${vista.filtro === o.valor ? ' on' : ''}`} onClick={() => mudarVista({ filtro: o.valor })}>
+                {o.valor ? <Icone nome="paw-print" /> : null}<span>{o.rotulo}</span>
+              </button>
+            ))}
+          </div>
           <div className="transaction-list">
             {lista.length ? lista.map((m) => (
               <ArtigoMovimento key={m.id} movimento={m} aoAbrir={abrirMovimento}>
@@ -150,7 +169,11 @@ export function Veterinario({ estado, mes, ocultos, vista, mudarVista, abrirMovi
                   </span>
                   <div className="min-w-0">
                     <h3>{m.title}</h3>
-                    <p>{`${Number(m.date.slice(8, 10))} ${MESES[Number(m.date.slice(5, 7)) - 1]?.slice(0, 3)} · ${m.pet} · ${(m.vetCategory as string) || 'Outros'}`}</p>
+                    <p>
+                      <span className={`tx-acc ffvet-tag ffvet-tag-${classeDoAnimal(m.pet!)}`}>{m.pet}</span>
+                      <span className="tx-acc">{(m.vetCategory as string) || 'Outros'}</span>
+                      {` ${Number(m.date.slice(8, 10))} ${MESES[Number(m.date.slice(5, 7)) - 1]?.slice(0, 3)}`}
+                    </p>
                   </div>
                 </div>
                 <strong className="amount-negative">−{eur(Math.abs(m.amount))}</strong>

@@ -272,12 +272,14 @@ export function Aparencia({ estado, mudarEstado }: { estado: Estado; mudarEstado
   const a = estado.appearance;
   const mudar = (o: Partial<Estado['appearance']>) => mudarEstado((e) => ({ ...e, appearance: { ...e.appearance, ...o } }));
   return (
-    <section className="settings-panel">
+    <section className="settings-panel ffaparencia">
+      <div className="ffap-cartao">
       <h3>Tema</h3>
       <div className="fftemas" role="group" aria-label="Tema">
         {TEMAS_APP.map((t) => (
-          <button key={t.id} type="button" className={`fftema fftema-${t.id}`} aria-pressed={temaDe(a) === t.id} onClick={() => mudar({ theme: t.id })}>
-            <i aria-hidden="true" /><strong>{t.nome}</strong><small>{t.descricao}</small>
+          // miniatura do ecrã com as cores do tema (v2.46.0)
+          <button key={t.id} type="button" className={`fftema fftema-${t.id}`} aria-pressed={temaDe(a) === t.id} onClick={() => mudar({ theme: t.id })} title={t.descricao}>
+            <span className="fftema-tela" aria-hidden="true"><b /><b /><i /></span><strong>{t.nome}</strong><small>{t.descricao}</small>
           </button>
         ))}
       </div>
@@ -294,7 +296,8 @@ export function Aparencia({ estado, mudarEstado }: { estado: Estado; mudarEstado
         ))}
       </div>
       </>) : null}
-      <div className="settings-divider" />
+      </div>
+      <div className="ffap-cartao">
       <h3>Cor das despesas</h3>
       <div className="ffcor-despesa" role="group" aria-label="Cor das despesas">
         {CORES_DESPESA.map((c) => (
@@ -313,7 +316,8 @@ export function Aparencia({ estado, mudarEstado }: { estado: Estado; mudarEstado
         <span><strong>Tamanho do texto</strong><small>{a.fontScale}%</small></span>
         <input type="range" min="85" max="120" step="5" value={a.fontScale} onChange={(ev) => mudar({ fontScale: Number(ev.target.value) })} />
       </label>
-      <div className="settings-divider" />
+      </div>
+      <div className="ffap-cartao ffap-interruptores">
       <Botao
         type="button" variante="ghost" className="setting-row" aria-pressed={a.haptics !== false}
         onClick={() => { const v = a.haptics === false; mudar({ haptics: v }); try { if (v) navigator.vibrate?.(30); } catch { /* sem vibração */ } }}
@@ -330,6 +334,7 @@ export function Aparencia({ estado, mudarEstado }: { estado: Estado; mudarEstado
         <span><strong>Sons</strong><small>{a.sounds === false ? 'Desligados' : 'Som suave ao guardar, alterar e eliminar'}</small></span>
         <i className={a.sounds === false ? 'toggle' : 'toggle toggle-on'} />
       </Botao>
+      </div>
     </section>
   );
 }

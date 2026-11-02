@@ -1,3 +1,4 @@
+import { VERSAO } from '../config';
 import { type FormEvent, useMemo, useState } from 'react';
 import { type Aparencia as TipoAparencia, type Conta, type Estado, hashPin, pinValido, PREFIXO_REAL } from '../dados';
 import { PREFIXO } from '../config';
@@ -98,11 +99,19 @@ export function FolhaDefinicoes(props: PropsFolha) {
   const [mensagem, setMensagem] = useState('');
   const abrirSeccao = (s: Seccao | null) => { setMensagem(''); mudarSeccao(s); };
   const a = estado.appearance;
-  const linha = (s: Seccao, icone: NomeIcone, titulo: string, resumo: string, extra = false) => (
+  // lista em grupos com ícones coloridos e o estado à vista (v2.46.0)
+  const linha = (s: Seccao, icone: NomeIcone, titulo: string, resumo: string, extra = false, cor = '', estadoTxt?: [string, string]) => (
     <Botao variante="ghost" className={extra ? 'setting-row ffv2-extra' : 'setting-row'} onClick={() => abrirSeccao(s)}>
-      <Icone nome={icone} /><span><strong>{titulo}</strong><small>{resumo}</small></span><Icone nome="chevron-right" />
+      <span className="ffdef-ic" style={{ background: cor } as React.CSSProperties}><Icone nome={icone} /></span>
+      <span><strong>{titulo}</strong><small>{resumo}</small></span>
+      {estadoTxt ? <em className={`ffdef-estado ffdef-${estadoTxt[1]}`}>{estadoTxt[0]}</em> : null}
+      <Icone nome="chevron-right" />
     </Botao>
   );
+  const diasBackup = lb ? Math.floor((Date.now() - new Date(lb).getTime()) / 864e5) : null;
+  const estadoBackup: [string, string] = diasBackup === null ? ['Sem backup', 'mau'] : diasBackup <= 30 ? ['Em dia', 'bom'] : ['Atrasado', 'aviso'];
+  const membros = estado.profile.members.filter(Boolean), pets = Array.isArray(estado.profile.pets) ? estado.profile.pets.length : 0;
+  const viaturas = Array.isArray(estado.profile.vehicles) ? estado.profile.vehicles.length : 0;
   return (
     <div
       className="settings-sheet" role="dialog" aria-modal="true" aria-label="Definições" style={{ '--jv-kb': `${teclado}px` } as React.CSSProperties}
@@ -132,15 +141,33 @@ export function FolhaDefinicoes(props: PropsFolha) {
                     : <Dados espaco={espaco} limpar={props.limparDados} protegido={props.protegido} />}
           </Subvista>
         ) : (
-          <section className="settings-list">
-            {linha('profile', 'user-round', 'Perfil e família', resumoPerfil(estado))}
-            {linha('categories', 'tags', 'Categorias', `${estado.categories.length} categorias`)}
-            {linha('accounts', 'landmark', 'Contas bancárias', nomesContas(estado.accounts))}
-            {linha('appearance', 'palette', 'Aparência', `${tema(a)} · fundo ${a.backgroundIntensity}% · texto ${a.fontScale}%`)}
-            {linha('security', 'lock-keyhole', 'Segurança', resumoPin(estado))}
-            {linha('backup', 'download', 'Backup', `Criar, restaurar ou exportar · ${lb ? `último: ${new Date(lb).toLocaleDateString('pt-PT')}` : 'sem backups'}`)}
-            {linha('data', 'database', 'Dados', `${espaco} ocupados neste dispositivo`)}
-            {linha('import', 'receipt', 'Importação', `Extratos bancários · ${regrasPessoais(estado).length} regras pessoais`, true)}
+          <section className="settings-list ffdef-lista">
+            <button type="button" className="ffdef-perfil" onClick={() => abrirSeccao('profile')} aria-label="Abrir Perfil e família">
+              <span className="ffdef-av" aria-hidden="true">{(estado.profile.profileName || 'F').trim().charAt(0).toUpperCase()}</span>
+              <span className="ffdef-perfil-txt">
+                <b>{estado.profile.profileName || 'Perfil'}</b>
+                <small>{`${membros.length} ${membros.length === 1 ? 'membro' : 'membros'}${pets ? ` · ${pets} ${pets === 1 ? 'animal' : 'animais'}` : ''}${viaturas ? ` · ${viaturas} ${viaturas === 1 ? 'viatura' : 'viaturas'}` : ''}`}</small>
+                {membros.length ? <span className="ffdef-membros">{membros.slice(0, 4).map((m, k) => <i key={m} className={k === 0 ? 'ffp1' : k === 1 ? 'ffp2' : undefined}>{m}</i>)}</span> : null}
+              </span>
+            </button>
+            <p className="ffdef-titulo">A tua família</p>
+            <div className="ffdef-grupo">
+              {linha('profile', 'user-round', 'Perfil e família', 'Membros, animais e viaturas', false, 'linear-gradient(135deg,#38bdf8,#6366f1)')}
+              {linha('categories', 'tags', 'Categorias', `${estado.categories.length} categorias`, false, 'linear-gradient(135deg,#f472b6,#a855f7)')}
+              {linha('accounts', 'landmark', 'Contas bancárias', nomesContas(estado.accounts), false, 'linear-gradient(135deg,#34d399,#0ea5e9)')}
+            </div>
+            <p className="ffdef-titulo">Aspeto e segurança</p>
+            <div className="ffdef-grupo">
+              {linha('appearance', 'palette', 'Aparência', `${tema(a)} · fundo ${a.backgroundIntensity}% · texto ${a.fontScale}%`, false, 'linear-gradient(135deg,#00c8ff,#8b5cf6,#ec4899)')}
+              {linha('security', 'lock-keyhole', 'Segurança', resumoPin(estado), false, 'linear-gradient(135deg,#fbbf24,#f97316)', estado.pinHash ? ['Ativo', 'bom'] : undefined)}
+            </div>
+            <p className="ffdef-titulo">Os teus dados</p>
+            <div className="ffdef-grupo">
+              {linha('backup', 'download', 'Backup', `Criar, restaurar ou exportar · ${lb ? `último: ${new Date(lb).toLocaleDateString('pt-PT')}` : 'sem backups'}`, false, 'linear-gradient(135deg,#22d3ee,#3b82f6)', estadoBackup)}
+              {linha('data', 'database', 'Dados', `${espaco} ocupados neste dispositivo`, false, 'linear-gradient(135deg,#a78bfa,#6366f1)')}
+              {linha('import', 'receipt', 'Importação', `Extratos bancários · ${regrasPessoais(estado).length} regras pessoais`, true, 'linear-gradient(135deg,#fb923c,#ef4444)')}
+            </div>
+            <p className="ffdef-versao">{`Finanças · v${VERSAO}`}</p>
           </section>
         )}
       </main>
