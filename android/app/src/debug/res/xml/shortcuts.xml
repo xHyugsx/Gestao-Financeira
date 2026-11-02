@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut android:shortcutId="despesa" android:enabled="true" android:icon="@drawable/atalho_despesa" android:shortcutShortLabel="@string/atalho_despesa">
+        <intent android:action="android.intent.action.VIEW" android:data="financas://acao/despesa" android:targetPackage="io.github.xhyugsx.financas.dev" android:targetClass="io.github.xhyugsx.financas.MainActivity" />
+    </shortcut>
+    <shortcut android:shortcutId="jarvis" android:enabled="true" android:icon="@drawable/atalho_jarvis" android:shortcutShortLabel="@string/atalho_jarvis">
+        <intent android:action="android.intent.action.VIEW" android:data="financas://acao/jarvis" android:targetPackage="io.github.xhyugsx.financas.dev" android:targetClass="io.github.xhyugsx.financas.MainActivity" />
+    </shortcut>
+</shortcuts>

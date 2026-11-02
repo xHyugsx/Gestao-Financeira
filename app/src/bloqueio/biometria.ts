@@ -1,7 +1,10 @@
 // Impressão digital (WebAuthn). O formato do registo e os parâmetros do pedido ao sensor são
 // exatamente os da app atual: um registo feito lá continua válido aqui (e vice-versa).
+// Na APK (Capacitor) não há WebAuthn: usa-se o sensor nativo (BiometricPrompt) e o registo fica com id «nativo».
+import { BiometricAuth } from '@aparajita/capacitor-biometric-auth';
 import { PREFIXO } from '../config';
 import { chave } from '../dados';
+import { eNativo } from '../nativo/plataforma';
 
 const REGISTO = chave('biometria', PREFIXO);
 const OFERTA = chave('ofertaBiometria', PREFIXO);
@@ -30,7 +33,19 @@ export function desativar(): void {
 }
 
 /** O telemóvel tem sensor e a página pode usá-lo. */
+const NATIVO = 'nativo';
+
+async function pedirDedo(): Promise<boolean> {
+  try {
+    await BiometricAuth.authenticate({ reason: 'Desbloquear a Finanças', androidTitle: 'Finanças', androidSubtitle: 'Usa a impressão digital', cancelTitle: 'Usar PIN', allowDeviceCredential: false });
+    return true;
+  } catch { return false; }
+}
+
 export async function disponivel(): Promise<boolean> {
+  if (eNativo()) {
+    try { return (await BiometricAuth.checkBiometry()).isAvailable; } catch { return false; }
+  }
   try {
     if (!window.PublicKeyCredential?.isUserVerifyingPlatformAuthenticatorAvailable || !window.isSecureContext) return false;
     return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().catch(() => false);
@@ -40,12 +55,16 @@ export async function disponivel(): Promise<boolean> {
 /** Há impressão digital ativa para este PIN. Se o PIN mudou, o registo antigo é desativado. */
 export function registada(hashPin: string): boolean {
   const r = ler();
-  if (!r?.id) return false;
+  if (!r?.id || eNativo() !== (r.id === NATIVO)) return false;
   if (r.pin !== hashPin) { desativar(); return false; }
   return true;
 }
 
 export async function registar(hashPin: string): Promise<boolean> {
+  if (eNativo()) {
+    if (!(await pedirDedo())) return false;
+    try { localStorage.setItem(REGISTO, JSON.stringify({ id: NATIVO, pin: hashPin } satisfies Registo)); return true; } catch { return false; }
+  }
   try {
     const c = await navigator.credentials.create({
       publicKey: {
@@ -68,6 +87,7 @@ export async function registar(hashPin: string): Promise<boolean> {
 export async function verificar(hashPin: string, sinal?: AbortSignal): Promise<boolean> {
   const r = ler();
   if (!r || r.pin !== hashPin) return false;
+  if (eNativo()) return r.id === NATIVO && pedirDedo();
   try {
     const a = await navigator.credentials.get({
       signal: sinal,

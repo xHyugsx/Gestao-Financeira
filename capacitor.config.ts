@@ -9,7 +9,10 @@ const config: CapacitorConfig = {
   android: { allowMixedContent: false, captureInput: false, webContentsDebuggingEnabled: false },
   plugins: {
     SplashScreen: { launchShowDuration: 600, backgroundColor: '#05091F', showSpinner: false, launchFadeOutDuration: 200 },
-    StatusBar: { backgroundColor: '#05091F', style: 'DARK', overlaysWebView: false },
+    // A app já usa viewport-fit=cover e env(safe-area-inset-*): o fundo do tema fica por trás das barras.
+    SystemBars: { insetsHandling: 'css', initialViewportFitValueHint: 'cover', style: 'DARK' },
+    // FLAG_SECURE: o ecrã não aparece nos recentes nem em capturas.
+    PrivacyScreen: { enable: true },
   },
 };
 

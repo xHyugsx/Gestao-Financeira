@@ -37,7 +37,8 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: gradle
-      - uses: android-actions/setup-android@v3
+      - name: Licenças do Android SDK (o SDK já vem no executor)
+        run: yes | "$(ls -d "$ANDROID_HOME"/cmdline-tools/*/bin | sort -V | tail -1)/sdkmanager" --licenses > /dev/null || true
 
       - name: Montar o site e copiar para o Android
         run: |

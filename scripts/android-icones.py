@@ -35,3 +35,6 @@ for p in RES.glob('drawable*/splash.png'):
 (RES / 'values/ic_launcher_background.xml').write_text(
     '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="ic_launcher_background">#05091F</color>\n</resources>\n', encoding='utf-8')
 print('Ícones e ecrã inicial gerados')
+
+for n in ('despesa', 'jarvis'):
+    Image.open(RAIZ / f'icons/atalho-{n}.png').convert('RGBA').resize((192, 192), Image.LANCZOS).save(RES / f'drawable-nodpi/atalho_{n}.png')
