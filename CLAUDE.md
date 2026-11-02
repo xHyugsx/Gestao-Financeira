@@ -104,6 +104,7 @@ Qualquer alteração deve manter **compatibilidade total** com os dados já guar
   2. indicar **a lista exata de ficheiros alterados** para publicar.
 - **Publicação:** o dono publica pelo GitHub (muitas vezes a partir do telemóvel). O aviso "Nova versão disponível" depende da versão em `app/versao.json`; sem a atualizar, os telemóveis não recebem a versão nova.
 - **Testar sempre** antes de entregar (ver secção 6) e reportar os resultados em tabela.
+- **APK Android (planeada, não iniciada):** plano em `docs/PLANO-APK.md` (Capacitor, PWA intocada, Fases 0–2 primeiro). **Não começar nada da APK sem o dono escrever exatamente «avança com a criação da app android».** Em cada resposta sobre a APK, lembrar o dono desta frase.
 
 ---
 
