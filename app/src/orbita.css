@@ -651,3 +651,4 @@ body .calendar-day.ffcal-zero { background: transparent; }
   .ffconf-disco, .ffconf-alterado .ffconf-disco, .ffconf-eliminado .ffconf-disco { animation: ffconf-surgir 1.2s linear both; }
   .ffconf-disco::after { animation: none; }
 }
+.fffolha.ffregisto:has(.ffcat-painel) { min-height: min(78svh, calc(92svh - var(--kb, 0px))); align-content: start; }
