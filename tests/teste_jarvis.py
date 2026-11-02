@@ -66,7 +66,7 @@ async def t_limpar_conversa_sem_confirmacao(app):
     await app.jarvis('Quanto gastei em agosto?')
     await app.page.click('[aria-label="Limpar conversa"]'); await app.page.wait_for_timeout(300)
     n = await app.page.evaluate("document.querySelectorAll('.jarvis-msg').length")
-    verificar(n == 1, f'conversa não foi limpa ({n} mensagens)')
+    verificar(n == 0 and await app.page.query_selector('.ffjv-ola'), f'conversa não foi limpa ({n} mensagens); devia voltar às boas-vindas')
 
 
 async def t_recibo_le_ticket_refeicao(app):
