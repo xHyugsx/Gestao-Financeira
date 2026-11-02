@@ -5,6 +5,7 @@ import { renomearCategoria } from '../movimentos/categorias';
 import { coresCategorias, corNova } from '../movimentos/cores';
 import { Botao } from '../ui/Botao';
 import { Icone } from '../ui/Icone';
+import { somDaConfirmacao } from '../ui/Confirmacao';
 import { montarEspaco } from './espaco';
 import { CORES_DESPESA, corDespesaDe, TEMAS as TEMAS_APP, temaDe } from '../ui/temas';
 import { SENHA_MIN } from '../dados';
@@ -320,6 +321,14 @@ export function Aparencia({ estado, mudarEstado }: { estado: Estado; mudarEstado
         <Icone nome="smartphone" />
         <span><strong>Vibração</strong><small>{a.haptics === false ? 'Desligada' : 'Ao guardar e eliminar movimentos'}</small></span>
         <i className={a.haptics === false ? 'toggle' : 'toggle toggle-on'} />
+      </Botao>
+      <Botao
+        type="button" variante="ghost" className="setting-row ffsons" aria-pressed={a.sounds !== false}
+        onClick={() => { const v = a.sounds === false; mudar({ sounds: v }); if (v) somDaConfirmacao('guardado'); }}
+      >
+        <Icone nome="bell" />
+        <span><strong>Sons</strong><small>{a.sounds === false ? 'Desligados' : 'Som suave ao guardar, alterar e eliminar'}</small></span>
+        <i className={a.sounds === false ? 'toggle' : 'toggle toggle-on'} />
       </Botao>
     </section>
   );
