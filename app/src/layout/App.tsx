@@ -54,11 +54,14 @@ import { useAnimacaoNumeros } from './animacaoNumeros';
 import { aplicarCorDespesa, aplicarTema, corDespesaDe, temaDe } from '../ui/temas';
 import { saudacao, svgDoCeu } from './ceu';
 import { COR_MAIS, PAGINAS, PAGINAS_MAIS } from './paginas';
+import { guardarEPartilhar } from '../nativo/ficheiros';
+import { eNativo } from '../nativo/plataforma';
 
 type Direcao = 'left' | 'right';
 
 /** Descarrega um ficheiro gerado na app (backup, CSV). */
 function descarregar(nome: string, conteudo: string, tipo: string) {
+  if (eNativo()) { void guardarEPartilhar(nome, conteudo, nome); return; }
   const url = URL.createObjectURL(new Blob([conteudo], { type: tipo })), a = document.createElement('a');
   a.href = url; a.download = nome;
   document.body.appendChild(a); a.click(); a.remove();
@@ -624,6 +627,13 @@ export function App() {
 
   // Atalhos do ícone da app (manifesto): ?acao=despesa | jarvis — depois do desbloqueio; o endereço fica limpo
   const acaoInicial = useRef(new URLSearchParams(window.location.search).get('acao'));
+  const [pedidoAcao, setPedidoAcao] = useState(0);
+  useEffect(() => {
+    // APK: atalho tocado com a app já aberta
+    const f = (e: Event) => { acaoInicial.current = (e as CustomEvent<string>).detail; setPedidoAcao((n) => n + 1); };
+    window.addEventListener('ff-acao', f);
+    return () => window.removeEventListener('ff-acao', f);
+  }, []);
   useEffect(() => {
     const acao = acaoInicial.current;
     if (!acao || bloqueada) return;
@@ -635,7 +645,7 @@ export function App() {
       setEscolhas((e) => ({ ...e, tipo: 'expense', recorrente: false, tipoValor: 'com', periodicidade: 1, diaSalario: false, revolut: false }));
       setNovoAberto(true);
     } else if (acao === 'jarvis') setJarvis(true);
-  }, [bloqueada]);
+  }, [bloqueada, pedidoAcao]);
 
   // Interface da app atual usada pelos avisos e pelo Jarvis; avisos ao abrir e de espaço
   useEffect(() => {

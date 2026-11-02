@@ -1,0 +1,113 @@
+name: APK Android
+
+# Plataforma B (Capacitor). Independente do testes.yml e da publicação da PWA no GitHub Pages.
+on:
+  push:
+    paths:
+      - 'android/**'
+      - 'app/**'
+      - 'capacitor.config.ts'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'scripts/**'
+      - '.github/workflows/apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - name: Licenças do Android SDK (o SDK já vem no executor)
+        run: yes | "$(ls -d "$ANDROID_HOME"/cmdline-tools/*/bin | sort -V | tail -1)/sdkmanager" --licenses > /dev/null || true
+
+      - name: Montar o site e copiar para o Android
+        run: |
+          npm ci
+          node scripts/montar-site.mjs
+          npx cap sync android
+          echo "VERSAO=$(node -p "require('./app/versao.json').versao")" >> "$GITHUB_ENV"
+
+      - name: Chave de assinatura
+        env:
+          APK_KEYSTORE: ${{ secrets.APK_KEYSTORE }}
+        run: |
+          if [ -n "$APK_KEYSTORE" ]; then
+            echo "$APK_KEYSTORE" | base64 -d > "$RUNNER_TEMP/financas.jks"
+            echo "APK_KEYSTORE_FILE=$RUNNER_TEMP/financas.jks" >> "$GITHUB_ENV"
+            echo "ASSINADA=1" >> "$GITHUB_ENV"
+          else
+            echo "::warning::Sem o segredo APK_KEYSTORE: a APK de produção fica sem assinatura e não é publicada."
+          fi
+
+      - name: Compilar (desenvolvimento e produção)
+        working-directory: android
+        env:
+          APK_KEYSTORE_PASS: ${{ secrets.APK_KEYSTORE_PASS }}
+          APK_KEY_ALIAS: ${{ secrets.APK_KEY_ALIAS }}
+          APK_KEY_PASS: ${{ secrets.APK_KEY_PASS }}
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleDebug assembleRelease
+          mkdir -p ../_apk
+          cp app/build/outputs/apk/debug/app-debug.apk "../_apk/financas-dev-v$VERSAO.apk"
+          if [ -n "$ASSINADA" ]; then
+            cp app/build/outputs/apk/release/app-release.apk "../_apk/financas-v$VERSAO.apk"
+          else
+            cp app/build/outputs/apk/release/app-release-unsigned.apk "../_apk/financas-v$VERSAO-sem-assinatura.apk"
+          fi
+
+      - name: Verificar a assinatura
+        run: |
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          for f in _apk/*.apk; do
+            case "$f" in *sem-assinatura*) continue ;; esac
+            echo "== $f"; "$APKSIGNER" verify --verbose --print-certs "$f" | grep -iE "verified|certificate (DN|SHA-256)" || true
+            "$APKSIGNER" verify "$f"
+          done
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apk-v${{ env.VERSAO }}
+          path: _apk/*.apk
+          retention-days: 30
+
+      - name: Tag de referência antes da APK (só uma vez)
+        if: github.ref == 'refs/heads/main'
+        run: |
+          if ! git ls-remote --exit-code --tags origin v2.47.0-pre-android >/dev/null; then
+            git tag v2.47.0-pre-android 272ed7ac804f92f4d1c3a8ec652c0d2c0b66a663
+            git push origin v2.47.0-pre-android
+          fi
+
+      - name: Publicar na Release
+        if: github.ref == 'refs/heads/main' && env.ASSINADA == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="apk-v$VERSAO"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" _apk/*.apk --clobber
+          else
+            gh release create "$TAG" _apk/*.apk --target "$GITHUB_SHA" --title "Finanças $VERSAO (Android)" \
+              --notes "APK da versão $VERSAO. Instalar \`financas-v$VERSAO.apk\`; a \`financas-dev\` é só para testes."
+          fi

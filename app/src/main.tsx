@@ -11,6 +11,7 @@ import { iniciarPrivacidade } from './bloqueio/privacidade';
 import { VERSAO } from './config';
 import { tratarRespostaGoogle } from './dados/drive';
 import { App } from './layout/App';
+import { iniciarAndroid, prepararAndroid } from './nativo/android';
 import { iniciarLembretes } from './veterinario/lembretes';
 
 window.ffVer = VERSAO;
@@ -22,5 +23,6 @@ if (tratarRespostaGoogle()) {
   iniciarPrivacidade();
   iniciarAutobloqueio(() => ligacoes.bloquear());
   iniciarLembretes();
-  createRoot(document.getElementById('root')!).render(<App />);
+  iniciarAndroid();
+  void prepararAndroid().finally(() => createRoot(document.getElementById('root')!).render(<App />));
 }

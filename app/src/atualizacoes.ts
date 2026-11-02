@@ -1,9 +1,10 @@
 // Regista o service worker e mostra o aviso "Nova versão disponível" (mesmo comportamento de
 // js/modulos/atualizacoes.js da 1.9.x).
 import { CACHE } from './config';
+import { eNativo } from './nativo/plataforma';
 
 export function iniciarAtualizacoes() {
-  if (!('serviceWorker' in navigator)) return;
+  if (eNativo() || !('serviceWorker' in navigator)) return;
   const ignoradas = new Set<string>();
 
   function aviso(aoConfirmar: () => void) {

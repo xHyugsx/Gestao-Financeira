@@ -1,4 +1,6 @@
 // Ano em revista › «Partilhar»: desenha o ecrã atual numa imagem (1080×1350) e partilha-a (ou guarda-a, se não der).
+import { guardarEPartilhar } from '../nativo/ficheiros';
+import { eNativo } from '../nativo/plataforma';
 
 export interface Cartao {
   olho: string;
@@ -90,6 +92,7 @@ export async function desenharCartao(c: Cartao, ano: number, estilo: number): Pr
 
 /** Partilha a imagem (menu «Partilhar» do Android) ou, se não houver, guarda-a nas transferências. */
 export async function partilharImagem(blob: Blob, nome: string): Promise<'partilhado' | 'guardado' | 'cancelado'> {
+  if (eNativo()) return (await guardarEPartilhar(nome, blob, 'Ano em revista')) ? 'partilhado' : 'cancelado';
   const ficheiro = new File([blob], nome, { type: 'image/png' });
   if (navigator.canShare?.({ files: [ficheiro] })) {
     try { await navigator.share({ files: [ficheiro], title: 'Ano em revista' }); return 'partilhado'; } catch (e) { if ((e as Error).name === 'AbortError') return 'cancelado'; }
