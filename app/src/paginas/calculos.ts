@@ -152,7 +152,14 @@ export function caminhoDaFatia(de: number, ate: number, R = 50, r = 34): string 
   return `M${p(de, R)}A${R} ${R} 0 ${grande} 1 ${p(ate, R)}L${p(ate, r)}A${r} ${r} 0 ${grande} 0 ${p(de, r)}Z`;
 }
 
-/** Contas do fecho do mês (secção "Fecho de mês" do Resumo). */
+/** Maior sequência de dias seguidos numa lista ordenada de dias (ex.: dias sem despesas). */
+export function maiorSequencia(dias: number[]): number {
+  let melhor = 0, atual = 0, antes = -1;
+  for (const d of dias) { atual = d === antes + 1 ? atual + 1 : 1; antes = d; melhor = Math.max(melhor, atual); }
+  return melhor;
+}
+
+/** Contas do fecho do mês (secção «Fecho do Mês» do Resumo). */
 export function fechoDoMes(movimentos: Movimento[], mes: Date) {
   const doMesAtual = doMes(movimentos, mes);
   const entradas = doMesAtual.filter((m) => m.movementType === 'income');

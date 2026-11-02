@@ -14,12 +14,13 @@ async def t_recorrentes_do_mes(app):
     await app.abrir(DADOS)
     p = app.page
     await p.evaluate("window.ffGoPg('resumo')"); await p.wait_for_timeout(400)
-    await p.click('.segmented button:text-is("Recorrentes")'); await p.wait_for_timeout(500)
+    await p.click('.page-current .ffchips button:text-is("Recorrentes")'); await p.wait_for_timeout(500)
     linhas = await p.evaluate("""[...document.querySelectorAll('.page-current .transaction-list article')].map(a=>
       [a.querySelector('h3').textContent, a.querySelector('.ffrec-dir small').textContent])""")
     # o Seguro tem periodicidade: a app cria sozinha a cópia de 15 de setembro, por isso aparece como pago
-    verificar(linhas == [['Renda', 'Pago'], ['Streaming', 'Pago'], ['Seguro', 'Pago'], ['Internet', 'Por pagar']], f'linhas: {linhas}')
-    resumo = await p.evaluate("[...document.querySelectorAll('.page-current .summary-grid article strong')].map(e=>e.textContent.replace(/\\u00a0/g,' '))")
+    # agrupados por estado: primeiro o que falta pagar, depois o pago
+    verificar(linhas == [['Internet', 'Por pagar'], ['Renda', 'Pago'], ['Streaming', 'Pago'], ['Seguro', 'Pago']], f'linhas: {linhas}')
+    resumo = await p.evaluate("[...document.querySelectorAll('.page-current .ffrec-v-pago, .page-current .ffrec-v-falta, .page-current .ffrec-v-custo')].map(e=>e.textContent.replace(/\\u00a0/g,' '))")
     verificar(resumo[:2] == ['702,00 €', '40,00 €'], f'pago / falta: {resumo}')
     verificar(resumo[2] == '8184,00 €', f'anual (600×12 + 12×12 + 40×12 + 90×4): {resumo}')
     verificar('20%' in await p.text_content('.page-current .ffrec-subiu'), 'falta a subida de preço do Streaming')

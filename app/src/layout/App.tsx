@@ -75,7 +75,7 @@ function csvDosMovimentos(movimentos: Estado['transactions']): string {
 interface Transicao { para: string; dir: Direcao; dx: number; volta?: boolean }
 interface Toque { x: number; y: number; t: number; eixo: 'x' | 'y' | null; dx?: number }
 
-const NAO_DESLIZA = "input, textarea, select, [role='slider'], .segmented, .calendar-grid, table, .bottom-nav, [role='dialog'], .ffmeses";
+const NAO_DESLIZA = "input, textarea, select, [role='slider'], .segmented, .calendar-grid, table, .bottom-nav, [role='dialog'], .ffmeses, .ffchips";
 const ids = PAGINAS.map((p) => p.id);
 const reduzMovimento = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
