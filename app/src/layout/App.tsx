@@ -242,7 +242,7 @@ export function App() {
   }, [sairFolha]);
   const fecharMenu = useCallback(() => {
     setMenu((m) => m && { ...m, out: true });
-    setTimeout(() => setMenu(null), 220);
+    setTimeout(() => setMenu(null), window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 0 : 380);
   }, []);
   // Botão "voltar" do telemóvel: fecha as Definições ou, numa página que não seja a Principal, volta à Principal
   useEffect(() => {
