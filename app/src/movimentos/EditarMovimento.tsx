@@ -7,6 +7,7 @@ import { Icone } from '../ui/Icone';
 import { categoriaDoDetalhe } from './categorias';
 import { pessoasDaFamilia } from './pessoas';
 import { CamposCombustivel } from './CamposCombustivel';
+import { OpcoesCategoria } from './EscolhaCategoria';
 import { eCategoriaCombustivel } from './viaturas';
 import { DIA_DO_SALARIO, PERIODICIDADES, porConfirmar, valorRecorrente, valoresDaSerie } from './recorrentes';
 import { diaEMes } from './regras';
@@ -58,7 +59,7 @@ function Formulario({ m, estado, aoGuardar, aoEliminar }: { m: Movimento } & Pic
       {/* Lista de escolha (a app atual tinha um campo de texto com sugestões) */}
       <label>Categoria
         <select name="category" value={categoria} onChange={(x) => setCategoria(x.target.value)}>
-          {categoriasParaEditar(m, estado.categories, estado.incomeCategories, atual).map((c) => <option key={c}>{c}</option>)}
+          <OpcoesCategoria estado={estado} lista={categoriasParaEditar(m, estado.categories, estado.incomeCategories, atual)} />
         </select>
       </label>
       {m.movementType === 'expense' && !m.revolut && (eCategoriaCombustivel(categoria) || eCategoriaCombustivel(m.title) || m.vehicle) ? <CamposCombustivel estado={estado} viatura={String(m.vehicle ?? '')} combustivel={typeof m.fuel === 'string' ? m.fuel : ''} /> : null}

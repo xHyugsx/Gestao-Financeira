@@ -409,3 +409,73 @@ body .calendar-day.ffcal-zero { background: transparent; }
 .fffuel-outros .ffbloco small { white-space: normal; }
 .fffuel-dica { margin: 0 .3rem; font-size: .74rem; color: var(--orb-suave); }
 .tx-acc.ffviatura { color: #7dd3fc; background: rgba(56, 189, 248, .14); }
+
+/* Categorias com grupos (v2.44.0) */
+.ffcat-resumo { display: flex; justify-content: space-between; align-items: center; gap: .6rem; }
+.ffcat-resumo .ffresumo-valor { margin-bottom: 0; font-size: 1.7rem; }
+.ffcat-contagem { text-align: right; } .ffcat-contagem p { margin: .1rem 0; font-size: .74rem; color: var(--orb-suave); }
+.ffcat-contagem b { font-family: var(--font-display); color: var(--foreground); }
+.ffcat-titulo { display: flex; justify-content: space-between; align-items: center; margin: .2rem .3rem -.2rem; }
+.ffcat-titulo button { border-radius: 999px; background: var(--foreground); color: var(--background); }
+.ffcat-lista { display: grid; gap: .5rem; }
+.ffcat-grupo { border-radius: 1.3rem; background: var(--orb-sup); border: 1px solid var(--orb-linha); overflow: hidden; }
+.ffcat-cab { display: flex; align-items: center; }
+.ffcat-linha {
+  flex: 1; min-width: 0; display: grid; grid-template-columns: 2.4rem minmax(0, 1fr) auto auto; align-items: center; gap: .7rem;
+  padding: .75rem .85rem .45rem; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;
+}
+.ffcat-nome { min-width: 0; display: grid; } .ffcat-nome b { font-size: .92rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ffcat-nome small { font-size: .7rem; color: var(--orb-suave); } .ffcat-nome em { font-style: normal; font-weight: 700; }
+.ffcat-valor { display: grid; justify-items: end; } .ffcat-valor b { font-family: var(--font-display); font-weight: 600; font-size: .92rem; white-space: nowrap; }
+.ffcat-valor small { font-size: .68rem; color: var(--orb-suave); }
+.ffcat-chev { color: color-mix(in oklab, var(--foreground) 40%, transparent); transition: transform .2s; display: grid; }
+.ffcat-chev svg { width: 1rem; height: 1rem; transform: rotate(90deg); }
+.ffcat-aberto .ffcat-chev { transform: rotate(180deg); }
+.ffcat-editar { margin-right: .35rem; color: var(--orb-suave); }
+.ffcat-barra { display: block; height: 5px; margin: 0 .85rem .75rem 4rem; border-radius: 5px; background: rgba(255, 255, 255, .06); overflow: hidden; }
+.ffcat-barra b { display: block; height: 100%; border-radius: 5px; transform-origin: left; }
+.ffcat-subs { border-top: 1px solid var(--orb-linha); }
+.ffcat-sub {
+  position: relative; width: 100%; display: grid; grid-template-columns: 2rem minmax(0, 1fr) auto; align-items: center; gap: .65rem;
+  padding: .55rem .85rem .55rem 2.6rem; border: 0; border-top: 1px solid rgba(255, 255, 255, .04); background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;
+}
+.ffcat-sub:first-child { border-top: 0; }
+.ffcat-sub::before { content: ''; position: absolute; left: 1.95rem; top: 0; height: 50%; width: .5rem; border-left: 1.5px solid rgba(255, 255, 255, .13); border-bottom: 1.5px solid rgba(255, 255, 255, .13); border-bottom-left-radius: .45rem; }
+.ffcat-sub .ffcat-ic { width: 2rem; height: 2rem; border-radius: .65rem; }
+.ffcat-sub .ffcat-ic svg { width: .9rem; height: .9rem; }
+.ffcat-sub span:nth-child(2) { font-size: .84rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ffcat-sub small { margin-left: .4rem; font-size: .7rem; color: var(--orb-suave); }
+.ffcat-sub b { font-family: var(--font-display); font-weight: 600; font-size: .84rem; }
+.ffcat-sub-nova { color: var(--orb-suave); }
+.ffcat-sub-nova .ffcat-ic { --c: var(--orb-suave); }
+.ffsugest { padding: .9rem; border-radius: 1.4rem; background: linear-gradient(120deg, color-mix(in oklab, var(--orb-1) 10%, transparent), color-mix(in oklab, var(--orb-2) 16%, transparent)); border: 1px solid color-mix(in oklab, var(--orb-2) 35%, transparent); }
+.ffsugest-t { display: flex; align-items: center; gap: .65rem; } .ffsugest-t strong { font-size: .92rem; } .ffsugest-t small { display: block; font-size: .72rem; color: var(--orb-suave); }
+.ffsugest-ic { flex: none; width: 2.2rem; height: 2.2rem; border-radius: .75rem; display: grid; place-items: center; background: color-mix(in oklab, var(--orb-2) 25%, transparent); color: #c4b5fd; }
+.ffsugest-ic svg { width: 1.05rem; height: 1.05rem; }
+.ffsugest ul { list-style: none; margin: .7rem 0 0; padding: 0; display: grid; gap: .35rem; }
+.ffsugest li { display: flex; justify-content: space-between; align-items: center; gap: .5rem; padding: .5rem .6rem; border-radius: .8rem; background: color-mix(in oklab, var(--background) 55%, transparent); font-size: .78rem; }
+.ffsugest li label { display: flex; align-items: center; gap: .5rem; min-width: 0; color: var(--orb-suave); }
+.ffsugest li b { white-space: nowrap; }
+.ffsugest-acoes { display: flex; gap: .4rem; margin-top: .7rem; }
+.ffcat-campo { display: grid; gap: .45rem; margin-top: .8rem; } .ffcat-campo > p { margin: 0; font-size: .75rem; font-weight: 600; color: var(--orb-suave); }
+.ffcat-campo > small { font-size: .78rem; color: var(--orb-suave); }
+.ffcat-pilulas { display: flex; flex-wrap: wrap; gap: .35rem; }
+.ffcat-pilulas button { display: inline-flex; align-items: center; gap: .35rem; padding: .42rem .7rem; border-radius: 999px; font: inherit; font-size: .78rem; font-weight: 600; color: var(--orb-suave); background: var(--background); border: 1px solid var(--orb-linha); cursor: pointer; }
+.ffcat-pilulas button svg { width: .85rem; height: .85rem; }
+.ffcat-pilulas button.on { background: var(--foreground); color: var(--background); border-color: transparent; }
+.ffcat-cores { display: flex; flex-wrap: wrap; gap: .5rem; }
+.ffcat-cores button { width: 1.6rem; height: 1.6rem; border-radius: 50%; border: 0; cursor: pointer; }
+.ffcat-cores button.on { box-shadow: 0 0 0 2px var(--popover), 0 0 0 4px var(--foreground); }
+@media (prefers-reduced-motion: reduce) { .ffcat-chev { transition: none; } }
+
+/* Análise por grupo (v2.44.0) */
+.ffseg-vista { margin-top: .9rem; }
+.ffdonut-legenda > div.ffcom-subs > span:nth-child(2) { display: flex; align-items: center; gap: .3rem; }
+.ffdonut-legenda .ffcat-chev svg { width: .85rem; height: .85rem; }
+.ffdonut-legenda .ffaberto .ffcat-chev { transform: rotate(180deg); }
+.ffsubcat { position: relative; display: grid; grid-template-columns: 1.9rem minmax(0, 1fr) auto; align-items: center; gap: .55rem; margin: 0; padding: .35rem .2rem .35rem 2.9rem; font-size: .8rem; }
+.ffsubcat::before { content: ''; position: absolute; left: 1.2rem; top: -.2rem; height: 55%; width: .5rem; border-left: 1.5px solid rgba(255, 255, 255, .13); border-bottom: 1.5px solid rgba(255, 255, 255, .13); border-bottom-left-radius: .45rem; }
+.ffsubcat .ffcat-ic { width: 1.9rem; height: 1.9rem; border-radius: .6rem; } .ffsubcat .ffcat-ic svg { width: .85rem; height: .85rem; }
+.ffsubcat small { margin-left: .4rem; font-size: .68rem; color: var(--orb-suave); }
+.ffsubcat strong { font-family: var(--font-display); font-weight: 600; }
+.ffcat-linha .ffcat-ic, .ffcat-sub .ffcat-ic, .ffsubcat .ffcat-ic { grid-area: auto; }

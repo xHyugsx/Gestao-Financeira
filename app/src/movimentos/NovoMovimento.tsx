@@ -11,6 +11,7 @@ import { novoMovimento } from './regras';
 import { pessoasDaFamilia, ultimaPessoa } from './pessoas';
 import { categoriaSugerida, titulosAnteriores } from './sugestoes';
 import { CamposCombustivel } from './CamposCombustivel';
+import { OpcoesCategoria } from './EscolhaCategoria';
 import { eCategoriaCombustivel } from './viaturas';
 
 /** Escolhas do formulário que a app atual mantém entre aberturas (tipo e categoria) ou repõe ao abrir. */
@@ -101,7 +102,7 @@ export function NovoMovimento({ aberto, aoMudar, estado, escolhas: e, mudarEscol
           <>
             <label>Categoria
               <select name="category" value={lista.includes(e.categoria) ? e.categoria : lista[0]} onChange={(x) => escolherCategoria(x.target.value)}>
-                {lista.map((c) => <option key={c}>{c}</option>)}
+                <OpcoesCategoria estado={estado} lista={lista} />
               </select>
             </label>
             {sugerida && sugerida === e.categoria ? <small className="ffv2-sugestao" role="status">Categoria do histórico: {sugerida}</small> : null}

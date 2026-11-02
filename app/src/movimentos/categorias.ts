@@ -103,12 +103,15 @@ export function renomearCategoria<T extends Pick<Dados, 'transactions' | 'catego
     return n;
   };
   const cores = dados.extras.categoryColors as Record<string, string> | undefined;
+  // grupos (v2.44.0): a categoria muda de nome como subcategoria e como grupo
+  const grupos = dados.extras.categoryGroups as Record<string, string> | undefined;
+  const gruposNovos = grupos ? Object.fromEntries(Object.entries(moverChave(grupos)).map(([c, g]) => [c, g === antigo ? novo : g])) : undefined;
   return {
     ...dados,
     categories: trocar(dados.categories),
     incomeCategories: trocar(dados.incomeCategories),
     categoryIcons: moverChave(dados.categoryIcons),
-    extras: cores ? { ...dados.extras, categoryColors: moverChave(cores) } : dados.extras,
+    extras: { ...dados.extras, ...(cores ? { categoryColors: moverChave(cores) } : {}), ...(gruposNovos ? { categoryGroups: gruposNovos } : {}) },
     transactions: dados.transactions.map((m) => {
       const partes = m.detail.split('·');
       return partes.length < 2 || partes.at(-1)?.trim() !== antigo ? m : { ...m, detail: `${partes.slice(0, -1).join('·').trim()} · ${novo}` };
