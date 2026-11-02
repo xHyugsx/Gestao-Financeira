@@ -16,6 +16,7 @@ import { definir as definirLembretes, todos as todosLembretes } from '../veterin
 import type { RegraPessoal } from '../importacao/classificacao';
 import { ACOES, comRegras, regrasPessoais } from '../importacao/config';
 import { pessoasDosSalarios } from '../paginas/Resumo';
+import { eNativo } from '../nativo/plataforma';
 
 type Mudar = (f: (e: Estado) => Estado) => void;
 
@@ -499,7 +500,9 @@ export function Backup({ ultimo, mensagem, acoes }: { ultimo: string; mensagem: 
       {mensagem ? <p className="settings-message" role="status">{mensagem}</p> : null}
       <section className="ffdrive" aria-label="Google Drive">
         <div className="ffdrive-titulo"><Icone nome="database" /><strong>Google Drive</strong>{cfg.ligado ? <span className="ffdrive-ligado">Ligado</span> : null}</div>
-        {!cfg.clientId ? (
+        {eNativo() ? (
+          <p className="settings-copy">Na app Android, a ligação direta ao Google Drive chega numa próxima versão. Para já, «Criar backup» grava a cópia em Documentos › Finanças e abre o «Partilhar», onde podes escolher o Drive.</p>
+        ) : !cfg.clientId ? (
           <form className="ffdrive-cliente" onSubmit={(ev) => { ev.preventDefault(); drive.guardarCliente(String(new FormData(ev.currentTarget).get('cliente') ?? '')); }}>
             <p className="settings-copy">Guarda a cópia protegida no teu Google Drive, substituída em cada backup. Primeiro cria um «ID de cliente» na Google Cloud (passos em <code>docs/GOOGLE-DRIVE.md</code>) e cola-o aqui.</p>
             <label>ID de cliente do Google<input name="cliente" autoComplete="off" placeholder="…apps.googleusercontent.com" required /></label>
