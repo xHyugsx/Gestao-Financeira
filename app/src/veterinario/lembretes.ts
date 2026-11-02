@@ -61,13 +61,16 @@ function gravar(a: Lembrete[]) {
 export function definir(a: unknown) { gravar(Array.isArray(a) ? (a as Lembrete[]) : []); }
 export const ordenados = () => todos().sort((a, b) => proxima(a).localeCompare(proxima(b)));
 
+/** Contagem dos dias em destaque (v2.46.0): dias que faltam, «Hoje» ou dias de atraso. */
+const contagemHtml = (d: number) => `<span class="ffvr-dias" aria-hidden="true"><b>${d === 0 ? 'Hoje' : Math.abs(d)}</b>${d === 0 ? '' : `<small>${d < 0 ? 'atraso' : Math.abs(d) === 1 ? 'dia' : 'dias'}</small>`}</span>`;
+
 let anfitrioes: HTMLElement[] = [];
 function desenhar(el: HTMLElement) {
   const lista = ordenados();
-  el.innerHTML = '<section class="ffvr"><div class="section-heading ffvr-hd"><h2>Lembretes</h2><button type="button" class="ffvr-add">+ Novo</button></div>'
+  el.innerHTML = '<section class="ffvr"><div class="section-heading ffvr-hd"><h2>Próximos cuidados</h2><button type="button" class="ffvr-add">+ Novo</button></div>'
     + (lista.length ? lista.map((r) => {
       const d = dias(r), n = proxima(r);
-      return `<div class="ffvr-row ${estado(d)}" role="button" tabindex="0" data-id="${r.id}" aria-label="Editar lembrete ${escapar(`${r.pet} ${nome(r)}`)}"><span class="ffvr-ic">${icone(r)}</span><div class="ffvr-tx"><h3>${escapar(r.pet)} · ${escapar(nome(r))}</h3><p><span class="ffvr-st">${quando(d)}</span> · ${curta(n)} · ${cadaTexto(r.every)}</p>${r.note ? `<p class="ffvr-note">${escapar(r.note)}</p>` : ''}</div><button type="button" class="ffvr-done" data-done="${r.id}">Feito</button></div>`;
+      return `<div class="ffvr-row ${estado(d)}" role="button" tabindex="0" data-id="${r.id}" aria-label="Editar lembrete ${escapar(`${r.pet} ${nome(r)}`)}"><span class="ffvr-ic">${icone(r)}</span><div class="ffvr-tx"><h3>${escapar(r.pet)} · ${escapar(nome(r))}</h3><p><span class="ffvr-st">${quando(d)}</span> · ${curta(n)} · ${cadaTexto(r.every)}</p>${r.note ? `<p class="ffvr-note">${escapar(r.note)}</p>` : ''}</div>${contagemHtml(d)}<button type="button" class="ffvr-done" data-done="${r.id}">Feito</button></div>`;
     }).join('') : '<div class="vet-empty ffvr-empty">Sem lembretes. Toca em «+ Novo» para criar o primeiro.</div>')
     + '</section>';
   el.querySelector<HTMLElement>('.ffvr-add')!.onclick = () => janela(null);

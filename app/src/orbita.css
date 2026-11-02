@@ -652,3 +652,122 @@ body .calendar-day.ffcal-zero { background: transparent; }
   .ffconf-disco::after { animation: none; }
 }
 .fffolha.ffregisto:has(.ffcat-painel) { min-height: min(78svh, calc(92svh - var(--kb, 0px))); align-content: start; }
+
+/* ===== Etapa 5 (v2.46.0): Combustível ===== */
+.fuel-view .ffresumo-mes .ffresumo-valor { margin-bottom: .3rem; }
+.fffuel-blocos { align-items: start; }
+.fffuel-blocos .ffbloco small { white-space: normal; }
+.fffuel-rot-carros { color: #67e8f9; } .fffuel-rot-mota { color: #fdba74; }
+.fffuel-blocos .ffpilha { width: 100%; margin: .5rem 0 .35rem; height: .5rem; }
+.fffuel-blocos .fffuel-linhas { width: 100%; } .fffuel-blocos .fffuel-linhas p { font-size: .74rem; }
+.fffuel-blocos .ffmedias { display: grid; gap: .1rem; margin-top: .45rem; width: 100%; }
+.fffuel-blocos .ffmedias p { margin: 0; font-size: .68rem; color: var(--orb-suave); } .fffuel-blocos .ffmedias strong { font-family: var(--font-display); color: var(--foreground); }
+.fffuel-barras { display: flex; align-items: flex-end; gap: .45rem; height: 7rem; margin-top: .8rem; }
+.fffuel-barras > div { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: .3rem; }
+.fffuel-barras span { width: 100%; display: flex; flex-direction: column; border-radius: .45rem .45rem .15rem .15rem; overflow: hidden; transform-origin: bottom; animation: ffcascata .5s cubic-bezier(.2, .8, .2, 1) backwards; }
+.fffuel-barras i { display: block; width: 100%; min-height: 2px; }
+.fffuel-barras small { font-size: .6rem; font-weight: 600; color: color-mix(in oklab, var(--foreground) 42%, transparent); }
+.fffuel-barras .on small { color: var(--foreground); }
+.fffuel-b-carros { background: color-mix(in oklab, #22d3ee 45%, transparent); } .fffuel-barras .on .fffuel-b-carros { background: linear-gradient(#22d3ee, var(--orb-2)); }
+.fffuel-b-mota { background: #fb923c; } .fffuel-b-sem { background: rgba(255, 255, 255, .25); }
+.fffuel-leg { display: flex; gap: .9rem; margin-top: .6rem; font-size: .7rem; color: var(--orb-suave); }
+.fffuel-leg span { display: inline-flex; align-items: center; gap: .3rem; } .fffuel-leg i { width: .55rem; height: .55rem; border-radius: .18rem; }
+.fffuel-leg .fffuel-b-carros { background: #22d3ee; }
+.fuel-view .transactions-panel { background: none; border: 0; box-shadow: none; padding-left: 0; padding-right: 0; }
+.fuel-view .section-heading h2 { font-size: .7rem; letter-spacing: .14em; color: var(--orb-suave); }
+.fffuel-conta { font-size: .72rem; color: var(--orb-suave); font-weight: 700; }
+.fuel-view .transaction-row { border-radius: 1.1rem; background: var(--orb-sup); border-color: var(--orb-linha); -webkit-backdrop-filter: none; backdrop-filter: none; }
+.fuel-view .transaction-row .ffcat-ic, .vet-view .transaction-row .ffcat-ic { grid-area: auto; flex: none; }
+@media (prefers-reduced-motion: reduce) { .fffuel-barras span { animation: none; } }
+
+/* ===== Etapa 5 (v2.46.0): Veterinário ===== */
+.vet-view .pet-card.ffvet-cartao { position: relative; display: block; padding: .9rem; border-radius: 1.5rem; background: var(--orb-sup); border-color: var(--orb-linha); --c1: var(--orb-1); --c2: var(--orb-2); }
+.vet-view .ffvet-cartao-f { --c1: var(--orb-3); --c2: var(--orb-2); }
+.vet-view .ffvet-cartao .pet-photo-area { width: 4.2rem; height: 4.2rem; margin: .25rem; }
+.vet-view .ffvet-cartao .pet-portrait { border-radius: 50%; overflow: hidden; background: radial-gradient(circle at 35% 30%, color-mix(in oklab, var(--c1) 35%, transparent), #14123a); }
+.vet-view .ffvet-cartao .pet-photo-area::before { content: ''; position: absolute; inset: -.3rem; border-radius: 50%; padding: 2px; background: conic-gradient(var(--c1), var(--c2), var(--c1));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); pointer-events: none; }
+.vet-view .ffvet-cartao .pet-portrait svg { width: 1.8rem; height: 1.8rem; filter: none; color: #fff; }
+.vet-view .ffvet-cartao .pet-photo-edit { position: absolute; right: -.4rem; bottom: -.3rem; width: 1.8rem; height: 1.8rem; border-radius: .6rem; }
+.vet-view .ffvet-cartao .pet-photo-edit svg { width: .9rem; height: .9rem; }
+.ffvet-sexo { position: absolute; top: .8rem; right: .95rem; font-size: .85rem; color: var(--orb-suave); }
+.vet-view .ffvet-cartao .pet-card-copy { padding: .6rem 0 0; gap: .1rem; }
+.vet-view .ffvet-cartao .pet-card-copy strong { font-size: 1rem; }
+.vet-view .ffvet-cartao .pet-card-copy b { font-family: var(--font-display); font-size: 1.25rem; font-weight: 600; }
+.vet-view .ffvet-cartao .pet-card-copy small { font-size: .68rem; color: var(--orb-suave); }
+.ffvr-hd h2 { font-size: .7rem !important; letter-spacing: .14em; text-transform: uppercase; color: var(--orb-suave); }
+.ffvr-add { color: color-mix(in oklab, var(--orb-2) 60%, white) !important; border: 0 !important; background: none !important; }
+.ffvr-row { border-radius: 1.2rem !important; background: var(--orb-sup) !important; border-color: var(--orb-linha) !important; }
+.ffvr-row.late { border-color: rgba(248, 113, 113, .45) !important; }
+.ffvr-dias { flex: none; display: grid; justify-items: center; min-width: 3.1rem; padding: .35rem .45rem; border-radius: .9rem; line-height: 1; }
+.ffvr-dias b { font-family: var(--font-display); font-size: 1.15rem; font-weight: 600; } .ffvr-dias small { margin-top: .15rem; font-size: .56rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+.ffvr-row.late .ffvr-dias { color: #fca5a5; background: rgba(248, 113, 113, .14); }
+.ffvr-row.soon .ffvr-dias { color: #fbbf24; background: rgba(251, 191, 36, .14); }
+.ffvr-row.ok .ffvr-dias { color: #6ee7a0; background: rgba(74, 222, 128, .12); }
+.ffvr-done { border-radius: .8rem !important; background: var(--foreground) !important; color: var(--background) !important; border: 0 !important; font-weight: 700 !important; padding: .5rem .8rem !important; }
+.vet-view .transactions-panel { background: none; border: 0; box-shadow: none; padding-left: 0; padding-right: 0; }
+.vet-view .section-heading h2 { font-size: .7rem; letter-spacing: .14em; text-transform: uppercase; color: var(--orb-suave); }
+.vet-view .transaction-row { border-radius: 1.1rem; background: var(--orb-sup); border-color: var(--orb-linha); -webkit-backdrop-filter: none; backdrop-filter: none; }
+.ffvet-filtro { margin: .1rem 0 .6rem; }
+.ffvet-tag-m { color: #67e8f9 !important; background: rgba(34, 211, 238, .14) !important; } .ffvet-tag-f { color: #f9a8d4 !important; background: rgba(244, 114, 182, .14) !important; }
+/* ficha do animal */
+.ffvet-hero { position: relative; height: 12rem; border-radius: 1.8rem; overflow: hidden; display: grid; place-items: center; background: radial-gradient(circle at 30% 30%, #22d3ee, #4338ca 55%, #1e1b4b); }
+.ffvet-hero-f { background: radial-gradient(circle at 30% 30%, #f472b6, #7c3aed 55%, #1e1b4b); }
+.ffvet-hero img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ffvet-hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(transparent 45%, rgba(0, 0, 0, .55)); pointer-events: none; }
+.ffvet-hero-pata svg { width: 4rem; height: 4rem; color: rgba(255, 255, 255, .85); }
+.ffvet-hero-nome { position: absolute; left: 1.1rem; bottom: 1rem; z-index: 1; color: #fff; }
+.ffvet-hero-nome h2 { margin: 0; font-family: var(--font-display); font-size: 1.8rem; font-weight: 600; }
+.ffvet-hero-nome small { font-size: .78rem; opacity: .9; }
+.ffvet-hero-foto { position: absolute; right: .9rem; bottom: .9rem; z-index: 1; width: 2.4rem; height: 2.4rem; border-radius: .85rem; color: #fff; background: rgba(0, 0, 0, .35); }
+.ffvet-proximo.ffvet-soon .ffbloco-val { color: #fbbf24; } .ffvet-proximo.ffvet-late .ffbloco-val { color: #fca5a5; } .ffvet-proximo.ffvet-ok .ffbloco-val { color: #6ee7a0; }
+.ffvet-tipos { display: grid; gap: .55rem; }
+.ffvet-tipo p { display: flex; justify-content: space-between; margin: 0 0 .3rem; font-size: .84rem; }
+.ffvet-tipo span { display: inline-flex; align-items: center; gap: .45rem; } .ffvet-tipo span i { width: .55rem; height: .55rem; border-radius: 50%; }
+.ffvet-tipo strong { font-family: var(--font-display); font-weight: 600; }
+.ffvet-tipo .ffcat-barra { margin: 0; }
+.vet-view .vet-back { justify-self: start; }
+
+/* ===== Etapa 5 (v2.46.0): Definições e Aparência ===== */
+.ffdef-lista { display: grid; gap: 0; background: none !important; border: 0 !important; padding: 0 !important; box-shadow: none !important; }
+.ffdef-perfil { position: relative; display: flex; align-items: center; gap: .9rem; width: 100%; padding: 1rem; border: 0; border-radius: 1.6rem; text-align: left; font: inherit; color: inherit; cursor: pointer;
+  background: linear-gradient(140deg, var(--orb-sup2), color-mix(in oklab, var(--background) 70%, var(--orb-sup2))); }
+.ffdef-perfil::before { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: linear-gradient(120deg, color-mix(in oklab, var(--orb-1) 55%, transparent), color-mix(in oklab, var(--orb-2) 35%, transparent), color-mix(in oklab, var(--orb-3) 45%, transparent));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
+.ffdef-av { flex: none; width: 3.5rem; height: 3.5rem; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-display); font-size: 1.4rem; font-weight: 600; color: #fff; background: linear-gradient(135deg, var(--orb-1), var(--orb-2), var(--orb-3)); }
+.ffdef-perfil-txt { display: grid; gap: .1rem; min-width: 0; } .ffdef-perfil-txt b { font-size: 1.05rem; } .ffdef-perfil-txt small { font-size: .76rem; color: var(--orb-suave); }
+.ffdef-membros { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .4rem; }
+.ffdef-membros i { font-style: normal; padding: .15rem .55rem; border-radius: 999px; font-size: .68rem; font-weight: 700; color: var(--orb-suave); background: rgba(255, 255, 255, .07); }
+.ffdef-membros i.ffp1 { color: oklch(78% .13 250); background: oklch(68% .16 250 / .2); } .ffdef-membros i.ffp2 { color: oklch(82% .12 350); background: oklch(76% .15 350 / .2); }
+.ffdef-titulo { margin: 1rem .4rem .4rem; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; color: var(--orb-suave); }
+.ffdef-grupo { border-radius: 1.3rem; overflow: hidden; background: var(--orb-sup); border: 1px solid var(--orb-linha); }
+.ffdef-grupo .setting-row { border-radius: 0; border: 0; border-top: 1px solid var(--orb-linha); background: none; margin: 0; }
+.ffdef-grupo .setting-row:first-child { border-top: 0; }
+.ffdef-ic { flex: none; width: 2.1rem; height: 2.1rem; border-radius: .7rem; display: grid; place-items: center; }
+.ffdef-ic svg { width: 1rem !important; height: 1rem !important; color: #fff !important; }
+.ffdef-estado { flex: none; font-style: normal; padding: .15rem .55rem; border-radius: 999px; font-size: .64rem; font-weight: 700; }
+.ffdef-bom { color: #6ee7a0; background: rgba(74, 222, 128, .15); } .ffdef-aviso { color: #fbbf24; background: rgba(251, 191, 36, .15); } .ffdef-mau { color: #fca5a5; background: rgba(248, 113, 113, .15); }
+.ffdef-versao { margin: 1rem 0 0; text-align: center; font-size: .72rem; color: color-mix(in oklab, var(--foreground) 40%, transparent); }
+/* Aparência */
+.ffaparencia { display: grid; gap: .7rem; background: none !important; border: 0 !important; padding: 0 !important; box-shadow: none !important; }
+.ffap-cartao { display: grid; gap: .6rem; padding: 1rem; border-radius: 1.4rem; background: var(--orb-sup); border: 1px solid var(--orb-linha); }
+.ffap-cartao h3 { margin: 0; font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; color: var(--orb-suave); }
+.ffaparencia .fftemas { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.ffaparencia .fftema { display: grid; grid-template-columns: none; gap: 0; padding: 0; overflow: hidden; border-radius: 1rem; }
+.ffaparencia .fftema strong { padding: .4rem .5rem; font-size: .72rem; text-align: left; background: rgba(0, 0, 0, .25); }
+.ffaparencia .fftema small { display: none; }
+.fftema-tela { position: relative; display: block; height: 4.4rem; padding: .5rem; background: linear-gradient(160deg, #1a1050, #06061a); }
+.fftema-tela b { display: block; height: .35rem; margin-bottom: .3rem; border-radius: .2rem; background: rgba(255, 255, 255, .35); } .fftema-tela b + b { width: 60%; }
+.ffaparencia .fftema .fftema-tela i { position: absolute; grid-row: auto; right: .5rem; bottom: .5rem; width: 1.35rem; height: 1.35rem; border-radius: 50%; }
+.fftema-cosmico .fftema-tela i { background: linear-gradient(135deg, #00f0ff, #8b5cf6, #ec4899); }
+.fftema-aurora .fftema-tela { background: linear-gradient(160deg, #063a3a, #03121c); } .fftema-aurora .fftema-tela i { background: linear-gradient(135deg, #34d399, #22d3ee); }
+.fftema-por-do-sol .fftema-tela { background: linear-gradient(160deg, #3b1530, #120612); } .fftema-por-do-sol .fftema-tela i { background: linear-gradient(135deg, #fb923c, #ec4899); }
+.fftema-dourado .fftema-tela { background: linear-gradient(160deg, #241c0a, #0b0904); } .fftema-dourado .fftema-tela i { background: linear-gradient(135deg, #fde68a, #d4a72c); }
+.fftema-oceano .fftema-tela { background: linear-gradient(160deg, #082a4a, #020d1a); } .fftema-oceano .fftema-tela i { background: linear-gradient(135deg, #38bdf8, #2dd4bf); }
+.fftema-floresta .fftema-tela { background: linear-gradient(160deg, #10301a, #040d07); } .fftema-floresta .fftema-tela i { background: linear-gradient(135deg, #a3e635, #22c55e); }
+.ffaparencia .settings-divider { display: none; }
+.ffap-interruptores { gap: 0; padding: .3rem 1rem; } .ffap-interruptores .setting-row { border-radius: 0; border: 0; border-top: 1px solid var(--orb-linha); background: none; margin: 0; padding-left: 0; padding-right: 0; }
+.ffap-interruptores .setting-row:first-child { border-top: 0; }
+.ffdef-grupo .setting-row { display: flex !important; align-items: center; gap: .75rem; }
+.ffdef-grupo .setting-row > span:nth-child(2) { flex: 1; min-width: 0; }
