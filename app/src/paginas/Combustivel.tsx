@@ -3,7 +3,8 @@ import { ArtigoMovimento, TextoMovimento } from '../movimentos/Movimento';
 import { formatarEuros, formatarPercentagem } from '../ui/formatos';
 import { Icone } from '../ui/Icone';
 import { RoboVazio } from '../ui/RoboVazio';
-import { eCombustivel } from './calculos';
+import { CORES, eCombustivel } from './calculos';
+import { combustivelPorViatura, viaturasDe } from '../movimentos/viaturas';
 
 interface Props {
   estado: Estado;
@@ -25,6 +26,11 @@ export function Combustivel({ estado, mes, agora, ocultos, abrirMovimento }: Pro
   const total = porMes.reduce((s, v) => s + v, 0);
   const meses = ano < agora.getFullYear() ? 12 : ano > agora.getFullYear() ? 0 : agora.getMonth() + 1;
   const gastoMes = soma(doMesAtual);
+  // carros e mota à parte: os carros são os que mais se usam (decisão do dono)
+  const viaturas = viaturasDe(estado);
+  const doMesV = combustivelPorViatura(doMesAtual, viaturas), doAnoV = combustivelPorViatura(doAno, viaturas);
+  const carros = viaturas.filter((v) => v.type === 'carro'), motas = viaturas.filter((v) => v.type === 'mota');
+  const CORES_CARROS = ['cyan', 'violet', 'amber', 'emerald'];
 
   const tendencia = () => {
     const media = total / meses, v = ((gastoMes - media) / media) * 100;
@@ -46,6 +52,44 @@ export function Combustivel({ estado, mes, agora, ocultos, abrirMovimento }: Pro
           </div>
         </article>
       </section>
+      {carros.length ? (
+        <section className="ffresumo-mes fffuel-carros" aria-label="Combustível dos carros">
+          <p className="ffbloco-rot">{`${carros.length === 1 ? 'Carro' : 'Carros'} em ${MESES[mes.getMonth()]}`}</p>
+          <strong className="ffresumo-valor amount-negative fffuel-total-carros">{eur(doMesV.carros)}</strong>
+          {carros.length > 1 && doMesV.carros > 0 ? (
+            <div className="ffpilha" aria-hidden="true">
+              {doMesV.porViatura.filter((v) => v.type === 'carro').map((v, k) => <i key={v.name} style={{ flex: v.amount, background: CORES[CORES_CARROS[k % CORES_CARROS.length]!] }} />)}
+            </div>
+          ) : null}
+          {carros.length > 1 ? (
+            <div className="fffuel-linhas">
+              {doMesV.porViatura.filter((v) => v.type === 'carro').map((v, k) => (
+                <p key={v.name}><span><i style={{ background: CORES[CORES_CARROS[k % CORES_CARROS.length]!] }} />{v.name}</span><strong>{eur(v.amount)}</strong></p>
+              ))}
+            </div>
+          ) : null}
+          <div className="ffmedias"><p>{`Em ${ano}`} <strong>{eur(doAnoV.carros)}</strong></p>{meses ? <p>Média mensal <strong>{eur(doAnoV.carros / meses)}</strong></p> : null}</div>
+        </section>
+      ) : null}
+      {motas.length || doMesV.semViatura || doAnoV.semViatura ? (
+        <section className="ffcal-resumos fffuel-outros">
+          {motas.length ? (
+            <article className="ffbloco fffuel-mota">
+              <p className="ffbloco-rot">{motas.length === 1 ? motas[0]!.name : 'Motas'}</p>
+              <strong className="ffbloco-val amount-negative">{eur(doMesV.motas)}</strong>
+              <small>{`mota · em ${ano}: ${eur(doAnoV.motas)}`}</small>
+            </article>
+          ) : null}
+          {doMesV.semViatura || doAnoV.semViatura ? (
+            <article className="ffbloco fffuel-sem">
+              <p className="ffbloco-rot">Sem viatura</p>
+              <strong className="ffbloco-val amount-negative">{eur(doMesV.semViatura)}</strong>
+              <small>{`em ${ano}: ${eur(doAnoV.semViatura)} · edite para escolher`}</small>
+            </article>
+          ) : null}
+        </section>
+      ) : null}
+      {!viaturas.length ? <p className="fffuel-dica">Para somar os carros à parte da mota, acrescente as viaturas em Definições › Perfil e família.</p> : null}
       <section className="vet-breakdown">
         <h3>Gasto mensal em combustível</h3>
         {porMes.map((v, i) => (

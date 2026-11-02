@@ -99,20 +99,21 @@ async def t_categoria_nova_recebe_cor_que_ninguem_usa(app):
     p = app.page
     await p.evaluate("window.ffGoPg('categorias')"); await p.wait_for_timeout(800)
     for nome in ('Ginásio', 'Farmácia', 'Livros'):
-        await p.fill('.page-current .inline-add input', nome)
-        await p.click('.page-current [aria-label="Adicionar categoria"]'); await p.wait_for_timeout(300)
+        await p.click('.page-current [aria-label="Nova categoria"]'); await p.wait_for_timeout(400)
+        await p.fill('[role=dialog] input[aria-label="Nome da categoria"]', nome)
+        await p.click('[role=dialog] button:text-is("Criar")'); await p.wait_for_timeout(500)
     cores = (await dados(app)).get('categoryColors', {})
     base = {'blue', 'green', 'orange', 'pink', 'violet', 'red', 'yellow', 'cyan'}
     verificar(len(cores) == 3 and len(set(cores.values())) == 3 and not set(cores.values()) & base, f'cores: {cores}')
-    cor = await p.evaluate("document.querySelector('.page-current .category-row:has(h2) .category-icon')&&[...document.querySelectorAll('.page-current .category-row')].find(r=>r.querySelector('h2').textContent==='Livros').querySelector('.category-icon').className")
-    verificar(f'tone-{cores["Livros"]}' in cor, f'a cor não aparece: {cor}')
+    tons = await p.evaluate("['Ginásio','Farmácia','Livros'].map(n=>document.querySelector(`.page-current [aria-label='Editar categoria ${n}'] .ffcat-ic`).style.getPropertyValue('--c'))")
+    verificar(len(set(tons)) == 3 and all(t.startswith('oklch') for t in tons), f'a cor não aparece: {tons}')
 
 
 async def t_mudar_o_nome_de_uma_categoria(app):
     await app.abrir(BASE)
     p = app.page
     await p.evaluate("window.ffGoPg('categorias')"); await p.wait_for_timeout(800)
-    await p.click('.page-current .category-row:has(h2:text-is("Alimentação")) .category-icon-edit'); await p.wait_for_timeout(400)
+    await p.click('.page-current [aria-label="Editar categoria Alimentação"]'); await p.wait_for_timeout(400)
     await p.fill('[role=dialog] input[aria-label="Nome da categoria"]', 'lazer')
     await p.click('[role=dialog] button:text-is("Guardar")'); await p.wait_for_timeout(300)
     verificar(await p.inner_text('[role=dialog] [role=alert]') == 'Essa categoria já existe.', 'aceitou um nome repetido')

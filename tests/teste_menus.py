@@ -46,3 +46,17 @@ async def t_onda_do_mais_e_brilho_ao_gravar(app):
     await p.fill('[role=dialog] input[name=amount]', '8'); await p.click('[role=dialog] button[type=submit]'); await p.wait_for_timeout(450)
     verificar('ffrealce' in (await p.get_attribute(linha, 'class') or ''), 'a linha editada também devia brilhar')
     verificar(not app.erros, f'erros: {app.erros}')
+
+
+async def t_menu_do_robo_sai_com_a_mesma_animacao(app):
+    await app.abrir(DADOS)
+    p = app.page
+    await p.click('button[aria-label="Jarvis e definições"]'); await p.wait_for_timeout(500)
+    abrir = await p.evaluate("getComputedStyle(document.querySelector('.set-menu')).animationDuration")
+    await p.mouse.click(30, 700); await p.wait_for_timeout(80)
+    anim = await p.evaluate("""(()=>{const m=document.querySelector('.set-menu'); if(!m) return null; const s=getComputedStyle(m);
+      return [s.animationName, s.animationDuration, getComputedStyle(m.parentElement).opacity]})()""")
+    verificar(anim and anim[0] == 'ffset-fechar' and anim[1] == abrir and anim[2] == '1', f'ao fechar, a animação de abrir ao contrário (aberto em {abrir}): {anim}')
+    await p.wait_for_timeout(500)
+    verificar(not await p.query_selector('.set-menu'), 'o menu devia fechar no fim da animação')
+    verificar(not app.erros, f'erros: {app.erros}')

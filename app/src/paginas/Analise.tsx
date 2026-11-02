@@ -6,6 +6,7 @@ import { Icone } from '../ui/Icone';
 import { RoboVazio } from '../ui/RoboVazio';
 import { Segmentado } from '../ui/Segmentado';
 import { pessoasDaFamilia } from '../movimentos/pessoas';
+import { agruparLinhas, gruposDe } from '../movimentos/grupos';
 import { caminhoDaFatia, calorDoMes, categoriasDoMes, CORES, coresDistintas, diasDoMes, doMes, fatiasComSeta, type GastoConta, gastosPorConta, gastosPorPessoa, percentagem, receitas, variacao } from './calculos';
 
 const DIAS_SEMANA = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
@@ -43,6 +44,9 @@ export function Analise({ estado, mes, ocultos, tipo, mudarTipo }: Props) {
   // o destaque (fatia ou barra tocada) só vale para o gráfico em que foi escolhido
   const chave = `${tipo}-${anoMes(mes)}`;
   const [toque, setToque] = useState<{ chave: string; fatia?: string; barra?: number }>({ chave: '' });
+  // categorias com grupos: por omissão o gráfico mostra os grupos; tocar num grupo abre as suas categorias
+  const [vistaCat, setVistaCat] = useState<'grupo' | 'categoria'>('grupo');
+  const [abertos, setAbertos] = useState<Set<string>>(new Set());
   const destaque = toque.chave === chave ? toque.fatia : undefined;
   const barraTocada = toque.chave === chave ? toque.barra : undefined;
   const tocarFatia = (nome?: string) => setToque({ chave, fatia: nome && nome !== destaque ? nome : undefined });
@@ -79,7 +83,10 @@ export function Analise({ estado, mes, ocultos, tipo, mudarTipo }: Props) {
   ) : null);
 
   const grafico = () => {
-    const l = coresDistintas(categoriasDoMes(estado, mes, tipo === 'receitas' ? 'receitas' : 'despesas')).filter((e) => e.amount > 0);
+    const base = categoriasDoMes(estado, mes, tipo === 'receitas' ? 'receitas' : 'despesas');
+    const mapaG = gruposDe(estado, base.map((x) => x.name)), temGrupos = Object.keys(mapaG).length > 0;
+    const l = coresDistintas(temGrupos && vistaCat === 'grupo' ? agruparLinhas(base, mapaG) : base.map((x) => ({ ...x, subs: [] as typeof base }))).filter((e) => e.amount > 0);
+    const icone = (nome: string) => (tipo === 'receitas' ? aspetos.receitas : aspetos.despesas).get(nome)?.icone ?? 'tags';
     const total = l.reduce((s, e) => s + e.amount, 0);
     const escolhida = l.find((e) => e.name === destaque);
     const maxComp = Math.max(1, ...l.map((e) => Math.max(e.amount, e.anterior)));
@@ -126,18 +133,23 @@ export function Analise({ estado, mes, ocultos, tipo, mudarTipo }: Props) {
             </ul>
           ) : null}
         </div>
+        {temGrupos && l.length ? (
+          <Segmentado valor={vistaCat} rotulo="Ver por" classe="ffseg-vista" aoMudar={setVistaCat} opcoes={[{ valor: 'grupo', rotulo: 'Por grupo' }, { valor: 'categoria', rotulo: 'Por categoria' }]} />
+        ) : null}
         {l.length ? (
           <div className={`chart-legend chart-legend-compact ffdonut-legenda${escolhida ? ' ffcom-destaque' : ''}`}>
             {l.map((e) => {
               // comparação com o mês anterior: seta com a variação e barra fantasma do valor desse mês
               const sobe = e.amount > e.anterior, bom = tipo === 'receitas' ? sobe : !sobe;
               const v = e.anterior ? variacao(e.amount, e.anterior) : null;
-              return (
-                <div key={e.name} className={e.name === destaque ? 'ffdestaque' : undefined} aria-pressed={e.name === destaque} {...comoBotao(() => tocarFatia(e.name))}>
+              const temSubs = e.subs.length > 0, aberto = temSubs && abertos.has(e.name);
+              const tocar = () => { tocarFatia(e.name); if (temSubs) setAbertos((a) => { const n = new Set(a); if (n.has(e.name)) n.delete(e.name); else n.add(e.name); return n; }); };
+              return [
+                <div key={e.name} className={`${e.name === destaque ? 'ffdestaque' : ''}${temSubs ? ' ffcom-subs' : ''}${aberto ? ' ffaberto' : ''}`.trim() || undefined} aria-pressed={e.name === destaque} aria-expanded={temSubs ? aberto : undefined} {...comoBotao(tocar)}>
                   <span className="ffcat-ic" style={{ '--c': CORES[e.tone] || 'var(--primary)' } as React.CSSProperties}>
-                    <Icone nome={(tipo === 'receitas' ? aspetos.receitas : aspetos.despesas).get(e.name)?.icone ?? 'tags'} />
+                    <Icone nome={icone(e.name)} />
                   </span>
-                  <span>{e.name}</span>
+                  <span>{e.name}{temSubs ? <i className="ffcat-chev" aria-hidden="true"><Icone nome="chevron-right" /></i> : null}</span>
                   <strong>{eur(e.amount)}</strong>
                   <small>{percentagem(e.share)}</small>
                   <em className={`ffcomp-var ${v === null || e.amount === e.anterior ? 'ffcomp-novo' : bom ? 'amount-positive' : 'amount-negative'}`} title={`Mês anterior: ${eur(e.anterior)}`}>
@@ -147,8 +159,15 @@ export function Analise({ estado, mes, ocultos, tipo, mudarTipo }: Props) {
                     <s style={{ transform: `scaleX(${e.anterior / maxComp})` }} />
                     <b className={`tone-${e.tone}`} style={{ transform: `scaleX(${e.amount / maxComp})` }} />
                   </i>
-                </div>
-              );
+                </div>,
+                ...(aberto ? e.subs.filter((x) => x.amount > 0 || x.anterior > 0).map((x) => (
+                  <p key={`${e.name}-${x.name}`} className="ffsubcat">
+                    <span className="ffcat-ic" style={{ '--c': CORES[e.tone] || 'var(--primary)' } as React.CSSProperties}><Icone nome={icone(x.name)} /></span>
+                    <span>{x.name} <small>{e.amount ? percentagem(Math.round((x.amount / e.amount) * 1000) / 10) : ''}</small></span>
+                    <strong>{eur(x.amount)}</strong>
+                  </p>
+                )) : []),
+              ];
             })}
           </div>
         ) : <div className="ffvazio"><RoboVazio /><p className="chart-empty">{tipo === 'receitas' ? 'Sem receitas neste mês.' : 'Sem gastos neste mês.'}</p></div>}

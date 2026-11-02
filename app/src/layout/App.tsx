@@ -242,7 +242,7 @@ export function App() {
   }, [sairFolha]);
   const fecharMenu = useCallback(() => {
     setMenu((m) => m && { ...m, out: true });
-    setTimeout(() => setMenu(null), 220);
+    setTimeout(() => setMenu(null), window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 0 : 380);
   }, []);
   // Botão "voltar" do telemóvel: fecha as Definições ou, numa página que não seja a Principal, volta à Principal
   useEffect(() => {
@@ -927,7 +927,7 @@ export function App() {
         aspetos={aspetosCategorias(visivel, mes)} aoGuardar={guardarNovo}
       />
       <NovaDespesaVet aberto={despesaVet} aoMudar={setDespesaVet} aoGuardar={guardarRegisto} animal={vistaVet.animal} />
-      <NovoAbastecimento aberto={abastecimento} aoMudar={setAbastecimento} aoGuardar={guardarRegisto} />
+      <NovoAbastecimento aberto={abastecimento} aoMudar={setAbastecimento} aoGuardar={guardarRegisto} estado={visivel} />
       <EditarMovimento movimento={aEditar} fechar={() => setAEditar(null)} estado={visivel} aoGuardar={guardarEdicao} aoEliminar={eliminar} />
       <ApagarRecorrente movimento={aApagarSerie} fechar={() => setAApagarSerie(null)} saltar={saltarMes} parar={apagar} />
       <DuplicadoRecorrente

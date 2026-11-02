@@ -1,4 +1,5 @@
 // Registar, editar e eliminar movimentos — mesmas regras e mesmo formato gravado que a app atual.
+import { camposCombustivel } from './viaturas';
 import { dia, MESES, type Movimento, type TipoMovimento } from '../dados';
 import { alfabetica } from './cores';
 
@@ -80,7 +81,8 @@ export function novoMovimento(campos: FormData, c: ContextoNovo): Movimento | Er
     amount: c.tipo === 'expense' ? -valor : c.tipo === 'income' ? valor : 0, kind: tipoVisual(c.tipo, categoria),
     movementType: c.tipo, date: data, affectsBalance: true,
     ...(conta !== 'principal' && c.tipo !== 'transfer' ? { account: conta } : {}),
-    ...(pessoa && c.tipo === 'expense' ? { person: pessoa } : {}), ...extras,
+    ...(pessoa && c.tipo === 'expense' ? { person: pessoa } : {}),
+    ...(c.tipo === 'expense' && campos.has('vehicle') ? Object.fromEntries(Object.entries(camposCombustivel(campos)).filter(([, v]) => v)) : {}), ...extras,
   };
 }
 
@@ -108,6 +110,7 @@ export function movimentoEditado(m: Movimento, campos: FormData): Movimento | nu
     note: nota || undefined, ...(m.revolut ? { transferValue: valor } : {}),
     ...(conta != null ? { account: conta === 'principal' ? undefined : String(conta) } : {}),
     ...(campos.has('person') ? { person: String(campos.get('person') || '').trim() || undefined } : {}),
+    ...(campos.has('vehicle') ? camposCombustivel(campos) : {}),
     detail: `${diaEMes(data)} · ${categoria || 'Outros'}`,
   };
 }
