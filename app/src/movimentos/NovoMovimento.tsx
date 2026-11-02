@@ -1,4 +1,4 @@
-import { type FormEvent, useEffect, useMemo, useState } from 'react';
+import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { dia, type Estado, type Movimento, type TipoMovimento } from '../dados';
 import { Botao } from '../ui/Botao';
 import { Dialogo } from '../ui/Dialogo';
@@ -11,7 +11,9 @@ import { novoMovimento } from './regras';
 import { pessoasDaFamilia, ultimaPessoa } from './pessoas';
 import { categoriaSugerida, titulosAnteriores } from './sugestoes';
 import { CamposCombustivel } from './CamposCombustivel';
-import { OpcoesCategoria } from './EscolhaCategoria';
+import { CampoCategoria } from './EscolhaCategoria';
+import { EscolhaData, Escolhas, LinhaInterruptor, Rotulo, ValorGrande } from '../ui/Escolhas';
+import { simplificar as simplificarTitulo } from './categorias';
 import { eCategoriaCombustivel } from './viaturas';
 
 /** Escolhas do formulário que a app atual mantém entre aberturas (tipo e categoria) ou repõe ao abrir. */
@@ -53,6 +55,11 @@ export function NovoMovimento({ aberto, aoMudar, estado, escolhas: e, mudarEscol
   const pessoas = useMemo(() => pessoasDaFamilia(estado), [estado]);
   const pessoaSugerida = useMemo(() => ultimaPessoa(estado.transactions, pessoas), [estado.transactions, pessoas]);
   const escolherCategoria = (categoria: string) => { setManual(true); setSugerida(null); mudar({ categoria }); };
+  const [pessoa, setPessoa] = useState(pessoaSugerida);
+  const [conta, setConta] = useState('principal');
+  const [origem, setOrigem] = useState('Principal');
+  const [destino, setDestino] = useState('Revolut');
+  useEffect(() => { if (aberto) { setPessoa(pessoaSugerida); setConta('principal'); setOrigem('Principal'); setDestino('Revolut'); setTitulo(''); } }, [aberto, pessoaSugerida]);
   const aoEscreverTitulo = (titulo: string) => {
     if (e.tipo === 'transfer' || manual) return;
     const c = categoriaSugerida(estado.transactions, titulo, tipoComCategoria);
@@ -75,89 +82,75 @@ export function NovoMovimento({ aberto, aoMudar, estado, escolhas: e, mudarEscol
     aoGuardar(r);
   };
 
+  const pessoasOp = [...pessoas.map((p, k) => ({ valor: p, rotulo: p, classe: k === 0 ? 'ffp1' : k === 1 ? 'ffp2' : undefined })), { valor: '', rotulo: '—' }];
+  const tituloRef = useRef<HTMLInputElement>(null);
+  const [titulo, setTitulo] = useState('');
+  const recentes = titulos.filter((t) => !titulo.trim() || (simplificarTitulo(t).includes(simplificarTitulo(titulo)) && t !== titulo)).slice(0, 4);
+  const usarTitulo = (t: string) => { if (tituloRef.current) tituloRef.current.value = t; setTitulo(t); aoEscreverTitulo(t); };
+  const categoriaAtual = lista.includes(e.categoria) ? e.categoria : lista[0] ?? '';
+  const rotuloGuardar = e.tipo === 'expense' ? 'Guardar despesa' : e.tipo === 'income' ? 'Guardar receita' : 'Guardar transferência';
+
   return (
-    <Dialogo folha aberto={aberto} aoMudar={aoMudar} className="movement-dialog" titulo="Novo movimento" descricao="Registe uma despesa, receita ou transferência.">
+    <Dialogo folha aberto={aberto} aoMudar={aoMudar} className="movement-dialog ffregisto" titulo="Novo movimento" descricao="Registe uma despesa, receita ou transferência.">
       <Segmentado valor={e.tipo} rotulo="Tipo de movimento" opcoes={TIPOS} aoMudar={(tipo) => mudar({ tipo })} />
-      <form className="movement-form" onSubmit={guardar}>
-        <label>Descrição<input
-          name="title" placeholder={e.tipo === 'transfer' ? 'Ex.: Reforço Revolut' : 'Ex.: Continente'} required
-          list={titulos.length ? 'ffv2-titulos' : undefined} autoComplete="off" onChange={(x) => aoEscreverTitulo(x.target.value)}
-        /></label>
-        {titulos.length ? <datalist id="ffv2-titulos">{titulos.map((t) => <option key={t} value={t} />)}</datalist> : null}
-        <div className="form-grid">
-          <label>Valor
-            <div className="input-suffix">
-              <input name="amount" inputMode="decimal" placeholder={semValor ? 'A definir' : '0,00'} required={!semValor} />
-              <span>€</span>
-            </div>
-          </label>
-          <label>Data<input name="date" type="date" defaultValue={dia(new Date())} required /></label>
-        </div>
-        {e.tipo === 'transfer' ? (
-          <div className="form-grid">
-            <label>Conta de origem<select name="origin" defaultValue="Principal"><option>Principal</option><option>Revolut</option></select></label>
-            <label>Conta de destino<select name="destination" defaultValue="Revolut"><option>Revolut</option><option>Principal</option></select></label>
+      <form className="movement-form ffregisto-form" onSubmit={guardar}>
+        <ValorGrande tipo={e.revolut ? 'transfer' : e.tipo} placeholder={semValor ? 'A definir' : '0,00'} required={!semValor} />
+        <label className="fftitulo"><Icone nome="pencil" /><span className="sr-only">Descrição</span>
+          <input
+            ref={tituloRef} name="title" placeholder={e.tipo === 'transfer' ? 'Ex.: Reforço Revolut' : 'Ex.: Continente'} required autoComplete="off"
+            onChange={(x) => { setTitulo(x.target.value); aoEscreverTitulo(x.target.value); }}
+          />
+        </label>
+        {recentes.length ? (
+          <div className="ffescolhas fftitulos" aria-label="Títulos recentes">
+            {recentes.map((t) => <button key={t} type="button" className="ffescolha" onClick={() => usarTitulo(t)}><span>{t}</span></button>)}
           </div>
+        ) : null}
+        {e.tipo === 'transfer' ? (
+          <>
+            <Rotulo>Conta de origem</Rotulo>
+            <Escolhas nome="origin" rotulo="Conta de origem" valor={origem} aoMudar={setOrigem} opcoes={[{ valor: 'Principal', rotulo: 'Principal' }, { valor: 'Revolut', rotulo: 'Revolut' }]} />
+            <Rotulo>Conta de destino</Rotulo>
+            <Escolhas nome="destination" rotulo="Conta de destino" valor={destino} aoMudar={setDestino} opcoes={[{ valor: 'Revolut', rotulo: 'Revolut' }, { valor: 'Principal', rotulo: 'Principal' }]} />
+          </>
         ) : (
           <>
-            <label>Categoria
-              <select name="category" value={lista.includes(e.categoria) ? e.categoria : lista[0]} onChange={(x) => escolherCategoria(x.target.value)}>
-                <OpcoesCategoria estado={estado} lista={lista} />
-              </select>
-            </label>
-            {sugerida && sugerida === e.categoria ? <small className="ffv2-sugestao" role="status">Categoria do histórico: {sugerida}</small> : null}
-            <div className="category-shortcuts" aria-label="Categorias rápidas">
-              {lista.slice(0, 5).map((c) => {
-                const a = mapa.get(c);
-                if (!a) return null;
-                return (
-                  <Botao key={c} type="button" variante="ghost" className={e.categoria === c ? 'shortcut-active' : ''} onClick={() => escolherCategoria(c)}>
-                    <span className={`tone-${a.tone}`}><Icone nome={a.icone} /></span>
-                    <small>{c}</small>
-                  </Botao>
-                );
-              })}
-            </div>
+            <Rotulo extra={sugerida && sugerida === e.categoria ? 'do histórico' : undefined}>Categoria</Rotulo>
+            <CampoCategoria estado={estado} lista={lista} valor={categoriaAtual} aoMudar={escolherCategoria} receita={e.tipo === 'income'} mapaAspetos={aspetos} />
+            {sugerida && sugerida === e.categoria ? <small className="ffv2-sugestao sr-only" role="status">Categoria do histórico: {sugerida}</small> : null}
           </>
         )}
-        {aberto && e.tipo === 'expense' && !e.revolut && eCategoriaCombustivel(lista.includes(e.categoria) ? e.categoria : lista[0] ?? '') ? <CamposCombustivel estado={estado} /> : null}
+        {aberto && e.tipo === 'expense' && !e.revolut && eCategoriaCombustivel(categoriaAtual) ? <CamposCombustivel estado={estado} /> : null}
+        <Rotulo>Data</Rotulo>
+        <EscolhaData />
         {e.tipo === 'expense' && !e.revolut && pessoas.length ? (
-          <label className="ffv2-extra">Quem fez
-            <select name="person" defaultValue={pessoaSugerida}>
-              <option value="">—</option>
-              {pessoas.map((p) => <option key={p} value={p}>{p}</option>)}
-            </select>
-          </label>
+          <div className="ffv2-extra"><Rotulo>Quem fez</Rotulo><Escolhas nome="person" rotulo="Quem fez" valor={pessoa} aoMudar={setPessoa} opcoes={pessoasOp} /></div>
         ) : null}
         {e.tipo !== 'transfer' && !e.revolut ? (
-          <label>Conta
-            <select name="account" defaultValue="principal">
-              {estado.accounts.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-          </label>
+          <><Rotulo>Conta</Rotulo><Escolhas nome="account" rotulo="Conta" valor={conta} aoMudar={setConta} opcoes={estado.accounts.map((c) => ({ valor: c.id, rotulo: c.name }))} /></>
         ) : null}
-        <div className="movement-checks">
-          <label className="checkbox-row"><input type="checkbox" checked={e.recorrente} onChange={(x) => mudar({ recorrente: x.target.checked })} /> Recorrente</label>
+        <div className="movement-checks ffregisto-mais">
+          <LinhaInterruptor icone="calendar-clock" rotulo="Recorrente" ligado={e.recorrente} aoMudar={(v) => mudar({ recorrente: v })} />
           {e.recorrente ? (
-            <label className="ffv2-extra">Periodicidade
-              <select
-                name="recurringEvery" value={e.diaSalario ? DIA_DO_SALARIO.valor : e.periodicidade}
-                onChange={(x) => mudar(x.target.value === DIA_DO_SALARIO.valor ? { periodicidade: 1, diaSalario: true } : { periodicidade: Number(x.target.value), diaSalario: false })}
-              >
-                {PERIODICIDADES.map((p) => <option key={p.meses} value={p.meses}>{p.rotulo}</option>)}
-                <option value={DIA_DO_SALARIO.valor}>{DIA_DO_SALARIO.rotulo}</option>
-              </select>
-            </label>
+            <div className="form-grid">
+              <label className="ffv2-extra">Periodicidade
+                <select
+                  name="recurringEvery" value={e.diaSalario ? DIA_DO_SALARIO.valor : e.periodicidade}
+                  onChange={(x) => mudar(x.target.value === DIA_DO_SALARIO.valor ? { periodicidade: 1, diaSalario: true } : { periodicidade: Number(x.target.value), diaSalario: false })}
+                >
+                  {PERIODICIDADES.map((p) => <option key={p.meses} value={p.meses}>{p.rotulo}</option>)}
+                  <option value={DIA_DO_SALARIO.valor}>{DIA_DO_SALARIO.rotulo}</option>
+                </select>
+              </label>
+              <label>Tipo de valor
+                <select value={e.tipoValor} onChange={(x) => mudar({ tipoValor: x.target.value })}>
+                  <option value="com">Valor fixo</option>
+                  <option value="sem">Valor variável (confirmar todos os meses)</option>
+                </select>
+              </label>
+            </div>
           ) : null}
-          {e.recorrente ? (
-            <label>Tipo de valor
-              <select value={e.tipoValor} onChange={(x) => mudar({ tipoValor: x.target.value })}>
-                <option value="com">Valor fixo</option>
-                <option value="sem">Valor variável (confirmar todos os meses)</option>
-              </select>
-            </label>
-          ) : null}
-          <label className="checkbox-row"><input type="checkbox" checked={e.revolut} onChange={(x) => mudar({ revolut: x.target.checked })} /> Transferência para Revolut</label>
+          <LinhaInterruptor icone="arrow-right-left" rotulo="Transferência para Revolut" ligado={e.revolut} aoMudar={(v) => mudar({ revolut: v })} />
           {e.revolut ? (
             <div className="form-grid">
               <label>Revolut Conjunta
@@ -174,11 +167,10 @@ export function NovoMovimento({ aberto, aoMudar, estado, escolhas: e, mudarEscol
               </label>
             </div>
           ) : null}
+          <label className="ffnota"><Icone nome="pencil" /><span className="sr-only">Nota (opcional)</span><textarea name="note" rows={1} maxLength={140} placeholder="Nota (opcional)" /></label>
         </div>
-        <label>Nota (opcional)<textarea name="note" rows={2} maxLength={140} placeholder="Ex.: presente de anos, fatura pedida…" /></label>
-        <div className="dialog-actions">
-          <Botao type="button" variante="ghost" onClick={() => aoMudar(false)}><Icone nome="x" />Cancelar</Botao>
-          <Botao type="submit"><Icone nome="plus" />Guardar</Botao>
+        <div className="ffregisto-rodape">
+          <Botao type="submit" className="ffguardar">{rotuloGuardar}</Botao>
         </div>
       </form>
     </Dialogo>

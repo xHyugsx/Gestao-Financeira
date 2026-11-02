@@ -74,10 +74,11 @@ async def t_escolha_por_grupos_no_mais(app):
     await app.abrir(AGRUPADO)
     p = app.page
     await p.click('[aria-label="Adicionar movimento"]'); await p.wait_for_timeout(500)
-    grupos = await p.evaluate("""[...document.querySelectorAll('.movement-dialog select[name=category] > *')].map(e=>e.tagName==='OPTGROUP'
-      ? e.label+': '+[...e.children].map(o=>o.textContent).join(' | ') : e.textContent)""")
-    verificar(grupos == ['Alimentação', 'Supermercado', 'Habitação: Habitação | Habitação › Luz | Habitação › Renda', 'Transportes: Transportes | Transportes › Combustível'], f'escolha: {grupos}')
-    await p.select_option('.movement-dialog select[name=category]', 'Luz')
+    await p.click('.movement-dialog .ffcat-escolha-abrir'); await p.wait_for_timeout(200)
+    grupos = await p.evaluate("""[...document.querySelectorAll('.movement-dialog .ffcat-painel-grupo')].map(g=>g.querySelector('.ffrotulo').textContent
+      + ': ' + [...g.querySelectorAll('[data-valor]')].map(o=>o.textContent).join(' | '))""")
+    verificar(grupos == ['Sem grupo: Alimentação | Supermercado', 'Habitação: Habitação (geral) | Luz | Renda', 'Transportes: Transportes (geral) | Combustível'], f'escolha: {grupos}')
+    await app.escolher('category', 'Luz', '.movement-dialog')
     await p.fill('.movement-dialog input[name=title]', 'EDP'); await p.fill('.movement-dialog input[name=amount]', '10')
     await p.click('.movement-dialog button[type=submit]'); await p.wait_for_timeout(600)
     verificar((await dados(app))['transactions'][0]['detail'].endswith('· Luz'), 'o movimento guarda a categoria (não o grupo)')

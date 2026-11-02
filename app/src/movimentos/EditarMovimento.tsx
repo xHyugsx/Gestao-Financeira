@@ -4,10 +4,11 @@ import { Botao } from '../ui/Botao';
 import { Dialogo } from '../ui/Dialogo';
 import { formatarEuros } from '../ui/formatos';
 import { Icone } from '../ui/Icone';
-import { categoriaDoDetalhe } from './categorias';
+import { aspetosCategorias, categoriaDoDetalhe } from './categorias';
 import { pessoasDaFamilia } from './pessoas';
 import { CamposCombustivel } from './CamposCombustivel';
-import { OpcoesCategoria } from './EscolhaCategoria';
+import { CampoCategoria } from './EscolhaCategoria';
+import { EscolhaData, Escolhas, LinhaInterruptor, Rotulo, ValorGrande } from '../ui/Escolhas';
 import { eCategoriaCombustivel } from './viaturas';
 import { DIA_DO_SALARIO, PERIODICIDADES, porConfirmar, valorRecorrente, valoresDaSerie } from './recorrentes';
 import { diaEMes } from './regras';
@@ -26,6 +27,9 @@ function Formulario({ m, estado, aoGuardar, aoEliminar }: { m: Movimento } & Pic
   const pessoas = pessoasDaFamilia(estado);
   const atual = categoriaDoDetalhe(m);
   const [categoria, setCategoria] = useState(atual);
+  const [pessoa, setPessoa] = useState(m.person || '');
+  const [conta, setConta] = useState(m.account || 'principal');
+  const aspetos = aspetosCategorias(estado, new Date(`${m.date}T12:00:00`));
   // Valor variável por confirmar: campo vazio e o valor da última vez à mão
   const pendente = porConfirmar(m);
   const ultimo = pendente ? valoresDaSerie(estado.transactions, m).at(-1) : undefined;
@@ -35,81 +39,63 @@ function Formulario({ m, estado, aoGuardar, aoEliminar }: { m: Movimento } & Pic
     const novo = movimentoEditado(m, new FormData(ev.currentTarget));
     if (novo) aoGuardar(novo);
   };
+  const pessoasOp = [...[...new Set([...pessoas, ...(m.person ? [m.person] : [])])].map((p, k) => ({ valor: p, rotulo: p, classe: k === 0 ? 'ffp1' : k === 1 ? 'ffp2' : undefined })), { valor: '', rotulo: '—' }];
+  const tipoValor = m.revolut ? 'transfer' : m.movementType ?? 'expense';
+  const comCategoria = m.movementType === 'expense' || m.movementType === 'income';
   return (
-    <form className="movement-form" onSubmit={guardar}>
-      <label>Descrição<input name="title" defaultValue={m.title} required /></label>
-      <div className="form-grid">
-        <label>Valor
-          <div className="input-suffix">
-            <input
-              ref={campoValor} name="amount" inputMode="decimal" placeholder={pendente ? 'A definir' : undefined}
-              defaultValue={pendente ? '' : String(m.revolut ? m.transferValue || 0 : Math.abs(m.amount)).replace('.', ',')}
-              disabled={m.movementType === 'transfer' && !m.revolut} required={!pendente}
-            />
-            <span>€</span>
-          </div>
-        </label>
-        <label>Data<input name="date" type="date" defaultValue={m.date} required /></label>
-      </div>
+    <form className="movement-form ffregisto-form" onSubmit={guardar}>
+      <button type="button" className="ffregisto-apagar" aria-label="Eliminar movimento" title="Eliminar" onClick={() => aoEliminar(m)}><Icone nome="trash-2" /><span className="sr-only">Eliminar</span></button>
+      <ValorGrande
+        tipo={tipoValor} inputRef={campoValor} placeholder={pendente ? 'A definir' : '0,00'} required={!pendente} disabled={m.movementType === 'transfer' && !m.revolut}
+        defaultValue={pendente ? '' : String(m.revolut ? m.transferValue || 0 : Math.abs(m.amount)).replace('.', ',')}
+      />
+      <label className="fftitulo"><Icone nome="pencil" /><span className="sr-only">Descrição</span><input name="title" defaultValue={m.title} required autoComplete="off" /></label>
       {ultimo ? (
-        <button type="button" className="ffultimo" onClick={() => { if (campoValor.current) { campoValor.current.value = String(ultimo).replace('.', ','); campoValor.current.focus(); } }}>
-          Da última vez: {formatarEuros(ultimo, false)} · usar
+        <button type="button" className="ffultimo" onClick={() => { if (campoValor.current) { campoValor.current.value = String(ultimo).replace('.', ','); campoValor.current.dispatchEvent(new Event('input', { bubbles: true })); campoValor.current.focus(); } }}>
+          ↺ Da última vez: {formatarEuros(ultimo, false)} · usar
         </button>
       ) : null}
-      {/* Lista de escolha (a app atual tinha um campo de texto com sugestões) */}
-      <label>Categoria
-        <select name="category" value={categoria} onChange={(x) => setCategoria(x.target.value)}>
-          <OpcoesCategoria estado={estado} lista={categoriasParaEditar(m, estado.categories, estado.incomeCategories, atual)} />
-        </select>
-      </label>
+      {comCategoria && !m.revolut ? (
+        <><Rotulo>Categoria</Rotulo><CampoCategoria estado={estado} lista={categoriasParaEditar(m, estado.categories, estado.incomeCategories, atual)} valor={categoria} aoMudar={setCategoria} receita={m.movementType === 'income'} mapaAspetos={aspetos} /></>
+      ) : <input type="hidden" name="category" value={categoria} />}
       {m.movementType === 'expense' && !m.revolut && (eCategoriaCombustivel(categoria) || eCategoriaCombustivel(m.title) || m.vehicle) ? <CamposCombustivel estado={estado} viatura={String(m.vehicle ?? '')} combustivel={typeof m.fuel === 'string' ? m.fuel : ''} /> : null}
+      <Rotulo>Data</Rotulo>
+      <EscolhaData inicial={m.date} />
       {m.movementType === 'expense' && !m.revolut && (pessoas.length || m.person) ? (
-        <label className="ffv2-extra">Quem fez
-          <select name="person" defaultValue={m.person || ''}>
-            <option value="">—</option>
-            {[...new Set([...pessoas, ...(m.person ? [m.person] : [])])].map((p) => <option key={p} value={p}>{p}</option>)}
-          </select>
-        </label>
+        <div className="ffv2-extra"><Rotulo>Quem fez</Rotulo><Escolhas nome="person" rotulo="Quem fez" valor={pessoa} aoMudar={setPessoa} opcoes={pessoasOp} /></div>
       ) : null}
-      {(m.movementType === 'expense' || m.movementType === 'income') && !m.revolut ? (
-        <label>Conta
-          <select name="account" defaultValue={m.account || 'principal'}>
-            {estado.accounts.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-        </label>
+      {comCategoria && !m.revolut ? (
+        <><Rotulo>Conta</Rotulo><Escolhas nome="account" rotulo="Conta" valor={conta} aoMudar={setConta} opcoes={estado.accounts.map((c) => ({ valor: c.id, rotulo: c.name }))} /></>
       ) : null}
-      <div className="movement-checks ffv2-extra">
-        <label className="checkbox-row"><input name="recurring" type="checkbox" checked={recorrente} onChange={(x) => setRecorrente(x.target.checked)} /> Recorrente</label>
+      <div className="movement-checks ffv2-extra ffregisto-mais">
+        <LinhaInterruptor icone="calendar-clock" rotulo="Recorrente" nome="recurring" ligado={recorrente} aoMudar={setRecorrente} />
         {recorrente ? (
-          <label>Periodicidade
-            <select name="recurringEvery" defaultValue={m.recurringDay === DIA_DO_SALARIO.valor ? DIA_DO_SALARIO.valor : m.recurringEvery ? String(m.recurringEvery) : ''}>
-              <option value="">Não criar automaticamente</option>
-              {PERIODICIDADES.map((p) => <option key={p.meses} value={p.meses}>{p.rotulo}</option>)}
-              <option value={DIA_DO_SALARIO.valor}>{DIA_DO_SALARIO.rotulo}</option>
-            </select>
-          </label>
+          <div className="form-grid">
+            <label>Periodicidade
+              <select name="recurringEvery" defaultValue={m.recurringDay === DIA_DO_SALARIO.valor ? DIA_DO_SALARIO.valor : m.recurringEvery ? String(m.recurringEvery) : ''}>
+                <option value="">Não criar automaticamente</option>
+                {PERIODICIDADES.map((p) => <option key={p.meses} value={p.meses}>{p.rotulo}</option>)}
+                <option value={DIA_DO_SALARIO.valor}>{DIA_DO_SALARIO.rotulo}</option>
+              </select>
+            </label>
+            <label>Tipo de valor
+              <select name="tipoValor" defaultValue={m.recurring === 'sem' ? 'sem' : 'com'}>
+                <option value="com">Valor fixo</option>
+                <option value="sem">Valor variável (confirmar todos os meses)</option>
+              </select>
+            </label>
+          </div>
         ) : null}
-        {recorrente ? (
-          <label>Tipo de valor
-            <select name="tipoValor" defaultValue={m.recurring === 'sem' ? 'sem' : 'com'}>
-              <option value="com">Valor fixo</option>
-              <option value="sem">Valor variável (confirmar todos os meses)</option>
-            </select>
-          </label>
-        ) : null}
+        <label className="ffnota"><Icone nome="pencil" /><span className="sr-only">Nota (opcional)</span><textarea name="note" rows={1} maxLength={140} defaultValue={m.note || ''} placeholder="Nota (opcional)" /></label>
       </div>
-      <label>Nota (opcional)<textarea name="note" rows={2} maxLength={140} defaultValue={m.note || ''} placeholder="Ex.: presente de anos, fatura pedida…" /></label>
-      <div className="dialog-actions">
-        <Botao type="button" variante="destrutivo" onClick={() => aoEliminar(m)}><Icone nome="trash-2" />Eliminar</Botao>
-        <Botao type="submit">Guardar</Botao>
-      </div>
+      <div className="ffregisto-rodape"><Botao type="submit" className="ffguardar">Guardar alterações</Botao></div>
     </form>
   );
 }
 
 export function EditarMovimento({ movimento: m, fechar, estado, aoGuardar, aoEliminar }: Props) {
   return (
-    <Dialogo folha aberto={m !== null} aoMudar={(a) => { if (!a) fechar(); }} className="movement-dialog" titulo="Editar movimento" descricao="Altere os dados ou elimine este movimento.">
+    <Dialogo folha aberto={m !== null} aoMudar={(a) => { if (!a) fechar(); }} className="movement-dialog ffregisto" titulo="Editar movimento" descricao="Altere os dados ou elimine este movimento.">
       {m ? <Formulario key={m.id} m={m} estado={estado} aoGuardar={aoGuardar} aoEliminar={aoEliminar} /> : null}
     </Dialogo>
   );

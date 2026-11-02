@@ -58,13 +58,13 @@ async def t_sugere_a_categoria_pelo_historico(app):
     await app.abrir(DADOS)
     p = app.page
     await novo(app)
-    opcoes = await p.evaluate("[...document.querySelectorAll('#ffv2-titulos option')].map(o=>o.value)")
+    opcoes = await p.evaluate("[...document.querySelectorAll('[role=dialog] .fftitulos button')].map(o=>o.textContent)")
     verificar(opcoes == ['Continente', 'Galp'], f'títulos sugeridos: {opcoes}')
     await p.fill('[role=dialog] input[name=title]', 'continente'); await p.wait_for_timeout(200)
-    verificar(await p.input_value('[role=dialog] select[name=category]') == 'Alimentação', 'não escolheu a categoria da última vez')
+    verificar(await p.input_value('[role=dialog] input[name=category]') == 'Alimentação', 'não escolheu a categoria da última vez')
     verificar('Alimentação' in await p.inner_text('.ffv2-sugestao'), 'falta a indicação da sugestão')
     await p.fill('[role=dialog] input[name=title]', 'Galp'); await p.wait_for_timeout(200)
-    verificar(await p.input_value('[role=dialog] select[name=category]') == 'Combustível', 'não atualizou a sugestão')
+    verificar(await p.input_value('[role=dialog] input[name=category]') == 'Combustível', 'não atualizou a sugestão')
     await p.fill('[role=dialog] input[name=amount]', '40'); await p.click('[role=dialog] button[type=submit]'); await p.wait_for_timeout(500)
     guardado = json.loads(await p.evaluate("localStorage.getItem('financas-familiar:v3')"))['transactions'][0]
     verificar(guardado['title'] == 'Galp' and guardado['detail'].endswith('· Combustível'), f'gravado: {guardado}')
@@ -74,7 +74,7 @@ async def t_escolha_manual_nao_e_alterada(app):
     await app.abrir(DADOS)
     p = app.page
     await novo(app)
-    await p.select_option('[role=dialog] select[name=category]', 'Lazer')
+    await app.escolher('category', 'Lazer', '[role=dialog]')
     await p.fill('[role=dialog] input[name=title]', 'Galp'); await p.wait_for_timeout(200)
-    verificar(await p.input_value('[role=dialog] select[name=category]') == 'Lazer', 'mudou a categoria escolhida à mão')
+    verificar(await p.input_value('[role=dialog] input[name=category]') == 'Lazer', 'mudou a categoria escolhida à mão')
     verificar(not await p.query_selector('.ffv2-sugestao'), 'mostrou sugestão depois da escolha manual')

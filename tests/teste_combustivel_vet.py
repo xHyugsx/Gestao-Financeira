@@ -33,8 +33,8 @@ async def t_registar_despesa_veterinaria(app):
     p = app.page
     await ir(app, 'veterinario')
     await p.click('[aria-label="Adicionar despesa veterinária"]'); await p.wait_for_timeout(500)
-    await p.select_option('[role=dialog] select[name=pet]', 'Nina')
-    await p.select_option('[role=dialog] select[name=vetCategory]', 'Vacinas')
+    await app.escolher('pet', 'Nina', '[role=dialog]')
+    await app.escolher('vetCategory', 'Vacinas', '[role=dialog]')
     await p.fill('[role=dialog] input[name=amount]', '30')
     await p.click('[role=dialog] button[type=submit]'); await p.wait_for_timeout(500)
     m = (await dados(app))['transactions'][0]

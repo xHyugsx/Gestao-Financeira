@@ -61,6 +61,8 @@ export function Dialogo({ aberto, aoMudar, titulo, descricao, className, folha, 
         <Radix.Content
           className={[folha ? 'fffolha' : CONTEUDO, className].filter(Boolean).join(' ')}
           style={folha ? ({ '--kb': `${teclado}px` } as React.CSSProperties) : undefined}
+          // folhas de registo: ao abrir não se põe o cursor em nenhum campo (o teclado só abre ao tocar no valor ou num texto)
+          onOpenAutoFocus={folha ? (e) => { e.preventDefault(); (e.currentTarget as HTMLElement | null)?.focus?.(); } : undefined}
         >
           {folha ? <div className="fffolha-pega" aria-hidden="true" {...tocar} onTouchCancel={tocar.onTouchEnd}><i /></div> : null}
           <div className="flex flex-col space-y-1.5 text-center sm:text-left" {...tocar}>

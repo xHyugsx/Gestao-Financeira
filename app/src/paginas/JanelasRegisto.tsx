@@ -1,5 +1,5 @@
 // Janelas do botão "+" nas páginas Combustível e Veterinário (mesmos campos e regras da app atual).
-import { type FormEvent, useMemo } from 'react';
+import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { dia, type Estado, type Movimento } from '../dados';
 import { CamposCombustivel } from '../movimentos/CamposCombustivel';
 import { pessoasDaFamilia, ultimaPessoa } from '../movimentos/pessoas';
@@ -7,27 +7,14 @@ import { camposCombustivel } from '../movimentos/viaturas';
 import { diaEMes, lerValor } from '../movimentos/regras';
 import { Botao } from '../ui/Botao';
 import { Dialogo } from '../ui/Dialogo';
+import { EscolhaData, Escolhas, Rotulo, ValorGrande } from '../ui/Escolhas';
 import { Icone } from '../ui/Icone';
 import { animais } from '../veterinario/animais';
 
 const CATEGORIAS_VET = ['Consultas', 'Vacinas', 'Medicação', 'Exames', 'Cirurgia', 'Outros'];
 
-function Acoes({ cancelar }: { cancelar: () => void }) {
-  return (
-    <div className="dialog-actions">
-      <Botao type="button" variante="ghost" onClick={cancelar}><Icone nome="x" />Cancelar</Botao>
-      <Botao type="submit"><Icone nome="plus" />Guardar</Botao>
-    </div>
-  );
-}
-
-function CampoValor() {
-  return (
-    <label>
-      Valor
-      <div className="input-suffix"><input name="amount" inputMode="decimal" placeholder="0,00" required /><span>€</span></div>
-    </label>
-  );
+function Guardar({ rotulo }: { rotulo: string }) {
+  return <div className="ffregisto-rodape"><Botao type="submit" className="ffguardar">{rotulo}</Botao></div>;
 }
 
 interface PropsJanela { aberto: boolean; aoMudar: (a: boolean) => void; aoGuardar: (m: Movimento) => void }
@@ -60,52 +47,59 @@ const submeter = (criar: (f: FormData, hoje: Date) => Movimento | null, aoGuarda
 
 export function NovoAbastecimento({ aberto, aoMudar, aoGuardar, estado }: PropsJanela & { estado: Estado }) {
   const pessoas = useMemo(() => pessoasDaFamilia(estado), [estado]);
-  const pessoa = useMemo(() => ultimaPessoa(estado.transactions, pessoas), [estado.transactions, pessoas]);
+  const sugerida = useMemo(() => ultimaPessoa(estado.transactions, pessoas), [estado.transactions, pessoas]);
+  const [pessoa, setPessoa] = useState(sugerida);
+  const posto = useRef<HTMLInputElement>(null);
+  useEffect(() => { if (aberto) setPessoa(sugerida); }, [aberto, sugerida]);
+  // postos usados antes (pelo título «Combustível — posto»), do mais recente para o mais antigo
+  const postos = useMemo(() => [...new Set(estado.transactions.filter((m) => m.title.startsWith('Combustível — ')).sort((x, y) => y.date.localeCompare(x.date))
+    .map((m) => m.title.slice('Combustível — '.length).trim()).filter(Boolean))].slice(0, 4), [estado.transactions]);
   return (
-    <Dialogo folha aberto={aberto} aoMudar={aoMudar} className="movement-dialog" titulo="Novo abastecimento" descricao="Registe um gasto de combustível.">
-      <form className="movement-form" onSubmit={submeter(novoAbastecimento, aoGuardar)}>
-        <div className="form-grid">
-          <label>Data<input name="date" type="date" defaultValue={dia(new Date())} required /></label>
-          <CampoValor />
-        </div>
+    <Dialogo folha aberto={aberto} aoMudar={aoMudar} className="movement-dialog ffregisto" titulo="Novo abastecimento" descricao="Registe um gasto de combustível.">
+      <form className="movement-form ffregisto-form" onSubmit={submeter(novoAbastecimento, aoGuardar)}>
+        <ValorGrande tipo="expense" required />
         {aberto ? <CamposCombustivel estado={estado} /> : null}
         {pessoas.length ? (
-          <label>Quem fez
-            <select name="person" defaultValue={pessoa}>
-              <option value="">—</option>
-              {pessoas.map((p) => <option key={p} value={p}>{p}</option>)}
-            </select>
-          </label>
+          <><Rotulo>Quem fez</Rotulo><Escolhas nome="person" rotulo="Quem fez" valor={pessoa} aoMudar={setPessoa}
+            opcoes={[...pessoas.map((p, k) => ({ valor: p, rotulo: p, classe: k === 0 ? 'ffp1' : k === 1 ? 'ffp2' : undefined })), { valor: '', rotulo: '—' }]} /></>
         ) : null}
-        <label>Posto<input name="station" placeholder="Ex.: Galp (opcional)" /></label>
-        <Acoes cancelar={() => aoMudar(false)} />
+        <Rotulo>Posto</Rotulo>
+        <label className="fftitulo"><Icone nome="fuel" /><span className="sr-only">Posto</span><input ref={posto} name="station" placeholder="Ex.: Galp (opcional)" autoComplete="off" /></label>
+        {postos.length ? (
+          <div className="ffescolhas fftitulos" aria-label="Postos usados antes">
+            {postos.map((t) => <button key={t} type="button" className="ffescolha" onClick={() => { if (posto.current) posto.current.value = t; }}><span>{t}</span></button>)}
+          </div>
+        ) : null}
+        <Rotulo>Data</Rotulo>
+        <EscolhaData />
+        <Guardar rotulo="Guardar abastecimento" />
       </form>
     </Dialogo>
   );
 }
 
 export function NovaDespesaVet({ aberto, aoMudar, aoGuardar, animal }: PropsJanela & { animal: string | null }) {
+  const lista = [...animais(), 'A confirmar'];
+  const [pet, setPet] = useState(animal || lista[0]!);
+  const [cat, setCat] = useState('Consultas');
+  const [origem, setOrigem] = useState('Conta principal');
+  useEffect(() => { if (aberto) { setPet(animal || lista[0]!); setCat('Consultas'); setOrigem('Conta principal'); } }, [aberto]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <Dialogo folha aberto={aberto} aoMudar={aoMudar} className="movement-dialog" titulo="Nova despesa veterinária" descricao="Registe uma consulta, medicação ou outro cuidado.">
-      <form className="movement-form" onSubmit={submeter(novaDespesaVet, aoGuardar)}>
-        <div className="form-grid">
-          <label>
-            Animal
-            <select name="pet" defaultValue={animal || animais()[0]}>
-              {animais().map((a) => <option key={a}>{a}</option>)}
-              <option>A confirmar</option>
-            </select>
-          </label>
-          <label>Categoria<select name="vetCategory">{CATEGORIAS_VET.map((c) => <option key={c}>{c}</option>)}</select></label>
-        </div>
-        <div className="form-grid">
-          <label>Data<input name="date" type="date" defaultValue={dia(new Date())} required /></label>
-          <CampoValor />
-        </div>
-        <label>Descrição<input name="title" placeholder="Ex.: consulta, medicação..." /></label>
-        <label>Local / clínica<input name="clinic" placeholder="Opcional" /></label>
-        <label>Origem do dinheiro<select name="source"><option>Conta principal</option><option>Revolut</option></select></label>
-        <Acoes cancelar={() => aoMudar(false)} />
+    <Dialogo folha aberto={aberto} aoMudar={aoMudar} className="movement-dialog ffregisto" titulo="Nova despesa veterinária" descricao="Registe uma consulta, medicação ou outro cuidado.">
+      <form className="movement-form ffregisto-form" onSubmit={submeter(novaDespesaVet, aoGuardar)}>
+        <ValorGrande tipo="expense" required />
+        <label className="fftitulo"><Icone nome="pencil" /><span className="sr-only">Descrição</span><input name="title" placeholder="Ex.: consulta, medicação..." autoComplete="off" /></label>
+        <Rotulo>Animal</Rotulo>
+        <Escolhas nome="pet" rotulo="Animal" valor={pet} aoMudar={setPet} opcoes={lista.map((a) => ({ valor: a, rotulo: a, icone: a === 'A confirmar' ? undefined : 'paw-print' as const }))} />
+        <Rotulo>Categoria</Rotulo>
+        <Escolhas nome="vetCategory" rotulo="Categoria" valor={cat} aoMudar={setCat} opcoes={CATEGORIAS_VET.map((c) => ({ valor: c, rotulo: c }))} />
+        <Rotulo>Data</Rotulo>
+        <EscolhaData />
+        <Rotulo>Local / clínica</Rotulo>
+        <label className="fftitulo"><Icone nome="house" /><span className="sr-only">Local / clínica</span><input name="clinic" placeholder="Opcional" autoComplete="off" /></label>
+        <Rotulo>Origem do dinheiro</Rotulo>
+        <Escolhas nome="source" rotulo="Origem do dinheiro" valor={origem} aoMudar={setOrigem} opcoes={[{ valor: 'Conta principal', rotulo: 'Conta principal' }, { valor: 'Revolut', rotulo: 'Revolut' }]} />
+        <Guardar rotulo="Guardar despesa" />
       </form>
     </Dialogo>
   );

@@ -56,19 +56,20 @@ async def t_categorias_por_ordem_alfabetica(app):
     await app.abrir(BASE)
     await novo(app)
     esperado = ['Alimentação', 'Habitação', 'Lazer', 'Transportes']
-    verificar(await opcoes(app, '[role=dialog] select[name=category]') == esperado, 'lista do novo movimento')
-    atalhos = await app.page.evaluate("[...document.querySelectorAll('[role=dialog] .category-shortcuts small')].map(s=>s.textContent)")
-    verificar(atalhos == esperado, f'atalhos: {atalhos}')
+    await app.page.click('[role=dialog] .ffcat-escolha-abrir'); await app.page.wait_for_timeout(200)
+    lista = await app.page.evaluate("[...document.querySelectorAll('[role=dialog] .ffcat-painel-grupo [data-valor]')].map(b=>b.dataset.valor)")
+    verificar(lista == esperado, f'lista do novo movimento: {lista}')
 
 
 async def t_editar_movimento_escolhe_a_categoria_da_lista(app):
     await app.abrir(BASE)
     p = app.page
     await p.evaluate("document.querySelector('[aria-label=\"Editar Recente\"]').click()"); await p.wait_for_timeout(500)
-    verificar(await p.evaluate("document.querySelector('[role=dialog] [name=category]').tagName") == 'SELECT', 'a categoria não é uma lista')
-    verificar(await opcoes(app, '[role=dialog] select[name=category]') == ['Alimentação', 'Habitação', 'Lazer', 'Transportes'], 'lista do editar')
-    verificar(await p.input_value('[role=dialog] select[name=category]') == 'Lazer', 'não mostra a categoria atual')
-    await p.select_option('[role=dialog] select[name=category]', 'Habitação')
+    verificar(await p.input_value('[role=dialog] input[name=category]') == 'Lazer', 'não mostra a categoria atual')
+    await p.click('[role=dialog] .ffcat-escolha-abrir'); await p.wait_for_timeout(200)
+    lista = await p.evaluate("[...document.querySelectorAll('[role=dialog] .ffcat-painel-grupo [data-valor]')].map(b=>b.dataset.valor)")
+    verificar(lista == ['Alimentação', 'Habitação', 'Lazer', 'Transportes'], f'lista do editar: {lista}')
+    await app.escolher('category', 'Habitação', '[role=dialog]')
     await p.click('[role=dialog] button[type=submit]'); await p.wait_for_timeout(500)
     m = next(m for m in (await dados(app))['transactions'] if m['title'] == 'Recente')
     verificar(m['detail'] == '20 setembro · Habitação', f'categoria gravada: {m["detail"]}')

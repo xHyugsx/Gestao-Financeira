@@ -49,7 +49,7 @@ async def t_sem_saldos_das_contas(app):
         verificar('Saldo' not in texto.replace('Saldo antes de', ''), f'{pagina} ainda mostra saldos: {texto[:200]}')
     await p.click('[aria-label="Adicionar movimento"]'); await p.wait_for_timeout(500)
     verificar('saldo' not in (await p.inner_text('[role=dialog]')).lower(), 'o novo movimento ainda fala do saldo')
-    verificar(await p.query_selector('[role=dialog] select[name=account]'), 'a escolha da conta tem de continuar')
+    verificar(await p.query_selector('[role=dialog] [data-campo=\"account\"]'), 'a escolha da conta tem de continuar')
     verificar(not app.erros, f'erros: {app.erros}')
 
 

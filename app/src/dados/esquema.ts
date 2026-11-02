@@ -70,6 +70,8 @@ export interface Aparencia {
   theme?: string;
   /** Cor dos valores das despesas (só na app nova, v2.39.0): 'rosa', 'laranja', 'vermelho' ou 'neutra'; sem valor = coral suave. */
   expenseColor?: string;
+  /** Som suave ao guardar, alterar e eliminar movimentos (v2.45.1); sem valor = ligado. */
+  sounds?: boolean;
   [extra: string]: unknown;
 }
 

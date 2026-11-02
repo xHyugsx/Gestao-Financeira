@@ -46,6 +46,8 @@ import { NovaDespesaVet, NovoAbastecimento } from '../paginas/JanelasRegisto';
 import { JanelaFotografia, Veterinario, VISTA_VETERINARIO, type VistaVeterinario } from '../paginas/Veterinario';
 import { type PeriodoResumo, Resumo, type SeccaoResumo } from '../paginas/Resumo';
 import { type ListaMovimentos, Principal } from '../paginas/Principal';
+import { fraseDoDia } from '../paginas/frase';
+import { Confirmacao, somDaConfirmacao, type TipoConfirmacao } from '../ui/Confirmacao';
 import { Botao } from '../ui/Botao';
 import { Icone } from '../ui/Icone';
 import { useAnimacaoNumeros } from './animacaoNumeros';
@@ -151,6 +153,17 @@ export function App() {
     return () => clearTimeout(t);
   }, [aviso]);
 
+  // confirmação animada (e com som, se ligado) ao guardar, alterar ou eliminar um movimento
+  const [confirmacao, setConfirmacao] = useState<{ tipo: TipoConfirmacao; chave: number } | null>(null);
+  useEffect(() => {
+    if (!confirmacao) return;
+    const t = setTimeout(() => setConfirmacao(null), 1500);
+    return () => clearTimeout(t);
+  }, [confirmacao]);
+  const confirmar = (tipo: TipoConfirmacao) => {
+    setConfirmacao({ tipo, chave: Date.now() });
+    if (estadoAtual.current.appearance.sounds !== false) somDaConfirmacao(tipo);
+  };
   const tirarFoco = () => { if (document.activeElement instanceof HTMLElement) document.activeElement.blur(); };
   const mudarMovimentos = (f: (l: Movimento[]) => Movimento[]) => setEstado((s) => ({ ...s, transactions: f(s.transactions) }));
   // a linha do movimento acabado de gravar brilha por instantes (depois de a janela fechar)
@@ -162,12 +175,12 @@ export function App() {
       setTimeout(() => el.classList.remove('ffrealce'), 1900);
     });
   }, 220);
-  const gravarNovo = (m: Movimento) => { mudarMovimentos((l) => [m, ...l]); vibrar(30); tirarFoco(); setNovoAberto(false); setDuplicado(null); realcar(m.id); };
+  const gravarNovo = (m: Movimento) => { mudarMovimentos((l) => [m, ...l]); vibrar(30); tirarFoco(); setNovoAberto(false); setDuplicado(null); realcar(m.id); confirmar('guardado'); };
   const substituirCopia = (copia: Movimento, m: Movimento) => {
     const nova = preencherCopia(copia, m);
     mudarMovimentos((l) => l.map((x) => (x.id === copia.id ? nova : x))); vibrar(30); tirarFoco(); setNovoAberto(false); setDuplicado(null);
     salarioNaTabela(copia, nova);
-    realcar(copia.id);
+    realcar(copia.id); confirmar('guardado');
   };
   // Salário (receita no dia do salário) confirmado ou corrigido à mão: a tabela de Salários acompanha («Rendimento mensal»)
   const salarioNaTabela = (antes: Movimento | undefined, depois: Movimento) => {
@@ -182,11 +195,11 @@ export function App() {
     if (porConfirmar(copia)) { substituirCopia(copia, m); setAviso(`Valor de «${copia.title.trim()}» confirmado (estava por confirmar).`); return; }
     setNovoAberto(false); setDuplicado({ novo: m, copia });
   };
-  const guardarRegisto = (m: Movimento) => { mudarMovimentos((l) => [m, ...l]); vibrar(30); tirarFoco(); setAbastecimento(false); setDespesaVet(false); realcar(m.id); };
+  const guardarRegisto = (m: Movimento) => { mudarMovimentos((l) => [m, ...l]); vibrar(30); tirarFoco(); setAbastecimento(false); setDespesaVet(false); realcar(m.id); confirmar('guardado'); };
   const guardarEdicao = (m: Movimento) => {
     salarioNaTabela(estadoAtual.current.transactions.find((x) => x.id === m.id), m);
     mudarMovimentos((l) => recorrenciaNaSerie(l.map((x) => (x.id === m.id ? m : x)), l.find((x) => x.id === m.id), m)); vibrar(30); tirarFoco(); setAEditar(null);
-    realcar(m.id);
+    realcar(m.id); confirmar('alterado');
   };
   const [aApagarSerie, setAApagarSerie] = useState<Movimento | null>(null);
   // Apagar mostra «Desfazer» durante 5 segundos (em vez de pedir confirmação antes)
@@ -200,7 +213,7 @@ export function App() {
     const original = estadoAtual.current.transactions.find((x) => x.id === m.id) ?? m;
     let pos = -1;
     mudarMovimentos((l) => { pos = l.findIndex((x) => x.id === m.id); return l.filter((x) => x.id !== m.id); });
-    vibrar([40, 60, 40]); setAEditar(null); setAApagarSerie(null);
+    vibrar([40, 60, 40]); setAEditar(null); setAApagarSerie(null); confirmar('eliminado');
     setDesfazer({
       chave: Date.now(), texto: `«${original.title.trim()}» apagado`,
       repor: () => {
@@ -219,10 +232,10 @@ export function App() {
   const abrirAcoes = useCallback((m: Movimento) => { vibrar(20); setAcoes(m); }, [vibrar]);
   const duplicar = (m: Movimento) => {
     const copia = duplicarMovimento(m, new Date(), Date.now());
-    mudarMovimentos((l) => [copia, ...l]); vibrar(30); setAcoes(null); realcar(copia.id);
+    mudarMovimentos((l) => [copia, ...l]); vibrar(30); setAcoes(null); realcar(copia.id); confirmar('guardado');
     setDesfazer({ chave: Date.now(), texto: `«${copia.title.trim()}» duplicado para hoje`, repor: () => { mudarMovimentos((l) => l.filter((x) => x.id !== copia.id)); vibrar(15); setDesfazer(null); } });
   };
-  const saltarMes = (m: Movimento) => { mudarMovimentos((l) => saltarEsteMes(l, m)); vibrar(30); setAApagarSerie(null); };
+  const saltarMes = (m: Movimento) => { mudarMovimentos((l) => saltarEsteMes(l, m)); vibrar(30); setAApagarSerie(null); confirmar('eliminado'); };
 
   // Definições: menu rápido da roda dentada e folha das Definições (o botão "voltar" do telemóvel fecha a folha)
   const sairFolha = useCallback((depois: () => void) => {
@@ -874,6 +887,7 @@ export function App() {
       <Jarvis
         aberto={jarvis} fechar={fecharJarvis} motor={motor} contexto={contextoJarvis} vocabulario={vocabularioJarvis} lerAnexo={lerAnexo}
         pagina={pagina} nome={nome ?? ''} teclado={teclado} vibrar={vibrar} mensagens={mensagens} mudarMensagens={setMensagens}
+        frase={jarvis && !ocultos ? fraseDoDia({ transactions: estado.transactions, annualExpenses: estado.annualExpenses }, new Date()) : null}
       />
       {folha ? (
         <FolhaDefinicoes
@@ -930,6 +944,7 @@ export function App() {
       <NovoAbastecimento aberto={abastecimento} aoMudar={setAbastecimento} aoGuardar={guardarRegisto} estado={visivel} />
       <EditarMovimento movimento={aEditar} fechar={() => setAEditar(null)} estado={visivel} aoGuardar={guardarEdicao} aoEliminar={eliminar} />
       <ApagarRecorrente movimento={aApagarSerie} fechar={() => setAApagarSerie(null)} saltar={saltarMes} parar={apagar} />
+      <Confirmacao evento={confirmacao} />
       <DuplicadoRecorrente
         par={duplicado} fechar={() => setDuplicado(null)}
         substituir={() => duplicado && substituirCopia(duplicado.copia, duplicado.novo)} registar={() => duplicado && gravarNovo(duplicado.novo)}

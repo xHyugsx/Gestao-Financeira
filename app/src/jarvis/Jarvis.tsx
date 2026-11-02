@@ -1,7 +1,8 @@
 // Janela do Jarvis — mesmo HTML da app atual (cabeçalho, mensagens, Confirmar/Cancelar, sugestões, anexos).
 import { useEffect, useRef, useState } from 'react';
 import { PREFIXO } from '../config';
-import { chave } from '../dados';
+import { chave, type Estado, gastos, MESES } from '../dados';
+import type { NomeIcone } from '../ui/icones';
 import { Botao } from '../ui/Botao';
 import { Icone } from '../ui/Icone';
 import { corrigir } from './correcao';
@@ -23,6 +24,30 @@ const SUGESTOES: Record<string, [string, string?][]> = {
   combustivel: [['Combustível este mês'], ['Quanto gastei este mês?'], D],
   veterinario: [['Veterinário este mês'], ['Quanto gastei este mês?'], ['Maior categoria'], D],
 };
+
+// Sugestões em cartões (v2.45.0): ícone, cor e uma linha a explicar
+const CARTAO: [RegExp, NomeIcone, string, string][] = [
+  [/^quanto gastei/i, 'chart-column', '#a78bfa', 'com a comparação'], [/^gastos por conta/i, 'wallet-cards', '#4ade80', 'este mês'],
+  [/^rendimento/i, 'banknote', '#22d3ee', 'salários do mês anterior'], [/^receitas/i, 'trending-up', '#4ade80', 'este mês'],
+  [/^maior categoria/i, 'tags', '#f472b6', 'onde foi mais dinheiro'], [/combust/i, 'fuel', '#fb923c', 'este mês'],
+  [/veterin/i, 'paw-print', '#f472b6', 'este mês'], [/^adicionar despesa/i, 'plus', '#fb923c', 'preenche a caixa'], [/^adicionar receita/i, 'plus', '#4ade80', 'preenche a caixa'],
+];
+const cartaoDe = (l: string) => CARTAO.find(([re]) => re.test(l)) ?? [null, 'bot' as NomeIcone, '#a78bfa', ''];
+const saudacao = (h: number) => (h < 6 ? 'Boa noite' : h < 13 ? 'Bom dia' : h < 20 ? 'Boa tarde' : 'Boa noite');
+
+/**
+ * Cartão das respostas sobre os gastos de um mês (v2.45.0): o valor em grande, a comparação e os últimos 6 meses.
+ * Lê o mês da própria resposta («Em setembro gastaste …»), por isso só aparece quando o Jarvis respondeu isso.
+ */
+export function cartaoDosGastos(texto: string, estado: Pick<Estado, 'transactions'>, agora: Date) {
+  const r = /^Em (\p{L}+)(?: de (\d{4}))? gastaste ([^,.]+,\d{2}\s?€)(?:, (mais|menos) ([\d.,]+%) do que em (\p{L}+))?/u.exec(texto);
+  const i = r ? MESES.indexOf(r[1]!.toLowerCase() as (typeof MESES)[number]) : -1;
+  if (!r || i < 0) return null;
+  const ano = r[2] ? Number(r[2]) : i <= agora.getMonth() ? agora.getFullYear() : agora.getFullYear() - 1;
+  const meses = Array.from({ length: 6 }, (_, k) => new Date(ano, i - 5 + k, 1));
+  const valores = meses.map((d) => gastos(estado.transactions.filter((m) => m.date.startsWith(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`))));
+  return { mes: MESES[i]!, valor: r[3]!, sobe: r[4] === 'mais', variacao: r[5] ? `${r[4] === 'mais' ? '↑' : '↓'} ${r[5]} vs ${r[6]}` : '', meses: meses.map((d, k) => ({ nome: MESES[d.getMonth()]!.slice(0, 3), v: valores[k]! })) };
+}
 
 const CONVERSAS = chave('conversaJarvis', PREFIXO);
 interface Conversa { id: string; title: string; updatedAt: string; messages: Mensagem[] }
@@ -53,9 +78,11 @@ interface Props {
   vibrar: (p: number | number[]) => void;
   mensagens: Mensagem[];
   mudarMensagens: (f: (m: Mensagem[]) => Mensagem[]) => void;
+  /** Frase do dia (a mesma da Principal), mostrada ao abrir sem conversa. */
+  frase?: string | null;
 }
 
-export function Jarvis({ aberto, fechar, motor, contexto, vocabulario, lerAnexo, pagina, nome, teclado, vibrar, mensagens, mudarMensagens }: Props) {
+export function Jarvis({ aberto, fechar, motor, contexto, vocabulario, lerAnexo, pagina, nome, teclado, vibrar, mensagens, mudarMensagens, frase }: Props) {
   const [texto, setTexto] = useState('');
   const [aEscrever, setAEscrever] = useState(false);
   const [, setVersao] = useState(0);
@@ -94,7 +121,7 @@ export function Jarvis({ aberto, fechar, motor, contexto, vocabulario, lerAnexo,
   if (!aberto) return null;
   const sugestoes = (SUGESTOES[pagina] || SUGESTOES.principal!).map(([l, pf]) => (
     <button
-      key={l} type="button" className={pf ? 'act' : undefined}
+      key={l} type="button" className={pf ? 'act' : undefined} data-icone={cartaoDe(l)[1]}
       onClick={() => {
         if (!pf) { enviar(l); return; }
         setTexto(pf);
@@ -102,6 +129,18 @@ export function Jarvis({ aberto, fechar, motor, contexto, vocabulario, lerAnexo,
       }}
     >{l}</button>
   ));
+  // ao abrir sem conversa, as mesmas sugestões em cartões (ícone e uma linha a explicar)
+  const cartoes = (SUGESTOES[pagina] || SUGESTOES.principal!).map(([l, pf], k) => {
+    const [, ic, cor, sub] = cartaoDe(l);
+    return (
+      <button key={l} type="button" className={`ffjv-cartao-sug${pf ? ' act' : ''}`} style={{ animationDelay: `${k * 50}ms` }}
+        onClick={() => (sugestoes[k]!.props as { onClick: () => void }).onClick()}>
+        <span className="ffjv-sug-ic" style={{ '--c': cor } as React.CSSProperties}><Icone nome={ic} /></span>
+        <b>{l}</b>{sub ? <small>{sub}</small> : null}
+      </button>
+    );
+  });
+  const ctx = contexto();
   const ultimaAi = mensagens.map((m) => m.role).lastIndexOf('assistant');
   const ultimaPergunta = [...mensagens].reverse().find((m) => m.role === 'user' && !m.file)?.content ?? '';
   const seguir = mensagens.length && mensagens[mensagens.length - 1]?.role === 'assistant' ? seguimentos(ultimaPergunta, new Date()) : [];
@@ -115,7 +154,7 @@ export function Jarvis({ aberto, fechar, motor, contexto, vocabulario, lerAnexo,
       <section className="jarvis-box" role="dialog" aria-modal="true" aria-label="Jarvis">
         <header className="jarvis-box-head">
           <span className="ffjv-logo" aria-hidden="true" />
-          <div className="ffjv-title"><strong>Jarvis</strong><small>O seu assistente financeiro</small></div>
+          <div className="ffjv-title"><strong>Jarvis</strong><small><i className="ffjv-online" aria-hidden="true" />Pronto a ajudar</small></div>
           {mensagens.length > 0 ? (
             <Botao type="button" variante="ghost" tamanho="icone" aria-label="Limpar conversa" onClick={() => { mudarMensagens(() => []); motor.limpar(); vibrar(15); }}>
               <Icone nome="trash-2" />
@@ -124,16 +163,40 @@ export function Jarvis({ aberto, fechar, motor, contexto, vocabulario, lerAnexo,
           <Botao type="button" variante="ghost" tamanho="icone" aria-label="Fechar Jarvis" onClick={fechar}><Icone nome="x" /></Botao>
         </header>
         <div className="jarvis-box-msgs" ref={lista}>
-          <div className={`ffjv-ai${!aEscrever && ultimaAi === -1 ? ' last' : ''}`}>
-            {marca}
-            <p className="jarvis-msg jarvis-msg-ai">{`Saudações${nome ? ` ${nome}` : ''}, em que posso ser útil hoje?`}</p>
-          </div>
+          {!mensagens.length && !aEscrever ? (
+            <div className="ffjv-ola">
+              <h2>{`${saudacao(new Date().getHours())}${nome ? `, ${nome}` : ''}`}</h2>
+              <p>Pergunta pelos teus gastos, pede previsões ou regista um movimento.</p>
+              {frase ? <div className="ffjv-frase"><small>Hoje</small>{frase}</div> : null}
+              <div className="jarvis-suggest ffjv-cartoes">{cartoes}</div>
+            </div>
+          ) : (
+            <div className={`ffjv-ai${!aEscrever && ultimaAi === -1 ? ' last' : ''}`}>
+              {marca}
+              <p className="jarvis-msg jarvis-msg-ai">{`Saudações${nome ? ` ${nome}` : ''}, em que posso ser útil hoje?`}</p>
+            </div>
+          )}
           {mensagens.map((e, i) => (e.role === 'user'
             ? <p key={i} className={`jarvis-msg jarvis-msg-me${e.file ? ' jarvis-msg-file' : ''}${novo(i)}`}>{e.content}</p>
             : (
-              <div key={i} className={`ffjv-ai${!aEscrever && i === ultimaAi ? ' last' : ''}${novo(i)}`}>
+              <div key={i} className={`ffjv-ai${!aEscrever && i === ultimaAi ? ' last' : ''}${novo(i)}${pendente && !aEscrever && i === ultimaAi ? ' ffjv-confirmar' : ''}`}>
                 {marca}
-                <p className={`jarvis-msg jarvis-msg-ai${e.file ? ' jarvis-msg-file' : ''}`}>{e.content}</p>
+                {(() => {
+                  const c = e.file ? null : cartaoDosGastos(e.content, ctx.estado, ctx.agora);
+                  if (!c) return <p className={`jarvis-msg jarvis-msg-ai${e.file ? ' jarvis-msg-file' : ''}`}>{e.content}</p>;
+                  const max = Math.max(1, ...c.meses.map((x) => x.v));
+                  return (
+                    <div className="ffjv-cartao">
+                      <p className="ffjv-cartao-rot">{`Gastos em ${c.mes}`}</p>
+                      <strong className="ffjv-cartao-valor">{c.valor}</strong>
+                      {c.variacao ? <span className={`ffhero-var ${c.sobe ? 'amount-negative' : 'amount-positive'}`}>{c.variacao}</span> : null}
+                      <span className="ffjv-mini" aria-hidden="true">
+                        {c.meses.map((x, k) => <span key={k} className={k === 5 ? 'on' : undefined}><i style={{ height: `${Math.max(6, (x.v / max) * 100)}%` }} />{x.nome}</span>)}
+                      </span>
+                      <p className="jarvis-msg jarvis-msg-ai">{e.content}</p>
+                    </div>
+                  );
+                })()}
               </div>
             )))}
           {pendente && !aEscrever ? (
@@ -153,7 +216,6 @@ export function Jarvis({ aberto, fechar, motor, contexto, vocabulario, lerAnexo,
               <p className="jarvis-msg jarvis-msg-ai jarvis-typing" aria-label="Jarvis a escrever"><i /><i /><i /></p>
             </div>
           ) : null}
-          {!mensagens.length && !aEscrever ? <div className="jarvis-suggest">{sugestoes}</div> : null}
         </div>
         {mensagens.length > 0 && !aEscrever && !pendente ? <div className="ffjv-row">{botoesSeguir}{sugestoes.filter((b) => !seguir.includes(String(b.key)))}</div> : null}
         <form className="jarvis-box-composer" onSubmit={(e) => { e.preventDefault(); enviar(texto); }}>
