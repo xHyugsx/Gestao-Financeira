@@ -52,7 +52,6 @@ import { Botao } from '../ui/Botao';
 import { Icone } from '../ui/Icone';
 import { useAnimacaoNumeros } from './animacaoNumeros';
 import { aplicarCorDespesa, aplicarTema, corDespesaDe, temaDe } from '../ui/temas';
-import { saudacao, svgDoCeu } from './ceu';
 import { COR_MAIS, PAGINAS, PAGINAS_MAIS } from './paginas';
 import { guardarEPartilhar } from '../nativo/ficheiros';
 import { eNativo } from '../nativo/plataforma';
@@ -858,14 +857,7 @@ export function App() {
         onTouchStart={inicioToque} onTouchMove={moverToque} onTouchEnd={fimToque} onTouchCancel={cancelarToque}
       >
         {cabecalhoDe === 'principal' ? (
-          <header className="app-heading app-heading-welcome">
-            <div className="welcome-sky" aria-hidden="true" dangerouslySetInnerHTML={{ __html: svgDoCeu(agora) }} />
-            {ferramentas}
-            <div className="min-w-0">
-              <p className="eyebrow">{agora.toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
-              <h1>{nome ? `${saudacao(agora)}, ${nome}` : saudacao(agora)}</h1>
-            </div>
-          </header>
+          <header className="app-heading app-heading-welcome ffsem-ceu">{ferramentas}</header>
         ) : (
           <header className="app-heading app-heading-page">
             <h1 key={cabecalhoDe}>{PAGINAS.find((p) => p.id === cabecalhoDe)?.label}</h1>
