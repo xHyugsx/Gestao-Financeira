@@ -7,7 +7,7 @@ import { pedirPersistencia } from '../definicoes/persistencia';
 import { iniciarAvisos } from '../definicoes/lembreteBackup';
 import type { AcoesBackup, AcoesImportacao } from '../definicoes/Seccoes';
 import { FolhaDefinicoes, MenuRapido, type PosicaoMenu, type Seccao } from '../definicoes/Definicoes';
-import { aplicarBackup, chave, cifrarBackup, criarBackup, decifrarBackup, eBackupCifrado, dia, type Estado, inicioDoMes, lerBackup, type LeituraBackup, MESES, type Movimento, nomeFicheiroBackup, PREFIXO_REAL } from '../dados';
+import { aplicarBackup, chave, cifrarBackup, criarBackup, decifrarBackup, eBackupCifrado, dia, type Estado, inicioDoMes, lerBackup, type LeituraBackup, MESES, perguntaRestauro, type Movimento, nomeFicheiroBackup, PREFIXO_REAL } from '../dados';
 import { aviso as avisoVeterinario, definir as definirLembretes, todos as todosLembretes } from '../veterinario/lembretes';
 import { useDados } from '../estado/useDados';
 import { aspetosCategorias } from '../movimentos/categorias';
@@ -478,7 +478,7 @@ export function App() {
       const r = await lerFicheiroBackup(f, senha);
       if (typeof r === 'string') return r;
       if (!r.ok) { setMensagemBackup('Ficheiro inválido. Escolha uma cópia JSON exportada por esta app.'); return; }
-      if (!window.confirm('Restaurar esta cópia? Os dados atuais serão substituídos.')) return;
+      if (!window.confirm(perguntaRestauro(r, estadoAtual.current.transactions.length))) return;
       setEstado((s) => aplicarBackup(s, r.dados));
       if (r.jarvisThreads) { try { localStorage.setItem(chave('conversaJarvis', PREFIXO), JSON.stringify(r.jarvisThreads)); } catch { /* sem espaço */ } }
       if (r.vetReminders) definirLembretes(r.vetReminders);
@@ -587,7 +587,7 @@ export function App() {
         if (!Array.isArray((t?.data ?? t)?.transactions)) return 'Este JSON não parece um backup desta app (falta a lista de movimentos).';
         const r = lerBackup(texto);
         if (!r.ok) return 'Ficheiro inválido. Escolha uma cópia JSON exportada por esta app.';
-        if (!window.confirm('Restaurar esta cópia? Os dados atuais serão substituídos.')) return 'Importação cancelada.';
+        if (!window.confirm(perguntaRestauro(r, estadoAtual.current.transactions.length))) return 'Importação cancelada.';
         setEstado((s) => aplicarBackup(s, r.dados));
         if (r.jarvisThreads) { try { localStorage.setItem(chave('conversaJarvis', PREFIXO), JSON.stringify(r.jarvisThreads)); } catch { /* sem espaço */ } }
         if (r.vetReminders) definirLembretes(r.vetReminders);

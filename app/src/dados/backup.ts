@@ -51,7 +51,7 @@ export function nomeFicheiroBackup(agora = new Date()): string {
 }
 
 export type LeituraBackup =
-  | { ok: true; dados: Record<string, unknown>; jarvisThreads?: unknown[]; vetReminders?: unknown[] }
+  | { ok: true; dados: Record<string, unknown>; jarvisThreads?: unknown[]; vetReminders?: unknown[]; exportadoEm?: string }
   | { ok: false };
 
 /** Aceita o backup completo (`{ data: … }`) ou só os dados; exige uma lista de movimentos. */
@@ -65,10 +65,21 @@ export function lerBackup(texto: string): LeituraBackup {
       dados,
       ...(eObjeto(t) && Array.isArray(t.jarvisThreads) ? { jarvisThreads: t.jarvisThreads } : {}),
       ...(eObjeto(t) && Array.isArray(t.vetReminders) ? { vetReminders: t.vetReminders } : {}),
+      ...(eObjeto(t) && typeof t.exportedAt === 'string' ? { exportadoEm: t.exportedAt } : {}),
     };
   } catch {
     return { ok: false };
   }
+}
+
+/** Pergunta antes de restaurar, com a data da cópia e os movimentos (para não se escolher um ficheiro antigo por engano). */
+export function perguntaRestauro(r: { dados: Record<string, unknown>; exportadoEm?: string }, atuais: number): string {
+  const n = (r.dados.transactions as unknown[]).length;
+  const d = r.exportadoEm ? new Date(r.exportadoEm) : null;
+  const quando = d && !Number.isNaN(d.getTime())
+    ? ` de ${d.toLocaleDateString('pt-PT')}, ${d.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}`
+    : '';
+  return `Restaurar a cópia${quando} (${n} movimentos)?\n\nOs dados atuais (${atuais} movimentos) serão substituídos.`;
 }
 
 /**
