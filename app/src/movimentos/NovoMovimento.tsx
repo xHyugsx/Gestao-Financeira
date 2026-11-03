@@ -10,6 +10,9 @@ import { DIA_DO_SALARIO, PERIODICIDADES } from './recorrentes';
 import { novoMovimento } from './regras';
 import { pessoasDaFamilia, ultimaPessoa } from './pessoas';
 import { categoriaSugerida, titulosAnteriores } from './sugestoes';
+import { BotaoDitado } from './Ditado';
+import type { Ditado } from '../nativo/ditado';
+import { eNativo } from '../nativo/plataforma';
 import { CamposCombustivel } from './CamposCombustivel';
 import { CampoCategoria } from './EscolhaCategoria';
 import { EscolhaData, Escolhas, LinhaInterruptor, Rotulo, ValorGrande } from '../ui/Escolhas';
@@ -86,6 +89,13 @@ export function NovoMovimento({ aberto, aoMudar, estado, escolhas: e, mudarEscol
   const tituloRef = useRef<HTMLInputElement>(null);
   const [titulo, setTitulo] = useState('');
   const recentes = titulos.filter((t) => !titulo.trim() || (simplificarTitulo(t).includes(simplificarTitulo(titulo)) && t !== titulo)).slice(0, 4);
+  const valorRef = useRef<HTMLInputElement>(null);
+  // Ditado (APK): preenche o valor e o título; a categoria segue a sugestão habitual do título
+  const ditado = (d: Ditado) => {
+    const v = valorRef.current;
+    if (d.valor !== null && v && !v.disabled) { v.value = d.valor.toFixed(2).replace('.', ','); v.dispatchEvent(new Event('input', { bubbles: true })); }
+    if (d.titulo) usarTitulo(d.titulo);
+  };
   const usarTitulo = (t: string) => { if (tituloRef.current) tituloRef.current.value = t; setTitulo(t); aoEscreverTitulo(t); };
   const categoriaAtual = lista.includes(e.categoria) ? e.categoria : lista[0] ?? '';
   const rotuloGuardar = e.tipo === 'expense' ? 'Guardar despesa' : e.tipo === 'income' ? 'Guardar receita' : 'Guardar transferência';
@@ -94,12 +104,13 @@ export function NovoMovimento({ aberto, aoMudar, estado, escolhas: e, mudarEscol
     <Dialogo folha aberto={aberto} aoMudar={aoMudar} className="movement-dialog ffregisto" titulo="Novo movimento" descricao="Registe uma despesa, receita ou transferência.">
       <Segmentado valor={e.tipo} rotulo="Tipo de movimento" opcoes={TIPOS} aoMudar={(tipo) => mudar({ tipo })} />
       <form className="movement-form ffregisto-form" onSubmit={guardar}>
-        <ValorGrande tipo={e.revolut ? 'transfer' : e.tipo} placeholder={semValor ? 'A definir' : '0,00'} required={!semValor} />
+        <ValorGrande tipo={e.revolut ? 'transfer' : e.tipo} placeholder={semValor ? 'A definir' : '0,00'} required={!semValor} inputRef={valorRef} />
         <label className="fftitulo"><Icone nome="pencil" /><span className="sr-only">Descrição</span>
           <input
             ref={tituloRef} name="title" placeholder={e.tipo === 'transfer' ? 'Ex.: Reforço Revolut' : 'Ex.: Continente'} required autoComplete="off"
             onChange={(x) => { setTitulo(x.target.value); aoEscreverTitulo(x.target.value); }}
           />
+          {eNativo() ? <BotaoDitado aoDitar={ditado} /> : null}
         </label>
         {recentes.length ? (
           <div className="ffescolhas fftitulos" aria-label="Títulos recentes">
