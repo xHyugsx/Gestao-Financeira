@@ -814,3 +814,4 @@ html[data-tema="dourado"] .pwa-update-card::before { filter: sepia(.6) saturate(
 html.nativo .ffl-backdrop{background:#05091F;filter:none}
 html.nativo .ffl-stage{top:auto;bottom:0;-webkit-mask-image:linear-gradient(to top,#000 86%,transparent);mask-image:linear-gradient(to top,#000 86%,transparent)}
 html.nativo .ffl-bar{display:none}
+html.nativo.ff-toque :is(.ws-rays, .ws-star, .ws-halo, .ws-moon, .jv-r1, .jv-r2, .jv-co, .ffanel-roda, .ffanel-orbita, .ffrobo-corpo, .ffrobo-olhos, .ffrobo-sombra, .ffrobo-luz) { animation-play-state: paused; }
