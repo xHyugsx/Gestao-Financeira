@@ -1,4 +1,6 @@
 // Marcação do ecrã de bloqueio — igual à da app atual (as classes estão em css/app.css, secção ff-lock-style).
+import { VERSAO } from '../config';
+import { eNativo } from '../nativo/plataforma';
 
 /** Estrelas: esquerda %, topo %, tamanho px, duração s, atraso s, brilho máximo. */
 const ESTRELAS: readonly (readonly [string, string, string, string, string, string])[] = [
@@ -56,5 +58,6 @@ export function marcacaoBloqueio(): string {
     + '<div class="ffl-veil"></div>'
     + `<div class="ffl-hint">${SVG_SETA}<span>Deslize para cima para desbloquear</span><div class="ffl-bar"></div></div>`
     + `<div class="ffl-pad" aria-hidden="true"><h2>Introduza o PIN</h2><div class="ffl-dots"><i class="ffl-dot"></i><i class="ffl-dot"></i><i class="ffl-dot"></i><i class="ffl-dot"></i></div><div class="ffl-keys">${teclas}</div><button type="button" class="ffl-back">Cancelar</button></div>`
+    + `<div class="ffl-ver" aria-hidden="true">v${VERSAO}${eNativo() ? ' · Android' : ''}</div>`
     + `<div class="ffl-sheet"><div class="ffl-sic">${SVG_IMPRESSAO}</div><h3>Desbloquear com impressão digital?</h3><p>Da próxima vez, entra na app com o sensor do telemóvel. O PIN continua disponível.</p><div class="ffl-btns"><button type="button" class="ffl-no">Agora não</button><button type="button" class="ffl-yes">Ativar</button></div></div>`;
 }
