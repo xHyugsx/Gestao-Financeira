@@ -10,6 +10,7 @@ public class MainActivity extends BridgeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         registerPlugin(VozPlugin.class);
+        registerPlugin(WidgetPlugin.class);
         super.onCreate(savedInstanceState);
         pedirTaxaMaisAlta();
     }

@@ -58,6 +58,7 @@ import { eNativo } from '../nativo/plataforma';
 import type { Destino } from '../nativo/avisos';
 import { fazerBackupAuto } from '../nativo/backupAuto';
 import { iniciarNotificacoes, reagendar } from '../nativo/notificacoes';
+import { atualizarWidget } from '../nativo/widget';
 
 type Direcao = 'left' | 'right';
 
@@ -635,10 +636,16 @@ export function App() {
     const conteudo = () => window.ffBk?.payload() as Backup | undefined;
     void iniciarNotificacoes(() => estadoAtual.current, (d) => { destinoPendente.current = d; setPedidoDestino((n) => n + 1); });
     const t = setTimeout(() => { void reagendar(true); void fazerBackupAuto(conteudo); }, 2500);
-    const f = () => { if (document.visibilityState === 'hidden') { void reagendar(); void fazerBackupAuto(conteudo); } };
+    const f = () => { if (document.visibilityState === 'hidden') { void reagendar(); void fazerBackupAuto(conteudo); void atualizarWidget(estadoAtual.current); } };
     document.addEventListener('visibilitychange', f);
     return () => { clearTimeout(t); document.removeEventListener('visibilitychange', f); };
   }, []);
+  // Widgets do ecrã inicial: os mesmos números da Principal (e «Valores ocultos»)
+  useEffect(() => {
+    if (!eNativo()) return;
+    const t = setTimeout(() => void atualizarWidget(estado), 1200);
+    return () => clearTimeout(t);
+  }, [estado]);
   useEffect(() => {
     const d = destinoPendente.current;
     if (!d || bloqueada) return;
