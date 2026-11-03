@@ -815,3 +815,6 @@ html.nativo .ffl-backdrop{background:#05091F;filter:none}
 html.nativo .ffl-stage{top:auto;bottom:0;-webkit-mask-image:linear-gradient(to top,#000 86%,transparent);mask-image:linear-gradient(to top,#000 86%,transparent)}
 html.nativo .ffl-bar{display:none}
 html.nativo.ff-toque :is(.ws-rays, .ws-star, .ws-halo, .ws-moon, .jv-r1, .jv-r2, .jv-co, .ffanel-roda, .ffanel-orbita, .ffrobo-corpo, .ffrobo-olhos, .ffrobo-sombra, .ffrobo-luz) { animation-play-state: paused; }
+
+/* Principal sem o céu nem a saudação (v2.50.0, decisão do dono): só o olho e o robô, à direita */
+.app-heading-welcome.ffsem-ceu { display: flex; justify-content: flex-end; align-items: center; min-height: 0; padding-top: .25rem; }
