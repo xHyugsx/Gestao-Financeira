@@ -502,9 +502,7 @@ export function Backup({ ultimo, mensagem, acoes }: { ultimo: string; mensagem: 
       {eNativo() ? <BackupAutomatico /> : null}
       <section className="ffdrive" aria-label="Google Drive">
         <div className="ffdrive-titulo"><Icone nome="database" /><strong>Google Drive</strong>{cfg.ligado ? <span className="ffdrive-ligado">Ligado</span> : null}</div>
-        {eNativo() ? (
-          <p className="settings-copy">Na app Android, a ligação direta ao Google Drive chega numa próxima versão. Para já, «Criar backup» grava a cópia em Documentos › Finanças e abre o «Partilhar», onde podes escolher o Drive.</p>
-        ) : !cfg.clientId ? (
+        {!cfg.clientId && !eNativo() ? (
           <form className="ffdrive-cliente" onSubmit={(ev) => { ev.preventDefault(); drive.guardarCliente(String(new FormData(ev.currentTarget).get('cliente') ?? '')); }}>
             <p className="settings-copy">Guarda a cópia protegida no teu Google Drive, substituída em cada backup. Primeiro cria um «ID de cliente» na Google Cloud (passos em <code>docs/GOOGLE-DRIVE.md</code>) e cola-o aqui.</p>
             <label>ID de cliente do Google<input name="cliente" autoComplete="off" placeholder="…apps.googleusercontent.com" required /></label>
@@ -514,7 +512,7 @@ export function Backup({ ultimo, mensagem, acoes }: { ultimo: string; mensagem: 
         ) : !cfg.ligado ? (
           <div className="settings-list">
             <Botao variante="ghost" className="setting-row" onClick={drive.ligar}><Icone nome="upload" /><span><strong>Ligar ao Google Drive</strong><small>Abre o Google para autorizares; a app só vê os ficheiros que ela própria cria</small></span></Botao>
-            <Botao variante="ghost" className="setting-row ffv2-extra" onClick={drive.esquecerCliente}><Icone nome="x" /><span><strong>Mudar o ID de cliente</strong><small>{cfg.clientId.slice(0, 18)}…</small></span></Botao>
+            {cfg.clientId && !eNativo() ? <Botao variante="ghost" className="setting-row ffv2-extra" onClick={drive.esquecerCliente}><Icone nome="x" /><span><strong>Mudar o ID de cliente</strong><small>{cfg.clientId.slice(0, 18)}…</small></span></Botao> : null}
           </div>
         ) : (
           <>

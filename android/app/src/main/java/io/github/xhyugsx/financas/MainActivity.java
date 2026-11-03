@@ -11,6 +11,7 @@ public class MainActivity extends BridgeActivity {
     protected void onCreate(Bundle savedInstanceState) {
         registerPlugin(VozPlugin.class);
         registerPlugin(WidgetPlugin.class);
+        registerPlugin(ContaGooglePlugin.class);
         super.onCreate(savedInstanceState);
         pedirTaxaMaisAlta();
     }
