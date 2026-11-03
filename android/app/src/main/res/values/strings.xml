@@ -6,4 +6,7 @@
     <string name="custom_url_scheme">io.github.xhyugsx.financas</string>
     <string name="atalho_despesa">Nova despesa</string>
     <string name="atalho_jarvis">Jarvis</string>
+    <string name="widget_grande">Rendimento, gastos do mês e atalhos</string>
+    <string name="widget_gastos">Gastos do mês</string>
+    <string name="widget_mais">Nova despesa</string>
 </resources>

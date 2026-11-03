@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/raiz" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@drawable/widget_fundo" android:padding="14dp">
+    <TextView android:layout_width="match_parent" android:layout_height="44dp" android:layout_gravity="center" android:gravity="center" android:background="@drawable/widget_botao_mais"
+        android:text="+ Despesa" android:textStyle="bold" android:textSize="14sp" android:textColor="#F7C75B" />
+</FrameLayout>
