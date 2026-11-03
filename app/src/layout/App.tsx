@@ -377,7 +377,8 @@ export function App() {
   const erroDrive = (e: unknown) => {
     const m = e instanceof Error ? e.message : '';
     setMensagemBackup(m === 'access_denied' ? 'O Google não autorizou o acesso ao Drive.' : m === 'tempo' ? 'A autorização do Google não chegou. Tenta outra vez.'
-      : m === 'sem_cliente' ? 'Falta o ID de cliente do Google.' : !navigator.onLine ? 'Sem internet: a cópia não foi enviada para o Drive.' : 'Não foi possível falar com o Google Drive. Tenta outra vez.');
+      : m === 'sem_cliente' ? 'Falta o ID de cliente do Google.' : m === 'cancelado' ? 'Autorização do Google cancelada.'
+      : m === 'sem_autorizacao' ? 'O Google não deu autorização. Confirma o ID de cliente Android na Google Cloud (pacote e SHA-1).' : !navigator.onLine ? 'Sem internet: a cópia não foi enviada para o Drive.' : 'Não foi possível falar com o Google Drive. Tenta outra vez.');
     mexeuDrive();
   };
   const terminarLigacao = async (token: string) => {

@@ -2,6 +2,8 @@
 // substitui-a em cada backup. Sem servidor: autorização OAuth no navegador («token» de 1 hora, só com acesso aos
 // ficheiros criados pela app — `drive.file`). A configuração fica neste telemóvel (não vai no backup).
 
+import { autorizarNativo } from '../nativo/contaGoogle';
+import { eNativo } from '../nativo/plataforma';
 export const ESCOPO = 'https://www.googleapis.com/auth/drive.file';
 export const PASTA = 'Finanças — backups';
 const CHAVE = 'financas-familiar:drive';
@@ -89,6 +91,8 @@ let espera: { resolver: (t: string) => void; rejeitar: (e: Error) => void } | nu
  * Se o telemóvel não deixar abrir a janela, vai para o Google nesta mesma janela e volta à app no fim.
  */
 export function pedirAutorizacao(acao: string, escolherConta = false): Promise<string> {
+  // APK: autorização nativa do Android (sem ID de cliente na app; o Google reconhece a APK pela chave de assinatura)
+  if (eNativo()) return autorizarNativo().then((token) => { gravar(TOKEN, { token, expira: Date.now() + 50 * 60000 }, sessionStorage); return token; });
   const c = lerConfigDrive();
   if (!c.clientId) return Promise.reject(new Error('sem_cliente'));
   const estado = crypto.randomUUID();
