@@ -52,8 +52,22 @@ export async function prepararAndroid(): Promise<void> {
   if (acao) window.history.replaceState(window.history.state, '', `?acao=${acao}`);
 }
 
+/** Enquanto se toca, desliza ou faz scroll, as animações decorativas em SVG (céu, anel, robô) param:
+ *  na WebView redesenham o SVG inteiro em cada fotograma e roubam tempo às animações da interface. */
+function pausarDecoracaoAoTocar() {
+  const raiz = document.documentElement;
+  let t: ReturnType<typeof setTimeout> | undefined;
+  const mexer = () => {
+    raiz.classList.add('ff-toque');
+    clearTimeout(t);
+    t = setTimeout(() => raiz.classList.remove('ff-toque'), 600);
+  };
+  for (const ev of ['pointerdown', 'touchmove', 'scroll', 'wheel']) document.addEventListener(ev, mexer, { passive: true, capture: true });
+}
+
 export function iniciarAndroid(): void {
   if (!eNativo()) return;
+  pausarDecoracaoAoTocar();
   void App.addListener('backButton', ({ canGoBack }) => voltar(canGoBack));
   void App.addListener('appUrlOpen', ({ url }) => {
     const acao = acaoDoEndereco(url);
