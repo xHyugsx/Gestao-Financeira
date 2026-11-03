@@ -16,6 +16,9 @@ export const NOMES = {
   regrasImportacao: 'import-rules',
   ultimaImportacao: 'last-import',
   avisoEspaco: 'storage-warn',
+  /** Só na APK: configuração das notificações e do backup automático deste telemóvel (não vão no backup). */
+  notificacoes: 'notifications',
+  backupAutomatico: 'auto-backup',
 } as const;
 
 export type NomeChave = keyof typeof NOMES;

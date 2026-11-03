@@ -7,7 +7,7 @@ import { pedirPersistencia } from '../definicoes/persistencia';
 import { iniciarAvisos } from '../definicoes/lembreteBackup';
 import type { AcoesBackup, AcoesImportacao } from '../definicoes/Seccoes';
 import { FolhaDefinicoes, MenuRapido, type PosicaoMenu, type Seccao } from '../definicoes/Definicoes';
-import { aplicarBackup, chave, cifrarBackup, criarBackup, decifrarBackup, eBackupCifrado, dia, type Estado, inicioDoMes, lerBackup, type LeituraBackup, MESES, perguntaRestauro, type Movimento, nomeFicheiroBackup, PREFIXO_REAL } from '../dados';
+import { aplicarBackup, type Backup, chave, cifrarBackup, criarBackup, decifrarBackup, eBackupCifrado, dia, type Estado, inicioDoMes, lerBackup, type LeituraBackup, MESES, perguntaRestauro, type Movimento, nomeFicheiroBackup, PREFIXO_REAL } from '../dados';
 import { aviso as avisoVeterinario, definir as definirLembretes, todos as todosLembretes } from '../veterinario/lembretes';
 import { useDados } from '../estado/useDados';
 import { aspetosCategorias } from '../movimentos/categorias';
@@ -55,6 +55,9 @@ import { aplicarCorDespesa, aplicarTema, corDespesaDe, temaDe } from '../ui/tema
 import { COR_MAIS, PAGINAS, PAGINAS_MAIS } from './paginas';
 import { guardarEPartilhar } from '../nativo/ficheiros';
 import { eNativo } from '../nativo/plataforma';
+import type { Destino } from '../nativo/avisos';
+import { fazerBackupAuto } from '../nativo/backupAuto';
+import { iniciarNotificacoes, reagendar } from '../nativo/notificacoes';
 
 type Direcao = 'left' | 'right';
 
@@ -623,6 +626,30 @@ export function App() {
     return () => document.removeEventListener('keydown', k);
   }, [jarvis, fecharJarvis]);
   useEffect(() => { window.ffImpApi = { get: () => apiImportacao.obter() }; });
+
+  // APK: notificações (tocar abre o destino depois do desbloqueio) e backup automático ao sair da app
+  const destinoPendente = useRef<Destino | null>(null);
+  const [pedidoDestino, setPedidoDestino] = useState(0);
+  useEffect(() => {
+    if (!eNativo()) return;
+    const conteudo = () => window.ffBk?.payload() as Backup | undefined;
+    void iniciarNotificacoes(() => estadoAtual.current, (d) => { destinoPendente.current = d; setPedidoDestino((n) => n + 1); });
+    const t = setTimeout(() => { void reagendar(true); void fazerBackupAuto(conteudo); }, 2500);
+    const f = () => { if (document.visibilityState === 'hidden') { void reagendar(); void fazerBackupAuto(conteudo); } };
+    document.addEventListener('visibilitychange', f);
+    return () => { clearTimeout(t); document.removeEventListener('visibilitychange', f); };
+  }, []);
+  useEffect(() => {
+    const d = destinoPendente.current;
+    if (!d || bloqueada) return;
+    destinoPendente.current = null;
+    if (d.backup) { abrirBackupRef.current(); return; }
+    if (d.movimento !== undefined) {
+      const m = estadoAtual.current.transactions.find((x) => String(x.id) === String(d.movimento));
+      if (m) { window.ffGoPg?.('principal'); setAEditar(m); return; }
+    }
+    if (d.pagina) window.ffGoPg?.(d.pagina);
+  }, [bloqueada, pedidoDestino]);
 
   // Atalhos do ícone da app (manifesto): ?acao=despesa | jarvis — depois do desbloqueio; o endereço fica limpo
   const acaoInicial = useRef(new URLSearchParams(window.location.search).get('acao'));
