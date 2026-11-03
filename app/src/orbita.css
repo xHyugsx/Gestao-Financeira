@@ -805,3 +805,12 @@ html[data-tema="dourado"] .pwa-update-card::before { filter: sepia(.6) saturate(
 @media (prefers-reduced-motion: reduce) {
   .ffdonut-lado, .ffjv-cartao-sug, .ffcat-painel, .fffuel-barras span { animation: none; }
 }
+
+/* Ecrã de bloqueio: versão num canto */
+.ffl-ver{position:absolute;right:14px;bottom:calc(10px + env(safe-area-inset-bottom,0px));font-size:.62rem;letter-spacing:.04em;color:rgba(255,255,255,.45);pointer-events:none;transition:opacity .3s}
+#ff-lock.ffl-open .ffl-ver,#ff-lock.ffl-bio .ffl-ver{opacity:0}
+
+/* APK: imagem do bloqueio nítida até ao fundo (encostada em baixo; o topo funde-se com o céu) e sem a barra */
+html.nativo .ffl-backdrop{background:#05091F;filter:none}
+html.nativo .ffl-stage{top:auto;bottom:0;-webkit-mask-image:linear-gradient(to top,#000 86%,transparent);mask-image:linear-gradient(to top,#000 86%,transparent)}
+html.nativo .ffl-bar{display:none}
