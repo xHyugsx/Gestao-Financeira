@@ -1,3 +1,5 @@
+import { eNativo } from '../nativo/plataforma';
+import { Notificacoes } from './Notificacoes';
 import { VERSAO } from '../config';
 import { type FormEvent, useMemo, useState } from 'react';
 import { type Aparencia as TipoAparencia, type Conta, type Estado, hashPin, pinValido, PREFIXO_REAL } from '../dados';
@@ -9,7 +11,7 @@ import { regrasPessoais } from '../importacao/config';
 import { montarAutobloqueio, montarBiometria } from './opcoesSeguranca';
 import { type AcoesBackup, type AcoesImportacao, Aparencia, Backup, CategoriasDefinicoes, Contas, Dados, Importacao, Perfil, Subvista } from './Seccoes';
 
-export type Seccao = 'profile' | 'categories' | 'accounts' | 'appearance' | 'security' | 'backup' | 'data' | 'import';
+export type Seccao = 'profile' | 'categories' | 'accounts' | 'appearance' | 'security' | 'notifications' | 'backup' | 'data' | 'import';
 
 const TITULOS: Record<Seccao, [string, string]> = {
   profile: ['Perfil e família', 'Dados pessoais e membros'],
@@ -17,6 +19,7 @@ const TITULOS: Record<Seccao, [string, string]> = {
   accounts: ['Contas bancárias', 'Contas para escolher em cada movimento'],
   appearance: ['Aparência', 'Tema, fundo e tamanho do texto'],
   security: ['Segurança', 'Bloqueio local da aplicação'],
+  notifications: ['Notificações', 'Avisos no telemóvel'],
   backup: ['Backup', 'Cópias de segurança'],
   data: ['Dados', 'Gestão e privacidade'],
   import: ['Importação', 'Extratos bancários'],
@@ -137,6 +140,7 @@ export function FolhaDefinicoes(props: PropsFolha) {
               : seccao === 'categories' ? <CategoriasDefinicoes estado={estado} mudarEstado={mudarEstado} avisar={setMensagem} categoriaRenomeada={props.categoriaRenomeada} />
                 : seccao === 'accounts' ? <Contas estado={estado} mudarEstado={mudarEstado} avisar={setMensagem} />
                   : seccao === 'appearance' ? <Aparencia estado={estado} mudarEstado={mudarEstado} />
+                    : seccao === 'notifications' ? <Notificacoes />
                     : seccao === 'import' ? <Importacao estado={estado} mudarEstado={mudarEstado} avisar={setMensagem} acoes={props.acoesImportacao} />
                     : <Dados espaco={espaco} limpar={props.limparDados} protegido={props.protegido} />}
           </Subvista>
@@ -160,6 +164,7 @@ export function FolhaDefinicoes(props: PropsFolha) {
             <div className="ffdef-grupo">
               {linha('appearance', 'palette', 'Aparência', `${tema(a)} · fundo ${a.backgroundIntensity}% · texto ${a.fontScale}%`, false, 'linear-gradient(135deg,#00c8ff,#8b5cf6,#ec4899)')}
               {linha('security', 'lock-keyhole', 'Segurança', resumoPin(estado), false, 'linear-gradient(135deg,#fbbf24,#f97316)', estado.pinHash ? ['Ativo', 'bom'] : undefined)}
+              {eNativo() ? linha('notifications', 'bell', 'Notificações', 'Recorrentes, ordenado, veterinário, backup…', false, 'linear-gradient(135deg,#a855f7,#ec4899)') : null}
             </div>
             <p className="ffdef-titulo">Os teus dados</p>
             <div className="ffdef-grupo">

@@ -17,6 +17,7 @@ import type { RegraPessoal } from '../importacao/classificacao';
 import { ACOES, comRegras, regrasPessoais } from '../importacao/config';
 import { pessoasDosSalarios } from '../paginas/Resumo';
 import { eNativo } from '../nativo/plataforma';
+import { BackupAutomatico } from './Notificacoes';
 
 type Mudar = (f: (e: Estado) => Estado) => void;
 
@@ -498,6 +499,7 @@ export function Backup({ ultimo, mensagem, acoes }: { ultimo: string; mensagem: 
       />
       <input ref={deOutro} type="file" accept="application/json,.json" className="hidden" aria-label="Backup do outro telemóvel" onChange={escolhido(true)} />
       {mensagem ? <p className="settings-message" role="status">{mensagem}</p> : null}
+      {eNativo() ? <BackupAutomatico /> : null}
       <section className="ffdrive" aria-label="Google Drive">
         <div className="ffdrive-titulo"><Icone nome="database" /><strong>Google Drive</strong>{cfg.ligado ? <span className="ffdrive-ligado">Ligado</span> : null}</div>
         {eNativo() ? (

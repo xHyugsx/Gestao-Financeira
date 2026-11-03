@@ -13,6 +13,7 @@ const config: CapacitorConfig = {
     SystemBars: { insetsHandling: 'css', initialViewportFitValueHint: 'cover', style: 'DARK' },
     // FLAG_SECURE: o ecrã não aparece nos recentes nem em capturas.
     PrivacyScreen: { enable: true },
+    LocalNotifications: { smallIcon: 'ic_stat_financas', iconColor: '#A855F7' },
   },
 };
 

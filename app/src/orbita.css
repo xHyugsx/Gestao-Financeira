@@ -818,3 +818,19 @@ html.nativo.ff-toque :is(.ws-rays, .ws-star, .ws-halo, .ws-moon, .jv-r1, .jv-r2,
 
 /* Principal sem o céu nem a saudação (v2.50.0, decisão do dono): só o olho e o robô, à direita */
 .app-heading-welcome.ffsem-ceu { display: flex; justify-content: flex-end; align-items: center; min-height: 0; padding-top: .25rem; }
+
+/* Definições › Notificações e backup automático (APK, v2.51.0) */
+.ffnt-cartao { margin: 0 0 .9rem; padding: .35rem .9rem; border-radius: 1.2rem; background: var(--orb-sup, rgba(20, 26, 63, .8)); border: 1px solid var(--orb-linha, rgba(255, 255, 255, .08)); }
+.ffnt-linha { display: flex; align-items: center; gap: .75rem; padding: .7rem 0; border-bottom: 1px solid var(--orb-linha, rgba(255, 255, 255, .08)); }
+.ffnt-cartao > .ffnt-linha:last-of-type, .ffnt-cartao > label:last-child { border-bottom: 0; }
+.ffnt-linha > span:nth-child(2) { flex: 1; min-width: 0; }
+.ffnt-linha b { display: flex; align-items: center; gap: .4rem; font-size: .9rem; font-weight: 600; }
+.ffnt-linha small { display: block; margin-top: .15rem; font-size: .74rem; line-height: 1.35; color: var(--muted-foreground); }
+.ffnt-linha .ffnt-ic { flex: none; width: 2.2rem; height: 2.2rem; border-radius: .7rem; display: grid; place-items: center; font-size: 1.05rem; }
+.ffnt-hora input { flex: none; width: auto !important; padding: .35rem .6rem; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .16); background: rgba(255, 255, 255, .07); color: var(--foreground); font: inherit; font-size: .85rem; }
+.ffnt-desligado { opacity: .45; pointer-events: none; }
+.ffnt-teste { display: block; width: 100%; margin: .2rem 0 .8rem; padding: .8rem; border: 0; border-radius: .9rem; font: inherit; font-weight: 700; font-size: .88rem; color: #05091F; background: linear-gradient(90deg, var(--orb-1, #22d3ee), var(--orb-2, #a855f7), var(--orb-3, #ec4899)); cursor: pointer; }
+.ffnt-teste:disabled { opacity: .6; }
+.ffnt-agora { margin: .6rem 0 .4rem; }
+.ffnt-chip { flex: none; font-style: normal; font-size: .78rem; padding: .25rem .6rem; border-radius: 999px; background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .14); }
+.ffnt-nota { margin: .2rem .2rem .9rem; font-size: .72rem; line-height: 1.45; color: var(--muted-foreground); }
