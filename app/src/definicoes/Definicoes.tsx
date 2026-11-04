@@ -1,5 +1,6 @@
 import { eNativo } from '../nativo/plataforma';
 import { Notificacoes } from './Notificacoes';
+import { ImagemBloqueio } from './ImagemBloqueio';
 import { VERSAO } from '../config';
 import { type FormEvent, useMemo, useState } from 'react';
 import { type Aparencia as TipoAparencia, type Conta, type Estado, hashPin, pinValido, PREFIXO_REAL } from '../dados';
@@ -131,7 +132,7 @@ export function FolhaDefinicoes(props: PropsFolha) {
       </div>
       <main className="detail-view settings-view">
         {seccao === 'security' ? (
-          <Seguranca estado={estado} mudarPin={mudarPin} mudarAparencia={mudarAparencia} />
+          <Seguranca estado={estado} mudarPin={mudarPin} mudarAparencia={mudarAparencia} mudarEstado={mudarEstado} />
         ) : seccao === 'backup' ? (
           <Backup ultimo={lb} mensagem={props.mensagemBackup} acoes={props.acoesBackup} />
         ) : seccao ? (
@@ -191,7 +192,7 @@ const montados = new WeakMap<HTMLElement, string>();
 
 const OCULTAR: [string, string][] = [['off', 'Desligado'], ['now', 'Logo ao sair'], ['60', 'Após 1 min']];
 
-function Seguranca({ estado, mudarPin, mudarAparencia }: Pick<PropsFolha, 'estado' | 'mudarPin' | 'mudarAparencia'>) {
+function Seguranca({ estado, mudarPin, mudarAparencia, mudarEstado }: Pick<PropsFolha, 'estado' | 'mudarPin' | 'mudarAparencia' | 'mudarEstado'>) {
   const [mensagem, setMensagem] = useState('');
   const [pin, setPin] = useState('');
   const [confirmar, setConfirmar] = useState('');
@@ -212,6 +213,7 @@ function Seguranca({ estado, mudarPin, mudarAparencia }: Pick<PropsFolha, 'estad
   return (
     <div className="settings-subview">
       <Cabecalho seccao="security" />
+      {eNativo() ? <ImagemBloqueio estado={estado} mudarEstado={mudarEstado} /> : null}
       <section className="settings-panel">
         <div className="security-intro">
           <Icone nome="lock-keyhole" />

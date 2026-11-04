@@ -59,6 +59,7 @@ import type { Destino } from '../nativo/avisos';
 import { fazerBackupAuto } from '../nativo/backupAuto';
 import { iniciarNotificacoes, reagendar } from '../nativo/notificacoes';
 import { atualizarWidget } from '../nativo/widget';
+import { eGrande, reduzirImagem, TAMANHOS } from '../ui/imagem';
 
 type Direcao = 'left' | 'right';
 
@@ -641,6 +642,15 @@ export function App() {
     document.addEventListener('visibilitychange', f);
     return () => { clearTimeout(t); document.removeEventListener('visibilitychange', f); };
   }, []);
+  // Fotografias dos animais guardadas sem reduzir (antes da v2.55.0): voltam a gravar-se mais pequenas
+  useEffect(() => {
+    const grandes = Object.entries(estado.petPhotos || {}).filter(([, v]) => eGrande(v));
+    if (!grandes.length) return;
+    void Promise.all(grandes.map(async ([k, v]) => [k, await reduzirImagem(v, TAMANHOS.animal)] as const))
+      .then((l) => setEstado((s) => ({ ...s, petPhotos: { ...s.petPhotos, ...Object.fromEntries(l) } })))
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // Widgets do ecrã inicial: os mesmos números da Principal (e «Valores ocultos»)
   useEffect(() => {
     if (!eNativo()) return;
@@ -746,7 +756,10 @@ export function App() {
     deslizar('.month-switcher > span, .ffcompacto-mes, .ffmeses > button', 18, 260);
   }, [desvioMes, bloqueada]);
 
-  if (bloqueada) return <EcraBloqueio key="ff-lock" hash={estado.pinHash} aoDesbloquear={() => setBloqueada(false)} />;
+  if (bloqueada) {
+    const imagem = eNativo() && typeof estado.extras.lockImage === 'string' ? estado.extras.lockImage : null;
+    return <EcraBloqueio key="ff-lock" hash={estado.pinHash} imagem={imagem} aoDesbloquear={() => setBloqueada(false)} />;
+  }
 
   const inicioToque = (e: TouchEvent) => {
     const alvo = e.target as HTMLElement;

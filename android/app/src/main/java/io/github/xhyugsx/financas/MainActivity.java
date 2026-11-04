@@ -9,7 +9,6 @@ import com.getcapacitor.BridgeActivity;
 public class MainActivity extends BridgeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        registerPlugin(VozPlugin.class);
         registerPlugin(WidgetPlugin.class);
         registerPlugin(ContaGooglePlugin.class);
         super.onCreate(savedInstanceState);

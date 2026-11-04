@@ -810,9 +810,7 @@ html[data-tema="dourado"] .pwa-update-card::before { filter: sepia(.6) saturate(
 .ffl-ver{position:absolute;right:14px;bottom:calc(10px + env(safe-area-inset-bottom,0px));font-size:.62rem;letter-spacing:.04em;color:rgba(255,255,255,.45);pointer-events:none;transition:opacity .3s}
 #ff-lock.ffl-open .ffl-ver,#ff-lock.ffl-bio .ffl-ver{opacity:0}
 
-/* APK: imagem do bloqueio nítida até ao fundo (encostada em baixo; o topo funde-se com o céu) e sem a barra */
-html.nativo .ffl-backdrop{background:#05091F;filter:none}
-html.nativo .ffl-stage{top:auto;bottom:0;-webkit-mask-image:linear-gradient(to top,#000 86%,transparent);mask-image:linear-gradient(to top,#000 86%,transparent)}
+/* APK (v2.55.0): bloqueio com a imagem do dono em ecrã inteiro ou, sem ela, o logótipo animado; sem a barra */
 html.nativo .ffl-bar{display:none}
 html.nativo.ff-toque :is(.ws-rays, .ws-star, .ws-halo, .ws-moon, .jv-r1, .jv-r2, .jv-co, .ffanel-roda, .ffanel-orbita, .ffrobo-corpo, .ffrobo-olhos, .ffrobo-sombra, .ffrobo-luz) { animation-play-state: paused; }
 
@@ -835,23 +833,28 @@ html.nativo.ff-toque :is(.ws-rays, .ws-star, .ws-halo, .ws-moon, .jv-r1, .jv-r2,
 .ffnt-chip { flex: none; font-style: normal; font-size: .78rem; padding: .25rem .6rem; border-radius: 999px; background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .14); }
 .ffnt-nota { margin: .2rem .2rem .9rem; font-size: .72rem; line-height: 1.45; color: var(--muted-foreground); }
 
-/* Ditado no «+» (APK, v2.52.0) */
-.ffditado-bt { flex: none; width: 2.3rem; height: 2.3rem; margin-left: .3rem; border: 0; border-radius: 50%; display: grid; place-items: center; color: #05091F; background: linear-gradient(135deg, var(--orb-1, #22d3ee), var(--orb-2, #a855f7)); cursor: pointer; }
-.ffditado-bt svg { width: 1.15rem; height: 1.15rem; }
-.ffditado { position: fixed; left: 12px; right: 12px; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); z-index: 80; max-width: 460px; margin: 0 auto; padding: 1.2rem 1.1rem 1rem; border-radius: 1.3rem; text-align: center; background: var(--popover, #0c1030); border: 1px solid color-mix(in oklab, var(--orb-2, #a855f7) 55%, transparent); box-shadow: 0 1rem 2.5rem #000a; cursor: default; animation: ffditado-entra .25s ease-out; }
-@keyframes ffditado-entra { from { opacity: 0; transform: translateY(12px); } }
-.ffditado b { display: block; font-size: 1.02rem; }
-.ffditado p { margin: .5rem 0 0; font-size: .92rem; font-style: italic; color: var(--foreground); }
-.ffditado p.ffditado-txt { font-style: normal; font-size: .84rem; line-height: 1.45; color: var(--muted-foreground); }
-.ffditado small { display: block; margin-top: .7rem; font-size: .7rem; line-height: 1.4; color: var(--muted-foreground); }
-.ffditado-anel { width: 4.6rem; height: 4.6rem; margin: 0 auto .7rem; border-radius: 50%; display: grid; place-items: center; color: #05091F; background: linear-gradient(135deg, var(--orb-1, #22d3ee), var(--orb-2, #a855f7)); box-shadow: 0 0 0 .6rem color-mix(in oklab, var(--orb-2, #a855f7) 22%, transparent); animation: ffditado-pulso 1.6s ease-in-out infinite; }
-.ffditado-anel svg { width: 1.8rem; height: 1.8rem; }
-@keyframes ffditado-pulso { 50% { transform: scale(1.06); opacity: .9; } }
-.ffditado-ponto { display: inline-block; width: .5rem; height: .5rem; margin-right: .4rem; border-radius: 50%; background: #ef4444; vertical-align: middle; }
-.ffditado-parar, .ffditado-bts button { margin-top: .8rem; padding: .6rem 1.3rem; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .22); background: transparent; color: var(--foreground); font: inherit; font-weight: 600; font-size: .85rem; cursor: pointer; }
-.ffditado-bts { display: flex; gap: .6rem; justify-content: center; flex-wrap: wrap; }
-.ffditado-bts .ok { border: 0; color: #05091F; background: linear-gradient(90deg, var(--orb-1, #22d3ee), var(--orb-2, #a855f7)); }
-@media (prefers-reduced-motion: reduce) { .ffditado, .ffditado-anel { animation: none; } }
-.fftitulo .ffditado-bt svg, .fftitulo .ffditado-anel svg { color: #05091F; width: 1.15rem; height: 1.15rem; }
-.fftitulo .ffditado-anel svg { width: 1.8rem; height: 1.8rem; }
-.fftitulo .ffditado svg:not(.ffditado-anel svg) { color: inherit; }
+
+.ffl-foto { position: absolute; inset: 0; background-size: cover; background-position: center 42%; background-repeat: no-repeat; }
+.ffl-sombra { position: absolute; left: 0; right: 0; bottom: 0; height: 32%; background: linear-gradient(transparent, rgba(0, 0, 0, .5)); pointer-events: none; }
+.ffl-cosmo { position: absolute; inset: 0; background: radial-gradient(90% 55% at 30% 20%, #3b1d7a88, transparent 60%), radial-gradient(80% 50% at 85% 75%, #0e7490aa, transparent 60%), radial-gradient(70% 40% at 15% 90%, #9d174d66, transparent 60%), #05091F; }
+.ffl-logo { position: absolute; left: 0; right: 0; top: 24%; text-align: center; pointer-events: none; }
+.ffl-orb { position: relative; width: 210px; height: 210px; margin: 0 auto; animation: ffl-flutua 4.5s ease-in-out infinite; }
+.ffl-orb img { position: absolute; inset: 35px; width: 140px; height: 140px; border-radius: 36px; box-shadow: 0 0 40px rgba(168, 85, 247, .6), 0 0 90px rgba(34, 211, 238, .33); }
+.ffl-anel { position: absolute; inset: 0; border-radius: 50%; border: 2px solid transparent; background: conic-gradient(#22d3ee, #a855f7, #ec4899, #22d3ee) border-box; -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) padding-box exclude, linear-gradient(#000 0 0); transform: rotateX(68deg) rotate(20deg); animation: ffl-anel 9s linear infinite; }
+.ffl-anel2 { inset: -18px; opacity: .5; transform: rotateX(70deg) rotate(-30deg); animation: ffl-anel2 14s linear infinite; }
+.ffl-orbita { position: absolute; inset: 0; transform: rotateX(68deg) rotate(20deg); animation: ffl-anel 6s linear infinite; }
+.ffl-lua { position: absolute; right: -6px; top: calc(50% - 6px); width: 12px; height: 12px; border-radius: 50%; background: #67e8f9; box-shadow: 0 0 12px #67e8f9; }
+.ffl-logo h1 { margin: 1.6rem 0 0; font-size: 1.9rem; font-weight: 700; color: #fff; }
+.ffl-logo p { margin: .35rem 0 0; font-size: .95rem; color: #c6cbef; }
+#ff-lock.ffl-open .ffl-logo, #ff-lock.ffl-bio .ffl-logo { opacity: 0; transition: opacity .3s; }
+@keyframes ffl-flutua { 50% { transform: translateY(-10px); } }
+@keyframes ffl-anel { from { transform: rotateX(68deg) rotate(20deg); } to { transform: rotateX(68deg) rotate(380deg); } }
+@keyframes ffl-anel2 { from { transform: rotateX(70deg) rotate(-30deg); } to { transform: rotateX(70deg) rotate(-390deg); } }
+@media (prefers-reduced-motion: reduce) { .ffl-orb, .ffl-anel, .ffl-anel2, .ffl-orbita { animation: none; } }
+.ffbloq-imagem h3 { margin: 0 0 .25rem; font-size: 1rem; }
+.ffbloq-miniat { display: flex; gap: .75rem; margin: .8rem 0; }
+.ffbloq-mi { position: relative; flex: 1; height: 11rem; border-radius: .9rem; border: 2px solid rgba(255, 255, 255, .14); overflow: hidden; background: rgba(255, 255, 255, .05) center 42% / cover no-repeat; color: #fff; font: inherit; cursor: pointer; padding: 0; }
+.ffbloq-mi.on { border-color: var(--orb-2, #a855f7); box-shadow: 0 0 0 3px color-mix(in oklab, var(--orb-2, #a855f7) 30%, transparent); }
+.ffbloq-mi span { position: absolute; left: 0; right: 0; bottom: 0; padding: .4rem; font-size: .72rem; background: rgba(0, 0, 0, .6); }
+.ffbloq-logo { display: grid; place-items: center; background: radial-gradient(70% 50% at 40% 30%, #3b1d7a, transparent 70%), #05091F; }
+.ffbloq-logo img { width: 3.5rem; height: 3.5rem; border-radius: .9rem; margin-bottom: 1.4rem; box-shadow: 0 0 20px rgba(168, 85, 247, .65); }

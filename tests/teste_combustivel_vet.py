@@ -50,7 +50,7 @@ async def t_fotografia_do_animal(app):
     await p.set_input_files('[role=dialog] input[type=file]', files=[{'name': 'animal.png', 'mimeType': 'image/png', 'buffer': PNG}])
     await p.wait_for_timeout(600)
     foto = (await dados(app)).get('petPhotos', {}).get('Rex', '')
-    verificar(foto.startswith('data:image/png;base64,'), 'a fotografia não foi guardada')
+    verificar(foto.startswith('data:image/jpeg;base64,'), 'a fotografia não foi guardada (reduzida em JPEG desde a v2.55.0)')
     await p.click('[role=dialog] .remove-photo'); await p.wait_for_timeout(400)
     verificar('Rex' not in (await dados(app)).get('petPhotos', {}), 'a fotografia não foi removida')
 
