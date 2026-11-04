@@ -9,16 +9,18 @@ import { esconderPrivacidade } from './privacidade';
 export interface OpcoesBloqueio {
   /** Hash do PIN guardado. */
   hash: string;
+  /** APK: imagem escolhida pelo dono (data URL); sem ela, o logótipo animado. */
+  imagem?: string | null;
   aoDesbloquear: () => void;
 }
 
 const vibrar = (p: number | number[]) => { try { navigator.vibrate?.(p); } catch { /* sem vibração */ } };
 
 /** Desenha o ecrã dentro de `anfitriao`; devolve a função que o desmonta. */
-export function montarBloqueio(anfitriao: HTMLElement, { hash, aoDesbloquear }: OpcoesBloqueio): () => void {
+export function montarBloqueio(anfitriao: HTMLElement, { hash, imagem = null, aoDesbloquear }: OpcoesBloqueio): () => void {
   const raiz = document.createElement('div');
   raiz.id = 'ff-lock';
-  raiz.innerHTML = marcacaoBloqueio();
+  raiz.innerHTML = marcacaoBloqueio(imagem);
   anfitriao.appendChild(raiz);
 
   const q = <T extends Element>(s: string) => raiz.querySelector(s) as T;

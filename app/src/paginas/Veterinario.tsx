@@ -1,3 +1,4 @@
+import { reduzirImagem, TAMANHOS } from '../ui/imagem';
 import { type Estado, MESES, type Movimento } from '../dados';
 import { ArtigoMovimento, TextoMovimento } from '../movimentos/Movimento';
 import { Botao } from '../ui/Botao';
@@ -194,9 +195,8 @@ export function JanelaFotografia({ animal, fotos, fechar, mudarFotos }: {
 }) {
   const escolher = (ficheiro?: File) => {
     if (!animal || !ficheiro) return;
-    const leitor = new FileReader();
-    leitor.addEventListener('load', () => { if (typeof leitor.result === 'string') { const r = leitor.result; mudarFotos((f) => ({ ...f, [animal]: r })); } });
-    leitor.readAsDataURL(ficheiro);
+    // Reduzida antes de guardar: uma fotografia do telemóvel tem vários MB e o armazenamento da app só ~5 MB
+    void reduzirImagem(ficheiro, TAMANHOS.animal).then((r) => mudarFotos((f) => ({ ...f, [animal]: r })));
   };
   return (
     <Dialogo
