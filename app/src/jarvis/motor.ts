@@ -126,7 +126,7 @@ export class MotorJarvis {
       const wantInc = /receita/.test(n), wantExp = /despesa|gasto/.test(n);
       const km = q.match(/(?:remov\w*|apag\w*|elimin\w*|anul\w*)\s+(?:a\s+)?(?:última|ultima)?\s*(?:despesa|receita|movimento|gasto)?\s*(?:de|do|da)?\s*(.+)/i);
       const kw = km && km[1] ? semAcentos(km[1]).replace(/^(?:o|a|os|as|um|uma|esse|essa|este|esta)\s+/, '').replace(/[?.!]+$/, '').trim() : '';
-      const generico = !kw || /^(?:ultim[oa]|movimento|despesa|receita|gasto)$/.test(kw);
+      const generico = /^(?:ultim[oa])?\s*(?:movimento|despesa|receita|gasto)?$/.test(kw);
       const tipoOk = (t: Movimento) => (!wantInc || t.movementType === 'income') && (!wantExp || t.movementType === 'expense');
       // com um nome, só serve um movimento com esse nome (antes caía no último registado, que podia ser outro)
       const tgt = generico ? f.find((t) => t.movementType !== 'transfer' && tipoOk(t)) : f.find((t) => semAcentos(t.title).includes(kw) && tipoOk(t));
