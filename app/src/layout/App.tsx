@@ -1,5 +1,6 @@
 import { type TouchEvent, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { EcraBloqueio } from '../bloqueio/EcraBloqueio';
+import { apagarPorPinEsquecido, esquecerMarcaDoPin, pinFoiEsquecido } from '../bloqueio/esquecido';
 import { ligacoes } from '../bloqueio/estado';
 import { PREFIXO, VERSAO } from '../config';
 import { iniciarEspaco } from '../definicoes/espaco';
@@ -32,6 +33,9 @@ import { type ContextoJarvis, MotorJarvis } from '../jarvis/motor';
 import { lerDocumento, textoDoPdf } from '../jarvis/recibos';
 import { previsaoDoMes } from '../paginas/previsao';
 import { pessoasDosSalarios } from '../paginas/Resumo';
+import { DadosApagados, PerguntaSalario } from '../definicoes/PerguntaSalario';
+import { sincronizarSalarios } from '../movimentos/salarios';
+import { eReceitaDeSalario, perguntarQuandoSalario } from '../dados/rendimento';
 
 const CATEGORIA_INICIAL = 'Alimentação';
 import { animais, animaisDe, definirAnimais } from '../veterinario/animais';
@@ -174,7 +178,11 @@ export function App() {
     if (estadoAtual.current.appearance.sounds !== false) somDaConfirmacao(tipo);
   };
   const tirarFoco = () => { if (document.activeElement instanceof HTMLElement) document.activeElement.blur(); };
-  const mudarMovimentos = (f: (l: Movimento[]) => Movimento[]) => setEstado((s) => ({ ...s, transactions: f(s.transactions) }));
+  // as receitas de salário com «Quem recebe» atualizam a tabela de Salários (gravar, editar, apagar, desfazer, Jarvis)
+  const mudarMovimentos = (f: (l: Movimento[]) => Movimento[]) => setEstado((s) => {
+    const transactions = f(s.transactions);
+    return { ...s, transactions, salaries: sincronizarSalarios(s.transactions, transactions, s.salaries) };
+  });
   // a linha do movimento acabado de gravar brilha por instantes (depois de a janela fechar)
   const realcar = (id: Movimento['id']) => setTimeout(() => {
     document.querySelectorAll<HTMLElement>(`.page-current article[data-id="${CSS.escape(String(id))}"]`).forEach((el) => {
@@ -184,7 +192,13 @@ export function App() {
       setTimeout(() => el.classList.remove('ffrealce'), 1900);
     });
   }, 220);
-  const gravarNovo = (m: Movimento) => { mudarMovimentos((l) => [m, ...l]); vibrar(30); tirarFoco(); setNovoAberto(false); setDuplicado(null); realcar(m.id); confirmar('guardado'); };
+  const [perguntaSalario, setPerguntaSalario] = useState(false);
+  const gravarNovo = (m: Movimento) => {
+    // o 1.º salário numa instalação nova pergunta quando se recebe (de que mês é o rendimento)
+    const perguntar = eReceitaDeSalario(m) && m.amount > 0 && perguntarQuandoSalario(estadoAtual.current, m.id);
+    mudarMovimentos((l) => [m, ...l]); vibrar(30); tirarFoco(); setNovoAberto(false); setDuplicado(null); realcar(m.id); confirmar('guardado');
+    if (perguntar) setTimeout(() => setPerguntaSalario(true), 900);
+  };
   const substituirCopia = (copia: Movimento, m: Movimento) => {
     const nova = preencherCopia(copia, m);
     mudarMovimentos((l) => l.map((x) => (x.id === copia.id ? nova : x))); vibrar(30); tirarFoco(); setNovoAberto(false); setDuplicado(null);
@@ -488,7 +502,7 @@ export function App() {
       if (typeof r === 'string') return r;
       if (!r.ok) { setMensagemBackup('Ficheiro inválido. Escolha uma cópia JSON exportada por esta app.'); return; }
       if (!window.confirm(perguntaRestauro(r, estadoAtual.current.transactions.length))) return;
-      setEstado((s) => aplicarBackup(s, r.dados));
+      aplicarRestauro(r.dados);
       if (r.jarvisThreads) { try { localStorage.setItem(chave('conversaJarvis', PREFIXO), JSON.stringify(r.jarvisThreads)); } catch { /* sem espaço */ } }
       if (r.vetReminders) definirLembretes(r.vetReminders);
       setMensagemBackup('Cópia restaurada com sucesso.');
@@ -514,6 +528,13 @@ export function App() {
       setMensagemBackup('Junção desfeita.');
     },
   };
+  // depois de «Esqueci-me do PIN», o backup restaurado chega sem PIN (nem a impressão digital)
+  const aplicarRestauro = (dados: Record<string, unknown>) => {
+    const semPin = pinFoiEsquecido();
+    setEstado((s) => { const n = aplicarBackup(s, dados); return semPin ? { ...n, pinHash: '' } : n; });
+    if (semPin) { esquecerMarcaDoPin(); setPinEsquecido(false); }
+  };
+  const [pinEsquecido, setPinEsquecido] = useState(pinFoiEsquecido);
   const limparDados = () => {
     try {
       Array.from({ length: localStorage.length }, (_, i) => localStorage.key(i))
@@ -597,7 +618,7 @@ export function App() {
         const r = lerBackup(texto);
         if (!r.ok) return 'Ficheiro inválido. Escolha uma cópia JSON exportada por esta app.';
         if (!window.confirm(perguntaRestauro(r, estadoAtual.current.transactions.length))) return 'Importação cancelada.';
-        setEstado((s) => aplicarBackup(s, r.dados));
+        aplicarRestauro(r.dados);
         if (r.jarvisThreads) { try { localStorage.setItem(chave('conversaJarvis', PREFIXO), JSON.stringify(r.jarvisThreads)); } catch { /* sem espaço */ } }
         if (r.vetReminders) definirLembretes(r.vetReminders);
         setMensagemBackup('Cópia restaurada com sucesso.');
@@ -762,7 +783,7 @@ export function App() {
 
   if (bloqueada) {
     const imagem = eNativo() && typeof estado.extras.lockImage === 'string' ? estado.extras.lockImage : null;
-    return <EcraBloqueio key="ff-lock" hash={estado.pinHash} imagem={imagem} aoDesbloquear={() => setBloqueada(false)} />;
+    return <EcraBloqueio key="ff-lock" hash={estado.pinHash} imagem={imagem} aoDesbloquear={() => setBloqueada(false)} aoApagarDados={() => apagarPorPinEsquecido([PREFIXO_REAL, PREFIXO])} />;
   }
 
   const inicioToque = (e: TouchEvent) => {
@@ -1000,6 +1021,13 @@ export function App() {
       <EditarMovimento movimento={aEditar} fechar={() => setAEditar(null)} estado={visivel} aoGuardar={guardarEdicao} aoEliminar={eliminar} />
       <ApagarRecorrente movimento={aApagarSerie} fechar={() => setAApagarSerie(null)} saltar={saltarMes} parar={apagar} />
       <Confirmacao evento={confirmacao} />
+      <DadosApagados
+        aberto={pinEsquecido && !folha && !estado.transactions.length} restaurar={() => abrirBackupRef.current()} fechar={() => setPinEsquecido(false)}
+      />
+      <PerguntaSalario
+        aberto={perguntaSalario}
+        escolher={(v) => { setPerguntaSalario(false); setEstado((e) => ({ ...e, profile: { ...e.profile, salaryMonth: v } })); }}
+      />
       <DuplicadoRecorrente
         par={duplicado} fechar={() => setDuplicado(null)}
         substituir={() => duplicado && substituirCopia(duplicado.copia, duplicado.novo)} registar={() => duplicado && gravarNovo(duplicado.novo)}

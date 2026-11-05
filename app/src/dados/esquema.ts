@@ -82,6 +82,8 @@ export interface Perfil {
   members: string[];
   /** Viaturas da família (v2.43.0): nome e tipo ('carro' | 'mota'). */
   vehicles?: { name: string; type: string }[];
+  /** Quando se recebe o salário (v2.57.0): 'anterior' = no fim do mês, conta para o mês seguinte (por omissão); 'proprio' = conta para o próprio mês. */
+  salaryMonth?: 'anterior' | 'proprio';
   [extra: string]: unknown;
 }
 

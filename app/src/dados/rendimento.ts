@@ -1,11 +1,23 @@
-// Rendimento do mês X = salários do mês X−1 (regra de negócio da app).
+// Rendimento do mês X = salários do mês X−1 (regra de negócio da app). Quem recebe no início do mês escolhe
+// «No próprio mês» em Perfil e família (`profile.salaryMonth`, v2.57.0): rendimento do mês X = salários do mês X.
 import { anoMes, diaDeVencimento, inicioDoMes } from './datas';
-import type { Dados } from './esquema';
+import type { Dados, Movimento } from './esquema';
 
 const SALARIO = /salario|vencimento|ordenado/;
 
 function textoSemAcentos(t: string): string {
   return t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+}
+
+/** Receita de salário (título ou categoria com salário/vencimento/ordenado). */
+export const eReceitaDeSalario = (m: Pick<Movimento, 'movementType' | 'title' | 'detail'>): boolean =>
+  m.movementType === 'income' && SALARIO.test(textoSemAcentos(`${m.title} ${m.detail}`));
+
+/** Ainda não há salários (nem na tabela nem nos movimentos, além de `exceto`) e não se escolheu quando se recebe: é altura de perguntar. */
+export function perguntarQuandoSalario(dados: Pick<Dados, 'salaries' | 'transactions' | 'profile'>, exceto: Movimento['id']): boolean {
+  if (dados.profile.salaryMonth) return false;
+  const naTabela = Object.values(dados.salaries).some((pessoas) => Object.values(pessoas ?? {}).some((v) => Array.isArray(v) && v.some((x) => x > 0)));
+  return !naTabela && !dados.transactions.some((m) => m.id !== exceto && eReceitaDeSalario(m) && m.amount > 0);
 }
 
 /**
@@ -20,22 +32,31 @@ export function salariosDoMes(dados: Pick<Dados, 'salaries' | 'transactions'>, d
   if (tabela) return tabela;
   const mes = anoMes(data);
   return dados.transactions
-    .filter((m) => m.date.startsWith(mes) && m.movementType === 'income' && SALARIO.test(textoSemAcentos(`${m.title} ${m.detail}`)))
+    .filter((m) => m.date.startsWith(mes) && eReceitaDeSalario(m))
     .reduce((s, m) => s + m.amount, 0);
 }
 
+type DadosRendimento = Pick<Dados, 'salaries' | 'transactions'> & { profile?: Pick<Dados['profile'], 'salaryMonth'> };
+
+/** Meses entre o salário e o mês em que conta como rendimento (1 = mês seguinte, 0 = próprio mês). */
+export const atrasoDoSalario = (dados: DadosRendimento): number => (dados.profile?.salaryMonth === 'proprio' ? 0 : 1);
+
+/** Mês dos salários que fazem o rendimento de `mes`. */
+export const mesDosSalarios = (dados: DadosRendimento, mes: Date): Date => inicioDoMes(mes, -atrasoDoSalario(dados));
+
 export interface Rendimento {
   valor: number;
-  /** Rendimento do mês anterior (salários de X−2). */
+  /** Rendimento do mês anterior. */
   anterior: number;
   /** Variação percentual; `null` quando o mês anterior é zero. */
   variacao: number | null;
 }
 
 /** Rendimento do mês selecionado (qualquer dia desse mês). */
-export function rendimentoDoMes(dados: Pick<Dados, 'salaries' | 'transactions'>, mes: Date): Rendimento {
-  const valor = salariosDoMes(dados, inicioDoMes(mes, -1));
-  const anterior = salariosDoMes(dados, inicioDoMes(mes, -2));
+export function rendimentoDoMes(dados: DadosRendimento, mes: Date): Rendimento {
+  const a = atrasoDoSalario(dados);
+  const valor = salariosDoMes(dados, inicioDoMes(mes, -a));
+  const anterior = salariosDoMes(dados, inicioDoMes(mes, -a - 1));
   return { valor, anterior, variacao: anterior ? ((valor - anterior) / anterior) * 100 : null };
 }
 
@@ -43,8 +64,8 @@ export function rendimentoDoMes(dados: Pick<Dados, 'salaries' | 'transactions'>,
  * Mês do rendimento que a Principal mostra (v2.37.0): o mês escolhido, exceto no mês atual a partir do dia do ordenado
  * (3.º dia útil a contar do fim do mês), em que já mostra o do mês seguinte — se os salários deste mês já estiverem registados.
  */
-export function mesDoRendimento(dados: Pick<Dados, 'salaries' | 'transactions'>, mes: Date, hoje: Date): Date {
-  if (anoMes(mes) !== anoMes(hoje)) return mes;
+export function mesDoRendimento(dados: DadosRendimento, mes: Date, hoje: Date): Date {
+  if (anoMes(mes) !== anoMes(hoje) || !atrasoDoSalario(dados)) return mes;
   const vencimento = diaDeVencimento(mes);
   if (vencimento == null || hoje.getDate() < vencimento || !salariosDoMes(dados, mes)) return mes;
   return inicioDoMes(mes, 1);

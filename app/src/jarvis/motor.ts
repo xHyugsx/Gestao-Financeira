@@ -1,6 +1,6 @@
 // Motor do Jarvis (por regras, sem IA externa): perguntas, ações com confirmação e seguimento da conversa.
 // Mesmas respostas da app atual (tests/referencias/jarvis.json); a lógica segue a ordem das regras originais.
-import { anoMes, type Conta, type Estado, MESES, type Movimento, salariosDoMes } from '../dados';
+import { anoMes, type Conta, type Estado, MESES, mesDosSalarios, type Movimento, rendimentoDoMes, salariosDoMes } from '../dados';
 import { CATEGORIAS_POR_OMISSAO } from '../dados/esquema';
 import { categoriaDespesa, categoriaReceita } from '../movimentos/categorias';
 import { criaCopias, saltarEsteMes } from '../movimentos/recorrentes';
@@ -372,7 +372,7 @@ export class MotorJarvis {
         : tipo === 'loja' ? gastosDe(tx.filter((t) => t.movementType === 'expense' && normal(t.title) === ffSub!.key))
           : tipo === 'comb' ? tx.filter(eCombustivel).reduce((e, t) => e + Math.abs(t.amount), 0)
             : tipo === 'rec' ? tx.filter((t) => t.movementType === 'income').reduce((e, t) => e + t.amount, 0)
-              : tipo === 'ren' ? un(new Date(D.getFullYear(), D.getMonth() - 1, 1))
+              : tipo === 'ren' ? rendimentoDoMes(c.estado, D).valor
                 : tipo === 'sal' ? un(D)
                   : tipo === 'vet' ? gastosDe(tx.filter((t) => t.pet)) : gastosDe(tx);
     };
@@ -465,12 +465,12 @@ export class MotorJarvis {
       }
       if (ik === 'sal') { const s = un(ffD); return s ? `Salários de ${L}: ${A(s)}.` : `Não há salários registados em ${L}.`; }
       if (ik === 'ren') {
-        const r = un(Dp), rp = un(new Date(ffD.getFullYear(), ffD.getMonth() - 2, 1));
-        return r ? `Rendimento de ${L} (salários de ${Lp}): ${A(r)}${rp ? `, ${r >= rp ? '+' : '−'}${pctAbs(variacao(r, rp))} face ao mês anterior` : ''}.` : `Não há salários registados em ${Lp}.`;
+        const { valor: r, anterior: rp } = rendimentoDoMes(c.estado, ffD), Ls = ffL(mesDosSalarios(c.estado, ffD));
+        return r ? `Rendimento de ${L} (salários de ${Ls}): ${A(r)}${rp ? `, ${r >= rp ? '+' : '−'}${pctAbs(variacao(r, rp))} face ao mês anterior` : ''}.` : `Não há salários registados em ${Ls}.`;
       }
       if (ik === 'rec') return `Receitas registadas em ${L}: ${A(rc)}.`;
       if (ik === 'gas') return g ? `Em ${L} gastaste ${A(g)}${gp ? `, ${g > gp ? 'mais' : 'menos'} ${pctAbs(variacao(g, gp))} do que em ${Lp}` : ''}.` : `Não há gastos registados em ${L}.`;
-      return g || rc || un(Dp) ? `Resumo de ${L}: gastos ${A(g)} · receitas ${A(rc)} · rendimento ${A(un(Dp))}.` : `Não há movimentos registados em ${L}.`;
+      return g || rc || rendimentoDoMes(c.estado, ffD).valor ? `Resumo de ${L}: gastos ${A(g)} · receitas ${A(rc)} · rendimento ${A(rendimentoDoMes(c.estado, ffD).valor)}.` : `Não há movimentos registados em ${L}.`;
     }
 
     // Sem mês na pergunta: mês escolhido na app
@@ -489,8 +489,8 @@ export class MotorJarvis {
       return vn && vn.amount > 0 ? `A maior categoria em ${mm} é ${vn.name}: ${A(vn.amount)} (${percentagem(vn.share)} dos gastos).` : `Ainda não há gastos registados em ${mm}.`;
     }
     if (/rendiment|salari|ordenad|vencimento/.test(n)) {
-      const dn = un(an), fn = un(new Date(It.getFullYear(), It.getMonth() - 2, 1));
-      return dn ? `Rendimento de ${mm} (salários de ${mp}): ${A(dn)}${fn ? `, ${dn >= fn ? '+' : '−'}${pctAbs(variacao(dn, fn))} face ao mês anterior` : ''}.` : `Ainda não há salários registados em ${mp}.`;
+      const { valor: dn, anterior: fn } = rendimentoDoMes(c.estado, It), ms = hc[mesDosSalarios(c.estado, It).getMonth()]!;
+      return dn ? `Rendimento de ${mm} (salários de ${ms}): ${A(dn)}${fn ? `, ${dn >= fn ? '+' : '−'}${pctAbs(variacao(dn, fn))} face ao mês anterior` : ''}.` : `Ainda não há salários registados em ${ms}.`;
     }
     if (/receit|recebi|ganhei/.test(n)) return `Receitas registadas em ${mm}: ${A(on(It).filter((t) => t.movementType === 'income').reduce((e, t) => e + t.amount, 0))}.`;
     if (/saldo|conta|revolut|dinheiro/.test(n)) return porConta(It, mm);

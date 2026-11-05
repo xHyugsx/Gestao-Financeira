@@ -418,3 +418,19 @@ html[data-tema="floresta"] .ffjv-row .ffjv-seg { border-color: #bef264; backgrou
 .ffdrive-copias article span { display: grid; flex: 1; min-width: 0; font-size: .8rem; }
 .ffdrive-copias article small { color: var(--muted-foreground); font-size: .68rem; }
 .ffdrive-volta { margin: 30vh 1.5rem 0; text-align: center; font-size: 1rem; color: #e9ecff; }
+
+/* «Esqueci-me do PIN» no ecrã de bloqueio (v2.57.0) */
+.ffl-esqueci { display: block; margin: 2px auto 0; background: none; border: 0; color: rgba(255, 255, 255, .55); font: inherit; font-size: .78rem; padding: 6px 14px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.ffl-reset { position: absolute; left: 14px; right: 14px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 5; max-width: 420px; margin: 0 auto; background: rgba(11, 16, 48, .96); border: 1px solid rgba(248, 113, 113, .45); border-radius: 22px; padding: 22px 18px 18px; text-align: center; color: #fff; opacity: 0; transform: translateY(30px); pointer-events: none; transition: opacity .35s ease, transform .4s cubic-bezier(.2, .8, .2, 1); }
+.ffl-reset-on .ffl-reset { opacity: 1; transform: none; pointer-events: auto; }
+.ffl-reset-on .ffl-keys, .ffl-reset-on .ffl-back, .ffl-reset-on .ffl-esqueci { opacity: 0; pointer-events: none; }
+.ffl-reset h3 { margin: 0 0 6px; font-size: 1rem; font-weight: 600; }
+.ffl-reset p { margin: 0 0 10px; font-size: .8rem; color: #b8bedb; line-height: 1.45; }
+.ffl-reset label { display: block; margin: 6px 0 14px; font-size: .78rem; color: #b8bedb; }
+.ffl-reset input { display: block; width: 100%; margin-top: 6px; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, .2); background: rgba(255, 255, 255, .06); color: #fff; font: inherit; font-size: 1rem; text-align: center; letter-spacing: .12em; text-transform: uppercase; }
+.ffl-reset .ffl-btns { display: flex; gap: 8px; }
+.ffl-reset .ffl-btns button { flex: 1; padding: 11px 0; border-radius: 12px; font: inherit; font-size: .85rem; font-weight: 600; cursor: pointer; }
+.ffl-reset-no { border: 1px solid rgba(255, 255, 255, .2); background: transparent; color: #fff; }
+.ffl-reset-sim { border: 0; background: #f87171; color: #1a0505; }
+.ffl-reset-sim:disabled { opacity: .45; cursor: default; }
+@media (prefers-reduced-motion: reduce) { .ffl-reset { transition: none; } }

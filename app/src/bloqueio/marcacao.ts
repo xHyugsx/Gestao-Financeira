@@ -65,7 +65,12 @@ export function marcacaoBloqueio(imagem: string | null = null): string {
   return fundo
     + '<div class="ffl-veil"></div>'
     + `<div class="ffl-hint">${SVG_SETA}<span>Deslize para cima para desbloquear</span><div class="ffl-bar"></div></div>`
-    + `<div class="ffl-pad" aria-hidden="true"><h2>Introduza o PIN</h2><div class="ffl-dots"><i class="ffl-dot"></i><i class="ffl-dot"></i><i class="ffl-dot"></i><i class="ffl-dot"></i></div><div class="ffl-keys">${teclas}</div><button type="button" class="ffl-back">Cancelar</button></div>`
+    + `<div class="ffl-pad" aria-hidden="true"><h2>Introduza o PIN</h2><div class="ffl-dots"><i class="ffl-dot"></i><i class="ffl-dot"></i><i class="ffl-dot"></i><i class="ffl-dot"></i></div><div class="ffl-keys">${teclas}</div><button type="button" class="ffl-back">Cancelar</button><button type="button" class="ffl-esqueci">Esqueci-me do PIN</button></div>`
+    + '<div class="ffl-reset" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="ffl-reset-t"><h3 id="ffl-reset-t">Esqueceste-te do PIN?</h3>'
+    + '<p>O PIN só existe neste telemóvel e não há forma de o recuperar. Para voltar a entrar, apaga os dados da app neste telemóvel e depois restaura um backup (fica sem PIN).</p>'
+    + '<p class="ffl-reset-bio">Se ativaste a impressão digital, cancela e usa o sensor.</p>'
+    + '<label>Escreve <b>APAGAR</b> para confirmar<input class="ffl-reset-in" autocomplete="off" autocapitalize="characters" spellcheck="false" /></label>'
+    + '<div class="ffl-btns"><button type="button" class="ffl-reset-no">Cancelar</button><button type="button" class="ffl-reset-sim" disabled>Apagar dados</button></div></div>'
     + `<div class="ffl-ver" aria-hidden="true">v${VERSAO}${eNativo() ? ' · Android' : ''}</div>`
     + `<div class="ffl-sheet"><div class="ffl-sic">${SVG_IMPRESSAO}</div><h3>Desbloquear com impressão digital?</h3><p>Da próxima vez, entra na app com o sensor do telemóvel. O PIN continua disponível.</p><div class="ffl-btns"><button type="button" class="ffl-no">Agora não</button><button type="button" class="ffl-yes">Ativar</button></div></div>`;
 }

@@ -28,7 +28,7 @@ const SUGESTOES: Record<string, [string, string?][]> = {
 // Sugestões em cartões (v2.45.0): ícone, cor e uma linha a explicar
 const CARTAO: [RegExp, NomeIcone, string, string][] = [
   [/^quanto gastei/i, 'chart-column', '#a78bfa', 'com a comparação'], [/^gastos por conta/i, 'wallet-cards', '#4ade80', 'este mês'],
-  [/^rendimento/i, 'banknote', '#22d3ee', 'salários do mês anterior'], [/^receitas/i, 'trending-up', '#4ade80', 'este mês'],
+  [/^rendimento/i, 'banknote', '#22d3ee', 'salários do mês'], [/^receitas/i, 'trending-up', '#4ade80', 'este mês'],
   [/^maior categoria/i, 'tags', '#f472b6', 'onde foi mais dinheiro'], [/combust/i, 'fuel', '#fb923c', 'este mês'],
   [/veterin/i, 'paw-print', '#f472b6', 'este mês'], [/^adicionar despesa/i, 'plus', '#fb923c', 'preenche a caixa'], [/^adicionar receita/i, 'plus', '#4ade80', 'preenche a caixa'],
 ];
