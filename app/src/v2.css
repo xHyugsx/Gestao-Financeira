@@ -434,3 +434,8 @@ html[data-tema="floresta"] .ffjv-row .ffjv-seg { border-color: #bef264; backgrou
 .ffl-reset-sim { border: 0; background: #f87171; color: #1a0505; }
 .ffl-reset-sim:disabled { opacity: .45; cursor: default; }
 @media (prefers-reduced-motion: reduce) { .ffl-reset { transition: none; } }
+
+/* Despesas anuais: tocar na linha edita (v2.57.1) */
+.ffanual[role=button] { cursor: pointer; }
+.ffanu-editar .ffanu-form { margin: 0; }
+.ffanu-erro { color: var(--negative); }
