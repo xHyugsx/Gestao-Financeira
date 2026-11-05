@@ -76,11 +76,19 @@ export function novoMovimento(campos: FormData, c: ContextoNovo): Movimento | Er
   }
   const conta = String(campos.get('account') || 'principal');
   const pessoa = String(campos.get('person') || '').trim();
+  if (c.tipo === 'transfer') {
+    // o valor fica em `transferValue` (como nas importações): uma transferência não é gasto nem receita
+    const origem = String(campos.get('origin') || 'principal'), destino = String(campos.get('destination') || '');
+    return {
+      id: c.id, title: titulo, detail: `${diaEMes(data)} · Transferência`, amount: 0, kind: 'transfer', movementType: 'transfer', date: data,
+      affectsBalance: true, transferValue: valor, ...(origem !== 'principal' ? { account: origem } : {}), ...(destino ? { toAccount: destino } : {}), ...extras,
+    };
+  }
   return {
-    id: c.id, title: titulo, detail: `${diaEMes(data)} · ${c.tipo === 'transfer' ? 'Transferência' : categoria}`,
-    amount: c.tipo === 'expense' ? -valor : c.tipo === 'income' ? valor : 0, kind: tipoVisual(c.tipo, categoria),
+    id: c.id, title: titulo, detail: `${diaEMes(data)} · ${categoria}`,
+    amount: c.tipo === 'expense' ? -valor : valor, kind: tipoVisual(c.tipo, categoria),
     movementType: c.tipo, date: data, affectsBalance: true,
-    ...(conta !== 'principal' && c.tipo !== 'transfer' ? { account: conta } : {}),
+    ...(conta !== 'principal' ? { account: conta } : {}),
     ...(pessoa && c.tipo === 'expense' ? { person: pessoa } : {}),
     ...(c.tipo === 'expense' && campos.has('vehicle') ? Object.fromEntries(Object.entries(camposCombustivel(campos)).filter(([, v]) => v)) : {}), ...extras,
   };
@@ -107,7 +115,7 @@ export function movimentoEditado(m: Movimento, campos: FormData): Movimento | nu
   } else if (m.recurring) Object.assign(recorrencia, { recurring: undefined, recurringEvery: undefined, recurringDone: undefined, recurringDay: undefined });
   return {
     ...m, ...recorrencia, title: titulo, amount: m.movementType === 'expense' ? -valor : m.movementType === 'income' ? valor : m.amount, date: data,
-    note: nota || undefined, ...(m.revolut ? { transferValue: valor } : {}),
+    note: nota || undefined, ...(m.revolut || m.movementType === 'transfer' ? { transferValue: valor } : {}),
     ...(conta != null ? { account: conta === 'principal' ? undefined : String(conta) } : {}),
     ...(campos.has('person') ? { person: String(campos.get('person') || '').trim() || undefined } : {}),
     ...(campos.has('vehicle') ? camposCombustivel(campos) : {}),

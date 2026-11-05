@@ -28,7 +28,10 @@ describe('novo movimento', () => {
       .toMatchObject({ amount: 1000, kind: 'income', affectsBalance: true });
     const t = novoMovimento(campos({ title: 'Reforço', amount: '50', date: '2026-09-02' }), ctx({ tipo: 'transfer' })) as Movimento;
     expect(t).toMatchObject({ amount: 0, kind: 'transfer', movementType: 'transfer', detail: '2 setembro · Transferência' });
+    expect(t).toMatchObject({ transferValue: 50 });
     expect('account' in t).toBe(false);
+    expect(novoMovimento(campos({ title: 'Poupar', amount: '100', date: '2026-09-02', origin: 'revolut', destination: 'principal' }), ctx({ tipo: 'transfer' })))
+      .toMatchObject({ amount: 0, transferValue: 100, account: 'revolut', toAccount: 'principal' });
     expect(novoMovimento(campos({ title: 'Oficina', amount: '5', date: '2026-09-02', category: 'Transportes' }), ctx())).toMatchObject({ kind: 'car' });
   });
 
@@ -71,6 +74,7 @@ describe('editar movimento', () => {
   it('transferência simples mantém o valor; sem categoria fica "Outros"', () => {
     const t: Movimento = { ...base, movementType: 'transfer', amount: 0, account: undefined };
     expect(movimentoEditado(t, campos({ title: 'T', date: '2026-08-10' }))).toMatchObject({ amount: 0, detail: '10 agosto · Outros' });
+    expect(movimentoEditado({ ...t, transferValue: 100 }, campos({ title: 'T', amount: '120', date: '2026-08-10' }))).toMatchObject({ amount: 0, transferValue: 120 });
   });
 
   it('Revolut: o valor vai para transferValue', () => {

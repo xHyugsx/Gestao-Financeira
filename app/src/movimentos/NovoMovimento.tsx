@@ -57,9 +57,18 @@ export function NovoMovimento({ aberto, aoMudar, estado, escolhas: e, mudarEscol
   const escolherCategoria = (categoria: string) => { setManual(true); setSugerida(null); mudar({ categoria }); };
   const [pessoa, setPessoa] = useState(pessoaSugerida);
   const [conta, setConta] = useState('principal');
-  const [origem, setOrigem] = useState('Principal');
-  const [destino, setDestino] = useState('Revolut');
-  useEffect(() => { if (aberto) { setPessoa(pessoaSugerida); setConta('principal'); setOrigem('Principal'); setDestino('Revolut'); setTitulo(''); } }, [aberto, pessoaSugerida]);
+  const contas = estado.accounts.map((c) => ({ valor: c.id, rotulo: c.name }));
+  const outraConta = (id: string) => contas.find((c) => c.valor !== id)?.valor ?? id;
+  const [origem, setOrigem] = useState('principal');
+  const [destino, setDestino] = useState(() => outraConta('principal'));
+  // cada abertura começa com o formulário limpo (sem o título, o valor ou a nota da vez anterior)
+  const [abertura, setAbertura] = useState(0);
+  useEffect(() => {
+    if (!aberto) return;
+    setPessoa(pessoaSugerida); setConta('principal'); setOrigem('principal'); setDestino(outraConta('principal')); setTitulo(''); setAbertura((n) => n + 1);
+  }, [aberto, pessoaSugerida]); // eslint-disable-line react-hooks/exhaustive-deps
+  const mudarOrigem = (id: string) => { setOrigem(id); if (id === destino) setDestino(outraConta(id)); };
+  const mudarDestino = (id: string) => { setDestino(id); if (id === origem) setOrigem(outraConta(id)); };
   const aoEscreverTitulo = (titulo: string) => {
     if (e.tipo === 'transfer' || manual) return;
     const c = categoriaSugerida(estado.transactions, titulo, tipoComCategoria);
@@ -93,7 +102,7 @@ export function NovoMovimento({ aberto, aoMudar, estado, escolhas: e, mudarEscol
   return (
     <Dialogo folha aberto={aberto} aoMudar={aoMudar} className="movement-dialog ffregisto" titulo="Novo movimento" descricao="Registe uma despesa, receita ou transferência.">
       <Segmentado valor={e.tipo} rotulo="Tipo de movimento" opcoes={TIPOS} aoMudar={(tipo) => mudar({ tipo })} />
-      <form className="movement-form ffregisto-form" onSubmit={guardar}>
+      <form key={abertura} className="movement-form ffregisto-form" onSubmit={guardar}>
         <ValorGrande tipo={e.revolut ? 'transfer' : e.tipo} placeholder={semValor ? 'A definir' : '0,00'} required={!semValor} />
         <label className="fftitulo"><Icone nome="pencil" /><span className="sr-only">Descrição</span>
           <input
@@ -109,9 +118,9 @@ export function NovoMovimento({ aberto, aoMudar, estado, escolhas: e, mudarEscol
         {e.tipo === 'transfer' ? (
           <>
             <Rotulo>Conta de origem</Rotulo>
-            <Escolhas nome="origin" rotulo="Conta de origem" valor={origem} aoMudar={setOrigem} opcoes={[{ valor: 'Principal', rotulo: 'Principal' }, { valor: 'Revolut', rotulo: 'Revolut' }]} />
+            <Escolhas nome="origin" rotulo="Conta de origem" valor={origem} aoMudar={mudarOrigem} opcoes={contas} />
             <Rotulo>Conta de destino</Rotulo>
-            <Escolhas nome="destination" rotulo="Conta de destino" valor={destino} aoMudar={setDestino} opcoes={[{ valor: 'Revolut', rotulo: 'Revolut' }, { valor: 'Principal', rotulo: 'Principal' }]} />
+            <Escolhas nome="destination" rotulo="Conta de destino" valor={destino} aoMudar={mudarDestino} opcoes={contas} />
           </>
         ) : (
           <>

@@ -46,8 +46,8 @@ function Formulario({ m, estado, aoGuardar, aoEliminar }: { m: Movimento } & Pic
     <form className="movement-form ffregisto-form" onSubmit={guardar}>
       <button type="button" className="ffregisto-apagar" aria-label="Eliminar movimento" title="Eliminar" onClick={() => aoEliminar(m)}><Icone nome="trash-2" /><span className="sr-only">Eliminar</span></button>
       <ValorGrande
-        tipo={tipoValor} inputRef={campoValor} placeholder={pendente ? 'A definir' : '0,00'} required={!pendente} disabled={m.movementType === 'transfer' && !m.revolut}
-        defaultValue={pendente ? '' : String(m.revolut ? m.transferValue || 0 : Math.abs(m.amount)).replace('.', ',')}
+        tipo={tipoValor} inputRef={campoValor} placeholder={pendente ? 'A definir' : '0,00'} required={!pendente}
+        defaultValue={pendente ? '' : String(m.revolut || m.movementType === 'transfer' ? m.transferValue || 0 : Math.abs(m.amount)).replace('.', ',')}
       />
       <label className="fftitulo"><Icone nome="pencil" /><span className="sr-only">Descrição</span><input name="title" defaultValue={m.title} required autoComplete="off" /></label>
       {ultimo ? (

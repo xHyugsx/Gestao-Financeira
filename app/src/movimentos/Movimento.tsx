@@ -9,7 +9,7 @@ import { porConfirmar } from './recorrentes';
 function valor(m: Movimento, ocultos: boolean): string {
   if (porConfirmar(m)) return 'A definir';
   if (m.revolut) return `→ ${formatarEuros(m.transferValue || 0, ocultos)}`;
-  if (m.movementType === 'transfer') return 'Movido';
+  if (m.movementType === 'transfer') return m.transferValue ? `⇄ ${formatarEuros(m.transferValue, ocultos)}` : 'Movido';
   return `${m.amount > 0 ? '+' : '−'}${formatarEuros(Math.abs(m.amount), ocultos)}`;
 }
 
