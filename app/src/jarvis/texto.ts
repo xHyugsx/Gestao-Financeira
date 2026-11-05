@@ -23,3 +23,20 @@ export function valorNoTexto(s: string): number | null {
 }
 
 export const categoriaNoTexto = (nrm: string, lista: string[]) => lista.find((c) => nrm.includes(semAcentos(c)));
+
+const PALAVRAS_DO_PEDIDO = new Set([
+  'adiciona', 'adicionar', 'adicione', 'regista', 'registar', 'registe', 'lanca', 'lança', 'lancar', 'lançar', 'lance', 'por', 'favor', 'hoje',
+  'uma', 'um', 'o', 'a', 'os', 'as', 'despesa', 'receita', 'gasto', 'movimento', 'rendimento', 'extra', 'de', 'do', 'da', 'dos', 'das',
+  'em', 'no', 'na', 'nos', 'nas', 'com', 'para', 'euro', 'euros', 'eur', '€', 'valor', 'conta',
+]);
+const MINUSCULAS = new Set(['de', 'do', 'da', 'dos', 'das', 'e']);
+
+/** Título de um registo pedido ao Jarvis: o texto sem o verbo, o valor e as palavras de ligação («adiciona 15€ no pingo doce» → «Pingo Doce»). */
+export function tituloDoRegisto(q: string): string {
+  const palavras = q.toLocaleLowerCase('pt-PT').replace(/(\d)\s*€/g, '$1 €').split(/\s+/).map((p) => p.replace(/^[«"'(]+|[»"'),.!?;:]+$/g, '')).filter(Boolean);
+  const util = palavras.filter((p) => !/^[\d.,]+€?$/.test(p) && !PALAVRAS_DO_PEDIDO.has(p));
+  // tira as palavras de ligação que ficaram no início ou no fim
+  while (util.length && MINUSCULAS.has(util[0]!)) util.shift();
+  while (util.length && MINUSCULAS.has(util.at(-1)!)) util.pop();
+  return util.map((p, i) => (i && MINUSCULAS.has(p) ? p : p.charAt(0).toLocaleUpperCase('pt-PT') + p.slice(1))).join(' ').slice(0, 60);
+}

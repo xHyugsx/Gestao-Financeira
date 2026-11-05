@@ -5,16 +5,18 @@ import { CATEGORIAS_POR_OMISSAO } from '../dados/esquema';
 import { categoriaDespesa, categoriaReceita } from '../movimentos/categorias';
 import { criaCopias, saltarEsteMes } from '../movimentos/recorrentes';
 import { tipoVisual } from '../movimentos/regras';
+import { categoriaSugerida } from '../movimentos/sugestoes';
 import { categoriasDoMes, eCombustivel, gastosPorConta, percentagem, variacao } from '../paginas/calculos';
 import { animais, deAnimal } from '../veterinario/animais';
 import type { InfoLembrete, Lembrete } from '../veterinario/lembretes';
 import type { PendenteRecibo } from './recibos';
-import { categoriaNoTexto, normal, semAcentos, valorNoTexto } from './texto';
+import { categoriaNoTexto, normal, semAcentos, tituloDoRegisto, valorNoTexto } from './texto';
 
 export type Pendente =
   | { type: 'vet-done'; payload: { id: string | number } }
   | { type: 'edit-tx'; payload: { id: number | string; patch: Partial<Movimento> } }
   | { type: 'remove-tx'; payload: Movimento }
+  | { type: 'add-tx'; payload: Movimento }
   /** Apagar a cópia mais recente de uma série recorrente: «Só este mês» ou «Parar a série». */
   | { type: 'remove-serie'; payload: Movimento }
   | PendenteRecibo;
@@ -81,7 +83,9 @@ export class MotorJarvis {
         return this.executar(pd, c);
       }
       if (/\b(cancelar?|n[aã]o)\b/.test(n)) { this.pendente = null; return 'Ok, não fiz essa alteração.'; }
-      return 'Tens uma ação por confirmar. Escolhe «Confirmar» ou «Cancelar».';
+      // outra pergunta: a ação por confirmar fica sem efeito e a pergunta é respondida
+      this.pendente = null;
+      return `(Não fiz a ação anterior.) ${this.responder(q, c)}`;
     }
     if (/(desfaz|anula)\w*.*importa/.test(n)) return c.importacao.desfazer();
     if (/\brever (o )?extrato\b/.test(n)) return c.importacao.reabrir();
@@ -102,30 +106,31 @@ export class MotorJarvis {
       const isInc = /receita|rendimento extra/.test(n), amt = valorNoTexto(q);
       if (amt == null) return 'Não percebi o valor. Tenta algo como «adiciona despesa de 45,90€ em Alimentação».';
       const incCat = categoriaNoTexto(n, c.estado.incomeCategories), expCat = categoriaNoTexto(n, c.estado.categories);
-      const cat = incCat || expCat || (isInc ? 'Outras receitas' : 'Outros');
       const ty = incCat ? 'income' : expCat ? (isInc ? 'income' : 'expense') : isInc ? 'income' : 'expense';
+      const titulo = tituloDoRegisto(q);
+      const cat = incCat || expCat || (titulo && categoriaSugerida(f, titulo, ty)) || (ty === 'income' ? 'Outras receitas' : 'Outros');
       const dd = new Date();
       const accM = c.estado.accounts.filter((a) => a.id !== 'principal').find((a) => {
         const an = semAcentos(a.name);
         return ` ${n} `.includes(` ${an} `) || (an.split(' ')[0]!.length > 3 && ` ${n} `.includes(` ${an.split(' ')[0]} `));
       });
       const obj: Movimento = {
-        id: Date.now(), title: cat, detail: `${dd.getDate()} ${hc[dd.getMonth()]} · ${cat}`, amount: ty === 'income' ? amt : -amt,
+        id: Date.now(), title: titulo || cat, detail: `${dd.getDate()} ${hc[dd.getMonth()]} · ${cat}`, amount: ty === 'income' ? amt : -amt,
         kind: tipoVisual(ty, cat), movementType: ty, date: iso(dd), affectsBalance: true, ...(accM ? { account: accM.id } : {}),
       };
-      c.mudarMovimentos((e) => [obj, ...e]);
-      this.ultimaAdicao = obj.id as number;
-      c.vibrar([20, 40, 20]);
-      return `Adicionado: ${cat} — ${A(amt)} · hoje${accM ? ` · conta ${accM.name}` : ''}. Escreve «desfazer» para reverter.`;
+      // registar também pede confirmação (como apagar e editar)
+      this.pendente = { type: 'add-tx', payload: obj };
+      return `Vou registar ${ty === 'income' ? 'a receita' : 'a despesa'} «${obj.title}» — ${A(amt)} · hoje · ${cat}${accM ? ` · conta ${accM.name}` : ''}. Confirmas?`;
     }
     if (/\b(remov\w*|apag\w*|elimin\w*|anul\w*)\b/.test(n)) {
       const wantInc = /receita/.test(n), wantExp = /despesa|gasto/.test(n);
       const km = q.match(/(?:remov\w*|apag\w*|elimin\w*|anul\w*)\s+(?:a\s+)?(?:última|ultima)?\s*(?:despesa|receita|movimento|gasto)?\s*(?:de|do|da)?\s*(.+)/i);
-      const kw = km && km[1] && semAcentos(km[1]).trim();
+      const kw = km && km[1] ? semAcentos(km[1]).replace(/^(?:o|a|os|as|um|uma|esse|essa|este|esta)\s+/, '').replace(/[?.!]+$/, '').trim() : '';
+      const generico = /^(?:ultim[oa])?\s*(?:movimento|despesa|receita|gasto)?$/.test(kw);
       const tipoOk = (t: Movimento) => (!wantInc || t.movementType === 'income') && (!wantExp || t.movementType === 'expense');
-      let tgt = kw && kw.length > 1 ? f.find((t) => semAcentos(t.title).includes(kw) && tipoOk(t)) : undefined;
-      if (!tgt) tgt = f.find((t) => t.movementType !== 'transfer' && tipoOk(t));
-      if (!tgt) return 'Não encontrei nenhum movimento correspondente.';
+      // com um nome, só serve um movimento com esse nome (antes caía no último registado, que podia ser outro)
+      const tgt = generico ? f.find((t) => t.movementType !== 'transfer' && tipoOk(t)) : f.find((t) => semAcentos(t.title).includes(kw) && tipoOk(t));
+      if (!tgt) return generico ? 'Não encontrei nenhum movimento correspondente.' : `Não encontrei nenhum movimento com «${km![1]!.trim()}».`;
       const quando = new Date(`${tgt.date}T12:00:00`).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' });
       if (criaCopias(tgt)) {
         // É dele que sai a cópia seguinte: apagar parava a série sem aviso
@@ -147,6 +152,12 @@ export class MotorJarvis {
       c.mudarMovimentos((ls) => ls.map((x) => (x.id === pd.payload.id ? { ...x, ...pd.payload.patch } : x)));
       c.vibrar([20, 40, 20]);
       return 'Movimento atualizado. ✏️';
+    }
+    if (pd.type === 'add-tx') {
+      c.mudarMovimentos((ls) => [pd.payload, ...ls]);
+      this.ultimaAdicao = pd.payload.id as number;
+      c.vibrar([20, 40, 20]);
+      return `Registado: ${pd.payload.title} — ${A(Math.abs(pd.payload.amount))}. Escreve «desfazer» para reverter.`;
     }
     if (pd.type === 'remove-tx' || pd.type === 'remove-serie') { c.mudarMovimentos((ls) => ls.filter((x) => x.id !== pd.payload.id)); c.vibrar([40, 60, 40]); return 'Movimento removido. 🗑️'; }
     if (pd.type === 'slip') {

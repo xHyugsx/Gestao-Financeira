@@ -5,7 +5,11 @@ from capturar_referencias import ler_respostas
 REF = json.loads((pathlib.Path(__file__).parent / 'referencias' / 'jarvis.json').read_text(encoding='utf-8'))
 
 # Diferenças intencionais face à 1.9.x: a resposta da referência passa por esta correção antes de comparar
-INTENCIONAIS = {}
+INTENCIONAIS = {
+    # v2.56.0: registar pelo Jarvis pede confirmação e o título vem do texto
+    'Adiciona despesa de 12,50 no Café Central': lambda r: 'Vou registar a despesa «Café Central» — 12,50 € · hoje · Outros. Confirmas?',
+    'Adiciona receita de 200 de venda': lambda r: 'Vou registar a receita «Venda» — 200,00 € · hoje · Outras receitas. Confirmas?',
+}
 # v2.36.0: os saldos das contas deixaram de aparecer; as respostas de saldo ficam de fora (teste_previsao cobre as novas)
 SEM_SALDOS = ('Saldos —', 'O saldo das contas é sempre o atual')
 SEM_SALDO_NA_AJUDA = lambda r: r.replace('gastos, saldo, rendimento', 'gastos, rendimento')

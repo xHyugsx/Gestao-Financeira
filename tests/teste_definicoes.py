@@ -133,9 +133,29 @@ async def t_perfil_e_membros(app):
     await p.fill('input[name=profileName]', 'Casa Nova'); await p.fill('input[name=email]', 'casa@exemplo.pt')
     await p.click('.settings-panel button[type=submit]'); await p.wait_for_timeout(300)
     verificar(await mensagem(app) == 'Perfil guardado.', f'mensagem: {await mensagem(app)!r}')
-    await p.fill('input[aria-label="Nome do membro 2"]', 'Rita'); await p.click('input[name=profileName]'); await p.wait_for_timeout(300)
+    await p.fill('input[aria-label="Nome do membro 2"]', 'Rita'); await p.click('button:text-is("Guardar membros")'); await p.wait_for_timeout(300)
     perfil = (await dados(app))['profile']
     verificar(perfil['profileName'] == 'Casa Nova' and perfil['email'] == 'casa@exemplo.pt' and perfil['members'] == ['Ana', 'Rita'], f'perfil: {perfil}')
+
+
+async def t_acrescentar_e_apagar_membros(app):
+    """Instalação nova: sem membros, acrescentam-se em Perfil e família; mudar o nome atualiza as despesas e os salários."""
+    await app.abrir({'transactions': [
+        {'id': 1, 'title': 'Café', 'amount': -2, 'date': '2026-09-12', 'detail': '12 setembro · Alimentação', 'movementType': 'expense', 'person': 'Ana'}],
+        'salaries': {'2026': {'Ana': [0, 0, 0, 0, 0, 0, 0, 0, 1000, 0, 0, 0]}}})
+    p = app.page
+    await seccao(app, 'Perfil e família')
+    await p.click('button:has-text("Novo membro")'); await p.fill('input[aria-label="Nome do membro 1"]', 'Ana')
+    await p.click('button:has-text("Novo membro")'); await p.fill('input[aria-label="Nome do membro 2"]', 'ana ')
+    await p.click('button:text-is("Guardar membros")'); await p.wait_for_timeout(300)
+    verificar(await mensagem(app) == 'Há dois membros com o mesmo nome.', f'mensagem: {await mensagem(app)!r}')
+    await p.fill('input[aria-label="Nome do membro 2"]', 'Rui'); await p.click('button:text-is("Guardar membros")'); await p.wait_for_timeout(300)
+    verificar((await dados(app))['profile']['members'] == ['Ana', 'Rui'], 'membros não gravados')
+    await p.fill('input[aria-label="Nome do membro 1"]', 'Ana Maria'); await p.click('button:text-is("Guardar membros")'); await p.wait_for_timeout(300)
+    d = await dados(app)
+    verificar(d['transactions'][0]['person'] == 'Ana Maria' and 'Ana Maria' in d['salaries']['2026'] and 'Ana' not in d['salaries']['2026'], f'nome não atualizado: {d["transactions"][0]}, {d["salaries"]}')
+    await p.click('[aria-label="Apagar o membro 2"]'); await p.click('button:text-is("Guardar membros")'); await p.wait_for_timeout(300)
+    verificar((await dados(app))['profile']['members'] == ['Ana Maria'], 'membro não apagado')
 
 
 async def t_categorias_nas_definicoes(app):

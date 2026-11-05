@@ -32,6 +32,8 @@ import { type ContextoJarvis, MotorJarvis } from '../jarvis/motor';
 import { lerDocumento, textoDoPdf } from '../jarvis/recibos';
 import { previsaoDoMes } from '../paginas/previsao';
 import { pessoasDosSalarios } from '../paginas/Resumo';
+
+const CATEGORIA_INICIAL = 'Alimentação';
 import { animais, animaisDe, definirAnimais } from '../veterinario/animais';
 import { feito as lembreteFeito, info as infoLembrete, ordenados as lembretesOrdenados } from '../veterinario/lembretes';
 import { formatarEuros } from '../ui/formatos';
@@ -106,7 +108,7 @@ export function App() {
   const [lista, setLista] = useState<ListaMovimentos>({ expandida: false, pesquisa: '', conta: 'all' });
   const [aviso, setAviso] = useState('');
   const [novoAberto, setNovoAberto] = useState(false);
-  const [escolhas, setEscolhas] = useState<EscolhasNovo>({ tipo: 'expense', categoria: 'Alimentação', recorrente: false, tipoValor: 'com', periodicidade: 1, diaSalario: false, revolut: false });
+  const [escolhas, setEscolhas] = useState<EscolhasNovo>({ tipo: 'expense', categoria: CATEGORIA_INICIAL, recorrente: false, tipoValor: 'com', periodicidade: 1, diaSalario: false, revolut: false });
   const [aEditar, setAEditar] = useState<Movimento | null>(null);
   const [menu, setMenu] = useState<PosicaoMenu | null>(null);
   const [folha, setFolha] = useState<'list' | 'direct' | null>(null);
@@ -213,8 +215,10 @@ export function App() {
   const [desfazer, setDesfazer] = useState<{ chave: number; texto: string; repor: () => void } | null>(null);
   useEffect(() => {
     if (!desfazer) return;
+    // os avisos de backup e veterinário saem da frente enquanto o «Desfazer» está à vista (tapavam o botão)
+    document.documentElement.classList.add('ff-desfazer-ativo');
     const t = setTimeout(() => setDesfazer(null), 5000);
-    return () => clearTimeout(t);
+    return () => { clearTimeout(t); document.documentElement.classList.remove('ff-desfazer-ativo'); };
   }, [desfazer]);
   const apagar = (m: Movimento) => {
     const original = estadoAtual.current.transactions.find((x) => x.id === m.id) ?? m;
@@ -686,7 +690,7 @@ export function App() {
     url.searchParams.delete('acao');
     window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
     if (acao === 'despesa') {
-      setEscolhas((e) => ({ ...e, tipo: 'expense', recorrente: false, tipoValor: 'com', periodicidade: 1, diaSalario: false, revolut: false }));
+      setEscolhas((e) => ({ ...e, tipo: 'expense', ...(e.tipo === 'expense' ? {} : { categoria: CATEGORIA_INICIAL }), recorrente: false, tipoValor: 'com', periodicidade: 1, diaSalario: false, revolut: false }));
       setNovoAberto(true);
     } else if (acao === 'jarvis') setJarvis(true);
   }, [bloqueada, pedidoAcao]);
@@ -927,7 +931,8 @@ export function App() {
           setOnda((n) => n + 1);
           if (pagina === 'veterinario') { setDespesaVet(true); return; }
           if (pagina === 'combustivel') { setAbastecimento(true); return; }
-          setEscolhas((e) => ({ ...e, recorrente: false, tipoValor: 'com', periodicidade: 1, diaSalario: false, revolut: false }));
+          // o «+» abre sempre numa despesa (a seguir a uma receita, as despesas ficavam gravadas como receitas)
+          setEscolhas((e) => ({ ...e, ...(e.tipo === 'expense' ? {} : { tipo: 'expense', categoria: CATEGORIA_INICIAL }), recorrente: false, tipoValor: 'com', periodicidade: 1, diaSalario: false, revolut: false }));
           setNovoAberto(true);
         }}
       >

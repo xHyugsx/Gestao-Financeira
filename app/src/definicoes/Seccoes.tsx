@@ -60,27 +60,48 @@ export function Perfil({ estado, mudarEstado, avisar }: { estado: Estado; mudarE
       <label>Telefone<input name="phone" type="tel" defaultValue={p.phone} maxLength={30} placeholder="Opcional" /></label>
       <Botao type="submit">Guardar perfil</Botao>
       <div className="settings-divider" />
-      <h3>Membros da família</h3>
-      <div className="editable-list">
-        {p.members.map((nome, i) => (
-          <div key={`${nome}-${i}`} className="editable-row">
-            <input
-              aria-label={`Nome do membro ${i + 1}`} defaultValue={nome} maxLength={60}
-              onBlur={(ev) => {
-                const erro = erroNome(ev.target.value);
-                if (erro) { avisar(erro); ev.target.value = nome; return; }
-                const novo = ev.target.value.trim();
-                mudarEstado((e) => ({ ...e, profile: { ...e.profile, members: e.profile.members.map((m, k) => (k === i ? novo : m)) } }));
-                avisar('Membro atualizado.');
-              }}
-            />
-          </div>
-        ))}
-      </div>
-      <p className="text-xs text-muted-foreground">Toca num nome para o editar.</p>
+      <Membros estado={estado} mudarEstado={mudarEstado} avisar={avisar} />
       <Animais estado={estado} mudarEstado={mudarEstado} avisar={avisar} />
       <Viaturas estado={estado} mudarEstado={mudarEstado} avisar={avisar} />
     </form>
+  );
+}
+
+/** Membros da família: acrescentar, mudar o nome (atualiza os movimentos e os salários) e apagar. A ordem dá as cores (1.º azul, 2.º cor-de-rosa). */
+function Membros({ estado, mudarEstado, avisar }: { estado: Estado; mudarEstado: Mudar; avisar: (m: string) => void }) {
+  const [linhas, setLinhas] = useState(() => estado.profile.members.map((n) => ({ nome: n, antes: n })));
+  const mudar = (i: number, nome: string) => setLinhas((l) => l.map((x, k) => (k === i ? { ...x, nome } : x)));
+  const guardar = () => {
+    const limpas = linhas.map((x) => ({ ...x, nome: x.nome.trim() })).filter((x) => x.nome);
+    const nomes = limpas.map((x) => x.nome.toLocaleLowerCase('pt-PT'));
+    if (nomes.some((n, i) => nomes.indexOf(n) !== i)) { avisar('Há dois membros com o mesmo nome.'); return; }
+    if (limpas.some((x) => x.nome.length > NOME_MAX)) { avisar(`Use no máximo ${NOME_MAX} caracteres.`); return; }
+    const trocas = new Map(limpas.filter((x) => x.antes && x.antes !== x.nome).map((x) => [x.antes, x.nome]));
+    const trocar = (n: string) => trocas.get(n) ?? n;
+    mudarEstado((e) => ({
+      ...e,
+      profile: { ...e.profile, members: limpas.map((x) => x.nome) },
+      transactions: trocas.size ? e.transactions.map((m) => (typeof m.person === 'string' && trocas.has(m.person) ? { ...m, person: trocar(m.person) } : m)) : e.transactions,
+      salaries: trocas.size ? Object.fromEntries(Object.entries(e.salaries).map(([ano, pessoas]) => [ano, Object.fromEntries(Object.entries(pessoas ?? {}).map(([p, v]) => [trocar(p), v]))])) : e.salaries,
+    }));
+    setLinhas(limpas.map((x) => ({ nome: x.nome, antes: x.nome })));
+    avisar('Membros guardados.');
+  };
+  return (
+    <section className="ffv2-extra ffv2-membros">
+      <h3>Membros da família</h3>
+      <div className="editable-list">
+        {linhas.map((x, i) => (
+          <div key={i} className="ffv2-regra">
+            <input aria-label={`Nome do membro ${i + 1}`} value={x.nome} maxLength={NOME_MAX} placeholder="Nome" onChange={(e) => mudar(i, e.target.value)} />
+            <Botao type="button" variante="ghost" tamanho="icone" aria-label={`Apagar o membro ${i + 1}`} onClick={() => setLinhas((l) => l.filter((_, k) => k !== i))}><Icone nome="trash-2" /></Botao>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-muted-foreground">Aparecem em «Quem fez» nas despesas e na tabela de Salários.</p>
+      <Botao type="button" variante="contorno" onClick={() => setLinhas((l) => [...l, { nome: '', antes: '' }])}><Icone nome="plus" />Novo membro</Botao>
+      <Botao type="button" onClick={guardar}>Guardar membros</Botao>
+    </section>
   );
 }
 

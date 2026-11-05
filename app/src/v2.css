@@ -297,6 +297,7 @@ html[data-tema="floresta"] .ffplus-onda { border-color: #a3e635; }
 /* «Desfazer» depois de apagar ou duplicar: aviso com botão e barra do tempo que falta (5 s) */
 .ffdesfazer { display: flex; align-items: center; gap: .9rem; left: 16px; right: 84px; width: auto; max-width: 28rem; transform: none; padding: 8px 8px 8px 16px; overflow: hidden; text-align: left; animation: ffdesfazer-entrar .28s cubic-bezier(.22, 1, .36, 1); }
 .ffdesfazer span { flex: 1; min-width: 0; }
+html.ff-desfazer-ativo #ff-bk, html.ff-desfazer-ativo #ff-vetbn { opacity: 0 !important; pointer-events: none !important; }
 @keyframes ffdesfazer-entrar { from { opacity: 0; transform: translateY(10px); } }
 .ffdesfazer span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ffdesfazer button { flex: none; padding: 6px 12px; border: 0; border-radius: 10px; font: inherit; font-weight: 700; color: #0b1030; background: #67e8f9; cursor: pointer; }
