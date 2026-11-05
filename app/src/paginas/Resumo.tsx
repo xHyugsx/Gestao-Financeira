@@ -12,6 +12,7 @@ import { Segmentado } from '../ui/Segmentado';
 import type { NomeIcone } from '../ui/icones';
 import { vibrarCurto } from '../ui/vibracao';
 import { AnoEmRevista } from './AnoEmRevista';
+import { EditarAnual } from './EditarAnual';
 import { categoriasDoPeriodo, CORES, diasSemDespesas, doMes, fechoDoMes, mesesDoPeriodo, receitas, variacao } from './calculos';
 import { type DespesaAnual, despesasAnuais, estadoAnual, movimentoDoPagamento, renovar, totalProximos12, valorAnual } from './anuais';
 import { type EstadoRecorrente, recorrentesDoMes } from './subscricoes';
@@ -69,6 +70,7 @@ const IconeCor = ({ nome, tom }: { nome: NomeIcone; tom: string }) => (
 export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mudarPeriodo, mudarEstado, abrirMovimento = () => {}, todos = estado.transactions }: Props) {
   const [revista, setRevista] = useState(false);
   const [anualVariavel, setAnualVariavel] = useState(false);
+  const [aEditarAnual, setAEditarAnual] = useState<DespesaAnual | null>(null);
   const chips = useRef<HTMLElement>(null);
   const eur = (v: number) => formatarEuros(v, ocultos);
   const movimentos = estado.transactions;
@@ -253,7 +255,12 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
     const linha = (e: DespesaAnual) => {
       const estadoE = estadoAnual(e, hoje), cls = estadoE.replace(' ', '-'), faltam = mesesAte(e);
       return (
-        <article key={e.id} className={`transaction-row ffanual ffanual-${cls}`}>
+        <article
+          key={e.id} className={`transaction-row ffanual ffanual-${cls}`} role="button" tabIndex={0} aria-label={`Editar ${e.name}`}
+          // tocar na linha (fora dos botões) abre a edição
+          onClick={(ev) => { if (!(ev.target as Element).closest('button')) setAEditarAnual(e); }}
+          onKeyDown={(ev) => { if ((ev.key === 'Enter' || ev.key === ' ') && ev.target === ev.currentTarget) { ev.preventDefault(); setAEditarAnual(e); } }}
+        >
           <div className="transaction-main">
             <IconeCor nome="calendar-clock" tom={estadoE === 'prevista' ? 'cyan' : 'red'} />
             <div className="min-w-0">
@@ -331,6 +338,11 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
           </label>
           <Botao type="submit"><Icone nome="plus" /> Adicionar</Botao>
         </form>
+        <EditarAnual
+          despesa={aEditarAnual} fechar={() => setAEditarAnual(null)}
+          guardar={(d) => { mudarAnuais((l) => l.map((x) => (x.id === d.id ? { ...x, ...d, variable: d.variable } : x))); setAEditarAnual(null); }}
+          eliminar={(d) => { mudarAnuais((l) => l.filter((x) => x.id !== d.id)); setAEditarAnual(null); }}
+        />
       </>
     );
   };

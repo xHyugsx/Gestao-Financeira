@@ -85,3 +85,30 @@ async def t_anual_de_valor_variavel(app):
     await p.click('.page-current button[aria-label="Passar a valor variável: Seguro saúde"]'); await p.wait_for_timeout(300)
     verificar((await linha('Seguro saúde'))[0] == 'Valor a definir', 'volta a variável')
     verificar(not app.erros, f'erros: {app.erros}')
+
+
+async def t_editar_despesa_anual(app):
+    """Tocar numa despesa anual abre a edição: valor, valor variável, mês e eliminar (antes não dava para alterar)."""
+    await app.abrir({'transactions': [], 'annualExpenses': [{**A(5, 'Seguro carro', 0, 11, 2026), 'variable': True}, A(6, 'IUC', 150, 12, 2026)]})
+    p = app.page
+    await abrir_anuais(app)
+    anuais = lambda: p.evaluate("P=>JSON.parse(localStorage.getItem(P+'v3')).annualExpenses", __import__('correr').PREFIXO)
+    await p.click('.page-current article[aria-label="Editar Seguro carro"]'); await p.wait_for_timeout(500)
+    verificar(await p.query_selector('.ffanu-editar'), 'tocar na linha devia abrir a edição')
+    await p.fill('.ffanu-editar input[name=value]', '385,40'); await p.click('.ffanu-editar button[type=submit]'); await p.wait_for_timeout(500)
+    e = next(x for x in await anuais() if x['id'] == 5)
+    verificar(e['value'] == 385.4 and e.get('variable') is True, f'valor variável: {e}')
+    estimativa = await p.text_content('.page-current article[aria-label="Editar Seguro carro"] .ffanual-estimativa') or ''
+    verificar('385,40' in estimativa.replace(' ', ' '), f'a linha devia mostrar a estimativa nova: {estimativa!r}')
+    # passa a fixo e muda o mês
+    await p.click('.page-current article[aria-label="Editar Seguro carro"]'); await p.wait_for_timeout(500)
+    await p.click('.ffanu-editar input[type=checkbox]'); await p.fill('.ffanu-editar input[name=month]', '2027-01')
+    await p.click('.ffanu-editar button[type=submit]'); await p.wait_for_timeout(500)
+    e = next(x for x in await anuais() if x['id'] == 5)
+    verificar(not e.get('variable') and e['month'] == 1 and e['year'] == 2027, f'fixo em janeiro: {e}')
+    # valor fixo vazio não grava
+    await p.click('.page-current article[aria-label="Editar IUC"]'); await p.wait_for_timeout(500)
+    await p.fill('.ffanu-editar input[name=value]', ''); await p.click('.ffanu-editar button[type=submit]'); await p.wait_for_timeout(300)
+    verificar('Valor inválido' in (await p.text_content('.ffanu-editar [role=alert]') or ''), 'devia pedir um valor')
+    await p.click('.ffanu-editar button:text-is("Eliminar")'); await p.wait_for_timeout(500)
+    verificar([x['id'] for x in await anuais()] == [5], 'eliminar pela edição')
