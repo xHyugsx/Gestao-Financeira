@@ -1,5 +1,5 @@
 import { type FormEvent, useRef, useState } from 'react';
-import type { Estado, Movimento } from '../dados';
+import { eReceitaDeSalario, type Estado, type Movimento } from '../dados';
 import { Botao } from '../ui/Botao';
 import { Dialogo } from '../ui/Dialogo';
 import { formatarEuros } from '../ui/formatos';
@@ -61,6 +61,9 @@ function Formulario({ m, estado, aoGuardar, aoEliminar }: { m: Movimento } & Pic
       {m.movementType === 'expense' && !m.revolut && (eCategoriaCombustivel(categoria) || eCategoriaCombustivel(m.title) || m.vehicle) ? <CamposCombustivel estado={estado} viatura={String(m.vehicle ?? '')} combustivel={typeof m.fuel === 'string' ? m.fuel : ''} /> : null}
       <Rotulo>Data</Rotulo>
       <EscolhaData inicial={m.date} />
+      {m.movementType === 'income' && eReceitaDeSalario({ ...m, detail: `x · ${categoria}` }) && (pessoas.length || m.person) ? (
+        <div className="ffv2-extra"><Rotulo>Quem recebe</Rotulo><Escolhas nome="person" rotulo="Quem recebe" valor={pessoa} aoMudar={setPessoa} opcoes={pessoasOp} /></div>
+      ) : null}
       {m.movementType === 'expense' && !m.revolut && (pessoas.length || m.person) ? (
         <div className="ffv2-extra"><Rotulo>Quem fez</Rotulo><Escolhas nome="person" rotulo="Quem fez" valor={pessoa} aoMudar={setPessoa} opcoes={pessoasOp} /></div>
       ) : null}

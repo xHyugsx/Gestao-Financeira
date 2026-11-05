@@ -19,6 +19,8 @@ export const NOMES = {
   /** Só na APK: configuração das notificações e do backup automático deste telemóvel (não vão no backup). */
   notificacoes: 'notifications',
   backupAutomatico: 'auto-backup',
+  /** «Esqueci-me do PIN» (v2.57.0): os dados foram apagados; o próximo restauro chega sem o PIN do backup. */
+  pinEsquecido: 'pin-forgot',
 } as const;
 
 export type NomeChave = keyof typeof NOMES;

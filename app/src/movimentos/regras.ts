@@ -1,6 +1,6 @@
 // Registar, editar e eliminar movimentos — mesmas regras e mesmo formato gravado que a app atual.
 import { camposCombustivel } from './viaturas';
-import { dia, MESES, type Movimento, type TipoMovimento } from '../dados';
+import { dia, eReceitaDeSalario, MESES, type Movimento, type TipoMovimento } from '../dados';
 import { alfabetica } from './cores';
 
 /** Interpreta valores escritos à portuguesa: "621,18", "1.234,56", "1.234", "12 €". */
@@ -89,7 +89,8 @@ export function novoMovimento(campos: FormData, c: ContextoNovo): Movimento | Er
     amount: c.tipo === 'expense' ? -valor : valor, kind: tipoVisual(c.tipo, categoria),
     movementType: c.tipo, date: data, affectsBalance: true,
     ...(conta !== 'principal' ? { account: conta } : {}),
-    ...(pessoa && c.tipo === 'expense' ? { person: pessoa } : {}),
+    // pessoa: «Quem fez» nas despesas, «Quem recebe» nos salários
+    ...(pessoa && (c.tipo === 'expense' || eReceitaDeSalario({ movementType: 'income', title: titulo, detail: categoria })) ? { person: pessoa } : {}),
     ...(c.tipo === 'expense' && campos.has('vehicle') ? Object.fromEntries(Object.entries(camposCombustivel(campos)).filter(([, v]) => v)) : {}), ...extras,
   };
 }

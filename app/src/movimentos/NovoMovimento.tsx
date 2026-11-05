@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { dia, type Estado, type Movimento, type TipoMovimento } from '../dados';
+import { dia, eReceitaDeSalario, type Estado, type Movimento, type TipoMovimento } from '../dados';
 import { Botao } from '../ui/Botao';
 import { Dialogo } from '../ui/Dialogo';
 import { Icone } from '../ui/Icone';
@@ -8,6 +8,7 @@ import type { aspetosCategorias } from './categorias';
 import { alfabetica } from './cores';
 import { DIA_DO_SALARIO, PERIODICIDADES } from './recorrentes';
 import { novoMovimento } from './regras';
+import { COLUNA_SEM_MEMBROS } from './salarios';
 import { pessoasDaFamilia, ultimaPessoa } from './pessoas';
 import { categoriaSugerida, titulosAnteriores } from './sugestoes';
 import { CamposCombustivel } from './CamposCombustivel';
@@ -97,6 +98,11 @@ export function NovoMovimento({ aberto, aoMudar, estado, escolhas: e, mudarEscol
   const recentes = titulos.filter((t) => !titulo.trim() || (simplificarTitulo(t).includes(simplificarTitulo(titulo)) && t !== titulo)).slice(0, 4);
   const usarTitulo = (t: string) => { if (tituloRef.current) tituloRef.current.value = t; setTitulo(t); aoEscreverTitulo(t); };
   const categoriaAtual = lista.includes(e.categoria) ? e.categoria : lista[0] ?? '';
+  // salário: «Quem recebe» (a tabela de Salários acompanha); pré-escolhe quem recebeu o último
+  const salario = e.tipo === 'income' && !e.revolut && eReceitaDeSalario({ movementType: 'income', title: titulo, detail: categoriaAtual });
+  const ultimoRecebe = useMemo(() => estado.transactions.find((m) => eReceitaDeSalario(m) && typeof m.person === 'string' && pessoas.includes(m.person))?.person ?? pessoas[0] ?? '', [estado.transactions, pessoas]);
+  const [recebe, setRecebe] = useState(ultimoRecebe);
+  useEffect(() => { if (aberto) setRecebe(ultimoRecebe); }, [aberto, ultimoRecebe]);
   const rotuloGuardar = e.tipo === 'expense' ? 'Guardar despesa' : e.tipo === 'income' ? 'Guardar receita' : 'Guardar transferência';
 
   return (
@@ -134,6 +140,11 @@ export function NovoMovimento({ aberto, aoMudar, estado, escolhas: e, mudarEscol
         <EscolhaData />
         {e.tipo === 'expense' && !e.revolut && pessoas.length ? (
           <div className="ffv2-extra"><Rotulo>Quem fez</Rotulo><Escolhas nome="person" rotulo="Quem fez" valor={pessoa} aoMudar={setPessoa} opcoes={pessoasOp} /></div>
+        ) : null}
+        {salario ? (
+          pessoas.length
+            ? <div className="ffv2-extra"><Rotulo>Quem recebe</Rotulo><Escolhas nome="person" rotulo="Quem recebe" valor={recebe} aoMudar={setRecebe} opcoes={pessoasOp.filter((o) => o.valor)} /></div>
+            : <input type="hidden" name="person" value={COLUNA_SEM_MEMBROS} />
         ) : null}
         {e.tipo !== 'transfer' && !e.revolut ? (
           <><Rotulo>Conta</Rotulo><Escolhas nome="account" rotulo="Conta" valor={conta} aoMudar={setConta} opcoes={estado.accounts.map((c) => ({ valor: c.id, rotulo: c.name }))} /></>

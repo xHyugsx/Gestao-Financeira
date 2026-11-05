@@ -12,12 +12,14 @@ export interface OpcoesBloqueio {
   /** APK: imagem escolhida pelo dono (data URL); sem ela, o logótipo animado. */
   imagem?: string | null;
   aoDesbloquear: () => void;
+  /** «Esqueci-me do PIN»: apaga os dados deste telemóvel (a app recomeça vazia e propõe restaurar um backup). */
+  aoApagarDados?: () => void;
 }
 
 const vibrar = (p: number | number[]) => { try { navigator.vibrate?.(p); } catch { /* sem vibração */ } };
 
 /** Desenha o ecrã dentro de `anfitriao`; devolve a função que o desmonta. */
-export function montarBloqueio(anfitriao: HTMLElement, { hash, imagem = null, aoDesbloquear }: OpcoesBloqueio): () => void {
+export function montarBloqueio(anfitriao: HTMLElement, { hash, imagem = null, aoDesbloquear, aoApagarDados }: OpcoesBloqueio): () => void {
   const raiz = document.createElement('div');
   raiz.id = 'ff-lock';
   raiz.innerHTML = marcacaoBloqueio(imagem);
@@ -112,6 +114,18 @@ export function montarBloqueio(anfitriao: HTMLElement, { hash, imagem = null, ao
     window.addEventListener('pointercancel', soltar);
   });
   q<HTMLElement>('.ffl-pad .ffl-back').addEventListener('click', fechar);
+  // «Esqueci-me do PIN»: pede «APAGAR» antes de apagar os dados
+  const folhaReset = q<HTMLElement>('.ffl-reset'), campoReset = q<HTMLInputElement>('.ffl-reset-in'), simReset = q<HTMLButtonElement>('.ffl-reset-sim');
+  q<HTMLElement>('.ffl-reset-bio').hidden = !comBio;
+  const mostrarReset = (v: boolean) => {
+    raiz.classList.toggle('ffl-reset-on', v); folhaReset.setAttribute('aria-hidden', String(!v));
+    campoReset.value = ''; simReset.disabled = true;
+    if (v) setTimeout(() => campoReset.focus(), 300);
+  };
+  q<HTMLElement>('.ffl-esqueci').addEventListener('click', () => { if (!ocupado) mostrarReset(true); });
+  q<HTMLElement>('.ffl-reset-no').addEventListener('click', () => mostrarReset(false));
+  campoReset.addEventListener('input', () => { simReset.disabled = campoReset.value.trim().toUpperCase() !== 'APAGAR'; });
+  simReset.addEventListener('click', () => { if (!simReset.disabled) { vibrar([40, 60, 40]); aoApagarDados?.(); } });
   q<HTMLElement>('.ffl-no').addEventListener('click', () => { biometria.recusarOferta(); terminar(); });
   q<HTMLButtonElement>('.ffl-yes').addEventListener('click', function (this: HTMLButtonElement) {
     this.disabled = true; this.textContent = 'A ativar…';
@@ -120,7 +134,7 @@ export function montarBloqueio(anfitriao: HTMLElement, { hash, imagem = null, ao
 
   // Gestos: deslizar para cima abre, para baixo fecha o teclado; um toque na dica também abre.
   raiz.addEventListener('pointerdown', (e) => {
-    if ((e.target as Element).closest('.ffl-key,.ffl-back,.ffl-sheet')) return;
+    if ((e.target as Element).closest('.ffl-key,.ffl-back,.ffl-esqueci,.ffl-sheet,.ffl-reset')) return;
     inicioY = e.clientY; inicioT = performance.now();
   });
   raiz.addEventListener('pointerup', (e) => {
@@ -128,12 +142,12 @@ export function montarBloqueio(anfitriao: HTMLElement, { hash, imagem = null, ao
     const dy = e.clientY - inicioY, v = dy / Math.max(1, performance.now() - inicioT);
     inicioY = null;
     if (!aberto() && !aAguardar() && (dy < -70 || v < -0.5)) revelar();
-    else if (aberto() && !ocupado && (dy > 90 || v > 0.6) && !(e.target as Element).closest('.ffl-keys')) fechar();
+    else if (aberto() && !ocupado && !raiz.classList.contains('ffl-reset-on') && (dy > 90 || v > 0.6) && !(e.target as Element).closest('.ffl-keys')) fechar();
     else if (!aberto() && !aAguardar() && Math.abs(dy) < 8 && (e.target as Element).closest('.ffl-hint')) revelar();
   });
 
   function aoTeclar(e: KeyboardEvent) {
-    if (aAguardar()) return;
+    if (aAguardar() || raiz.classList.contains('ffl-reset-on')) return;
     if (/^[0-9]$/.test(e.key)) { abrir(); premir(e.key); }
     else if (e.key === 'Backspace' && aberto()) premir('del');
     else if (e.key === 'Escape') fechar();

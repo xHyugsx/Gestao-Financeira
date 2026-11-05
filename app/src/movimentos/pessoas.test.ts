@@ -26,6 +26,7 @@ describe('quem fez a despesa', () => {
   it('grava a pessoa só nas despesas; ao editar, «—» apaga-a', () => {
     expect(novoMovimento(campos({ title: 'Mercado', amount: '10', date: '2026-10-05', person: 'Pessoa A' }), ctx)).toMatchObject({ person: 'Pessoa A' });
     expect(novoMovimento(campos({ title: 'Prémio', amount: '10', date: '2026-10-05', person: 'Pessoa A' }), { ...ctx, tipo: 'income' })).not.toHaveProperty('person');
+    expect(novoMovimento(campos({ title: 'Ordenado', amount: '10', date: '2026-10-05', category: 'Salário', person: 'Pessoa A' }), { ...ctx, tipo: 'income' })).toMatchObject({ person: 'Pessoa A' });
     expect(novoMovimento(campos({ title: 'Mercado', amount: '10', date: '2026-10-05', person: '' }), ctx)).not.toHaveProperty('person');
     const base = m(9, '2026-10-05', -10, 'Pessoa A');
     expect(movimentoEditado(base, campos({ title: 'X', amount: '10', person: 'Pessoa B' }))!.person).toBe('Pessoa B');

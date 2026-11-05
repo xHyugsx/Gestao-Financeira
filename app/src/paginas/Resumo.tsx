@@ -38,8 +38,12 @@ const reduzMovimento = () => window.matchMedia?.('(prefers-reduced-motion: reduc
  */
 export function pessoasDosSalarios(salarios: Salarios, membros: string[]): string[] {
   const anos = Object.keys(salarios).sort().reverse();
-  for (const a of anos) { const p = Object.keys(salarios[a] ?? {}); if (p.length) return p; }
-  return membros.slice(0, 2);
+  for (const a of anos) {
+    const p = Object.keys(salarios[a] ?? {});
+    // membros acrescentados depois também ganham coluna (v2.57.0)
+    if (p.length) return [...p, ...membros.filter((m) => m && !p.includes(m))];
+  }
+  return membros.filter(Boolean);
 }
 
 interface Props {

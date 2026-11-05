@@ -9,7 +9,7 @@ async def abrir_novo(p):
 
 
 async def t_mais_volta_a_despesa_depois_de_uma_receita(app):
-    await app.abrir({})
+    await app.abrir({'profile': {'profileName': '', 'email': '', 'phone': '', 'members': [], 'salaryMonth': 'anterior'}})
     p = app.page
     await abrir_novo(p)
     await p.click('[role=dialog] .segmented button:text-is("Receita")'); await p.wait_for_timeout(200)

@@ -18,6 +18,7 @@ import { ACOES, comRegras, regrasPessoais } from '../importacao/config';
 import { pessoasDosSalarios } from '../paginas/Resumo';
 import { eNativo } from '../nativo/plataforma';
 import { BackupAutomatico } from './Notificacoes';
+import { Escolhas } from '../ui/Escolhas';
 
 type Mudar = (f: (e: Estado) => Estado) => void;
 
@@ -61,9 +62,30 @@ export function Perfil({ estado, mudarEstado, avisar }: { estado: Estado; mudarE
       <Botao type="submit">Guardar perfil</Botao>
       <div className="settings-divider" />
       <Membros estado={estado} mudarEstado={mudarEstado} avisar={avisar} />
+      <QuandoSalario estado={estado} mudarEstado={mudarEstado} avisar={avisar} />
       <Animais estado={estado} mudarEstado={mudarEstado} avisar={avisar} />
       <Viaturas estado={estado} mudarEstado={mudarEstado} avisar={avisar} />
     </form>
+  );
+}
+
+/** Quando se recebe o salário: decide de que mês é o «Rendimento mensal» (v2.57.0). */
+export const OPCOES_SALARIO = [
+  { valor: 'anterior', rotulo: 'No fim do mês', sub: 'conta para o mês seguinte' },
+  { valor: 'proprio', rotulo: 'No início do mês', sub: 'conta para o próprio mês' },
+] as const;
+
+function QuandoSalario({ estado, mudarEstado, avisar }: { estado: Estado; mudarEstado: Mudar; avisar: (m: string) => void }) {
+  return (
+    <section className="ffv2-extra ffv2-quando-salario">
+      <div className="settings-divider" />
+      <h3>Quando recebes o salário?</h3>
+      <Escolhas
+        nome="salaryMonth" rotulo="Quando recebes o salário" valor={estado.profile.salaryMonth ?? 'anterior'} opcoes={OPCOES_SALARIO}
+        aoMudar={(v) => { mudarEstado((e) => ({ ...e, profile: { ...e.profile, salaryMonth: v as 'anterior' | 'proprio' } })); avisar('Rendimento atualizado.'); }}
+      />
+      <p className="text-xs text-muted-foreground">O «Rendimento mensal» da Principal usa os salários desse mês.</p>
+    </section>
   );
 }
 
