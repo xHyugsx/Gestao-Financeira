@@ -9,7 +9,7 @@ import { alfabetica } from './cores';
 import { DIA_DO_SALARIO, PERIODICIDADES } from './recorrentes';
 import { novoMovimento } from './regras';
 import { COLUNA_SEM_MEMBROS } from './salarios';
-import { pessoasDaFamilia, ultimaPessoa } from './pessoas';
+import { opcoesQuemFez, pessoasDaFamilia } from './pessoas';
 import { categoriaPeloTitulo, categoriaSugerida, titulosAnteriores } from './sugestoes';
 import { CamposCombustivel } from './CamposCombustivel';
 import { CampoCategoria } from './EscolhaCategoria';
@@ -55,7 +55,8 @@ export function NovoMovimento({ aberto, aoMudar, estado, escolhas: e, mudarEscol
   const tipoComCategoria = e.tipo === 'income' ? 'income' : 'expense';
   const titulos = useMemo(() => (e.tipo === 'transfer' ? [] : titulosAnteriores(estado.transactions, tipoComCategoria)), [estado.transactions, e.tipo, tipoComCategoria]);
   const pessoas = useMemo(() => pessoasDaFamilia(estado), [estado]);
-  const pessoaSugerida = useMemo(() => ultimaPessoa(estado.transactions, pessoas), [estado.transactions, pessoas]);
+  // «Quem fez» começa em «Ambos» (valor vazio); com um só membro, é dele (v2.61.0)
+  const pessoaSugerida = pessoas.length === 1 ? pessoas[0]! : '';
   const escolherCategoria = (categoria: string) => { setManual(true); setSugerida(null); mudar({ categoria }); };
   const [pessoa, setPessoa] = useState(pessoaSugerida);
   const [conta, setConta] = useState('principal');
@@ -96,7 +97,7 @@ export function NovoMovimento({ aberto, aoMudar, estado, escolhas: e, mudarEscol
     aoGuardar(r);
   };
 
-  const pessoasOp = [...pessoas.map((p, k) => ({ valor: p, rotulo: p, classe: k === 0 ? 'ffp1' : k === 1 ? 'ffp2' : undefined })), { valor: '', rotulo: '—' }];
+  const pessoasOp = opcoesQuemFez(pessoas);
   const tituloRef = useRef<HTMLInputElement>(null);
   const [titulo, setTitulo] = useState('');
   const recentes = titulos.filter((t) => !titulo.trim() || (simplificarTitulo(t).includes(simplificarTitulo(titulo)) && t !== titulo)).slice(0, 4);
@@ -143,9 +144,9 @@ export function NovoMovimento({ aberto, aoMudar, estado, escolhas: e, mudarEscol
         {aberto && e.tipo === 'expense' && !e.revolut && eCategoriaCombustivel(categoriaAtual) ? <CamposCombustivel estado={estado} /> : null}
         <Rotulo>Data</Rotulo>
         <EscolhaData />
-        {e.tipo === 'expense' && !e.revolut && pessoas.length ? (
+        {e.tipo === 'expense' && !e.revolut && pessoas.length > 1 ? (
           <div className="ffv2-extra"><Rotulo>Quem fez</Rotulo><Escolhas nome="person" rotulo="Quem fez" valor={pessoa} aoMudar={setPessoa} opcoes={pessoasOp} /></div>
-        ) : null}
+        ) : e.tipo === 'expense' && !e.revolut && pessoas.length === 1 ? <input type="hidden" name="person" value={pessoas[0]} /> : null}
         {salario ? (
           pessoas.length
             ? <div className="ffv2-extra"><Rotulo>Quem recebe</Rotulo><Escolhas nome="person" rotulo="Quem recebe" valor={recebe} aoMudar={setRecebe} opcoes={pessoasOp.filter((o) => o.valor)} /></div>

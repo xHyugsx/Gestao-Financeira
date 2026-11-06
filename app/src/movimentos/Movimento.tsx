@@ -5,6 +5,7 @@ import { formatarEuros } from '../ui/formatos';
 import { Icone } from '../ui/Icone';
 import { aspetoDoMovimento, type aspetosCategorias, iconePorTipo } from './categorias';
 import { porConfirmar } from './recorrentes';
+import { quemFez } from './pessoas';
 
 function valor(m: Movimento, ocultos: boolean): string {
   if (porConfirmar(m)) return 'A definir';
@@ -67,7 +68,7 @@ export function TextoMovimento({ movimento: m, contas }: { movimento: Movimento;
           ? <span className="tx-acc">{contas.find((c) => c.id === m.account)?.name || 'Conta'}</span>
           : null}
         {m.vehicle ? <span className="tx-acc ffviatura">{`${m.vehicle}${rotuloCombustivel(m.fuel) ? ` · ${rotuloCombustivel(m.fuel)}` : ''}`}</span> : null}
-        {m.person ? <span className="tx-acc ffpessoa">{m.person}</span> : null}
+        {quemFez(m) ? <span className={`tx-acc ffpessoa${m.person ? '' : ' ffambos'}`}>{quemFez(m)}</span> : null}
         {agendado(m, new Date()) ? <span className="tx-acc ffagendado">Agendado</span> : null}
         {porConfirmar(m) ? <span className="tx-acc ffconfirmar">Valor por confirmar</span> : null}
       </p>

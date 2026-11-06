@@ -19,3 +19,26 @@ export function ultimaPessoa(l: Movimento[], pessoas: string[]): string {
   }
   return melhor?.person ?? '';
 }
+
+// «Quem fez» (v2.61.0, decisões do dono): sem pessoa escolhida, a despesa é de **ambos** (com 3 ou mais membros, «Todos»);
+// com um só membro, é sempre dele. Os dados guardados não mudam: uma despesa sem `person` passa a ler-se como de ambos.
+export const rotuloAmbos = (n: number) => (n >= 3 ? 'Todos' : 'Ambos');
+
+let atuais: string[] = [];
+/** Membros atuais (a App chama a cada mudança; as linhas dos movimentos usam-nos para a etiqueta «Ambos»). */
+export function definirPessoas(l: string[]) { atuais = l; }
+
+/** Quem fez esta despesa, para mostrar: a pessoa escolhida; sem ela, o único membro ou «Ambos»/«Todos»; `null` sem membros. */
+export function quemFez(m: Pick<Movimento, 'movementType' | 'person'>, pessoas: string[] = atuais): string | null {
+  if (m.movementType !== 'expense') return typeof m.person === 'string' && m.person ? m.person : null;
+  if (typeof m.person === 'string' && m.person) return m.person;
+  if (pessoas.length === 1) return pessoas[0]!;
+  return pessoas.length >= 2 ? rotuloAmbos(pessoas.length) : null;
+}
+
+/** Opções de «Quem fez»: «Ambos»/«Todos» primeiro (valor vazio = de ambos) e depois cada membro, com as cores fixas. */
+export function opcoesQuemFez(pessoas: string[], extra: string[] = []) {
+  const nomes = [...new Set([...pessoas, ...extra.filter(Boolean)])];
+  return [{ valor: '', rotulo: rotuloAmbos(pessoas.length), classe: 'ffpambos' },
+    ...nomes.map((p, k) => ({ valor: p, rotulo: p, classe: k === 0 ? 'ffp1' : k === 1 ? 'ffp2' : undefined }))];
+}

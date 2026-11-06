@@ -37,7 +37,7 @@ async def t_registar_abastecimento_com_viatura(app):
     await p.evaluate("window.ffGoPg('combustivel')"); await p.wait_for_timeout(800)
     await p.click('[aria-label="Adicionar abastecimento"]'); await p.wait_for_timeout(500)
     escolhas = [await p.input_value(f'[role=dialog] input[name={n}]') for n in ('vehicle', 'fuel', 'person')]
-    verificar(escolhas == ['Mota X', 'gasolina', 'Pessoa B'], f'pré-escolhe a última viatura, o seu combustível e a última pessoa: {escolhas}')
+    verificar(escolhas == ['Mota X', 'gasolina', ''], f'pré-escolhe a última viatura, o seu combustível e «Ambos»: {escolhas}')
     await app.escolher('vehicle', 'Carro A', '[role=dialog]')
     verificar(await p.input_value('[role=dialog] input[name=fuel]') == 'gasoleo', 'ao trocar de viatura, o combustível dessa viatura')
     await app.escolher('person', 'Pessoa A', '[role=dialog]')

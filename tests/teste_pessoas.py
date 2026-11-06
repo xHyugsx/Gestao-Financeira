@@ -15,9 +15,9 @@ async def t_quem_fez_a_despesa(app):
     await app.abrir({'profile': PERFIL, 'transactions': [MOV]})
     p = app.page
     await p.click('[aria-label="Adicionar movimento"]'); await p.wait_for_timeout(500)
-    verificar(await p.input_value('[role=dialog] input[name=person]') == 'Pessoa B', 'não pré-escolheu a pessoa da última despesa')
+    verificar(await p.input_value('[role=dialog] input[name=person]') == '', 'não pré-escolheu «Ambos»')
     opcoes = await p.evaluate("[...document.querySelectorAll('[role=dialog] [data-campo=person] [data-valor]')].map(o=>o.textContent)")
-    verificar(opcoes == ['Pessoa A', 'Pessoa B', '—'], f'opções: {opcoes}')
+    verificar(opcoes == ['Ambos', 'Pessoa A', 'Pessoa B'], f'opções: {opcoes}')
     await p.fill('[role=dialog] input[name=title]', 'Mercado'); await p.fill('[role=dialog] input[name=amount]', '25')
     await app.escolher('person', 'Pessoa A', '[role=dialog]')
     await p.click('[role=dialog] button[type=submit]'); await p.wait_for_timeout(700)
@@ -27,7 +27,7 @@ async def t_quem_fez_a_despesa(app):
     verificar('Pessoa A' in etiquetas and 'Pessoa B' in etiquetas, f'etiquetas: {etiquetas}')
 
     await p.click('[aria-label="Adicionar movimento"]'); await p.wait_for_timeout(500)
-    verificar(await p.input_value('[role=dialog] input[name=person]') == 'Pessoa A', 'não lembrou a última pessoa')
+    verificar(await p.input_value('[role=dialog] input[name=person]') == '', 'cada despesa nova começa em «Ambos»')
     await p.click('[role=dialog] .segmented button:text-is("Receita")'); await p.wait_for_timeout(200)
     # nas receitas de salário (a categoria por omissão) aparece «Quem recebe», não «Quem fez» (v2.57.0/v2.59.0)
     verificar(await p.get_attribute('[role=dialog] [data-campo=\"person\"]', 'aria-label') == 'Quem recebe', 'nas receitas, «Quem fez» não aparece')
@@ -39,10 +39,12 @@ async def t_quem_fez_a_despesa(app):
     await p.click('[role=dialog] button[type=submit]'); await p.wait_for_timeout(600)
     padaria = next(m for m in (await dados(app))['transactions'] if m['title'] == 'Padaria')
     verificar('person' not in padaria, f'não apagou a pessoa: {padaria}')
+    etiqueta = await p.evaluate("document.querySelector('article[aria-label=\"Editar Padaria\"] .ffpessoa')?.textContent")
+    verificar(etiqueta == 'Ambos', f'sem pessoa, a etiqueta é «Ambos»: {etiqueta}')
 
     await p.evaluate("window.ffGoPg('analise')"); await p.wait_for_timeout(1000)
     linhas = await p.evaluate("""[...document.querySelectorAll('.ffpessoas .chart-legend > div')].map(d=>[...d.children].slice(1,3).map(e=>e.textContent.replace(/\\u00a0/g,' ')))""")
-    verificar(linhas == [['Pessoa A', '25,00 €'], ['Sem pessoa', '4,00 €']], f'gastos por pessoa: {linhas}')
+    verificar(linhas == [['Pessoa A', '25,00 €'], ['Ambos', '4,00 €']], f'gastos por pessoa: {linhas}')
 
 
 async def t_sem_pessoas_nao_mostra_o_campo(app):
@@ -50,3 +52,28 @@ async def t_sem_pessoas_nao_mostra_o_campo(app):
     p = app.page
     await p.click('[aria-label="Adicionar movimento"]'); await p.wait_for_timeout(500)
     verificar(not await p.query_selector('[role=dialog] [data-campo=\"person\"]'), 'campo sem pessoas no perfil')
+
+
+async def t_um_so_membro_e_sempre_dele(app):
+    await app.page.emulate_media(reduced_motion='reduce')
+    await app.abrir({'profile': {**PERFIL, 'members': ['Pessoa A']}, 'transactions': [{**MOV, 'person': None, 'title': 'Antiga'}]})
+    p = app.page
+    await p.click('[aria-label="Adicionar movimento"]'); await p.wait_for_timeout(500)
+    verificar(not await p.query_selector('[role=dialog] [data-campo="person"]'), 'com um só membro, sem escolha «Quem fez»')
+    await p.fill('[role=dialog] input[name=title]', 'Mercado'); await p.fill('[role=dialog] input[name=amount]', '7')
+    await p.click('[role=dialog] button[type=submit]'); await p.wait_for_timeout(700)
+    novo = next(m for m in (await dados(app))['transactions'] if m['title'] == 'Mercado')
+    verificar(novo.get('person') == 'Pessoa A', f'gravou o único membro: {novo}')
+    etiqueta = await p.evaluate("document.querySelector('article[aria-label=\"Editar Antiga\"] .ffpessoa')?.textContent")
+    verificar(etiqueta == 'Pessoa A', f'antiga sem pessoa fica do único membro: {etiqueta}')
+
+
+async def t_tres_membros_todos(app):
+    await app.page.emulate_media(reduced_motion='reduce')
+    await app.abrir({'profile': {**PERFIL, 'members': ['Pessoa A', 'Pessoa B', 'Pessoa C']}, 'transactions': [{k: v for k, v in MOV.items() if k != 'person'}]})
+    p = app.page
+    etiqueta = await p.evaluate("document.querySelector('.transaction-list .ffpessoa')?.textContent")
+    verificar(etiqueta == 'Todos', f'com 3 membros, «Todos»: {etiqueta}')
+    await p.click('[aria-label="Adicionar movimento"]'); await p.wait_for_timeout(500)
+    opcoes = await p.evaluate("[...document.querySelectorAll('[role=dialog] [data-campo=person] [data-valor]')].map(o=>o.textContent)")
+    verificar(opcoes[0] == 'Todos', f'opções: {opcoes}')

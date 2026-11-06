@@ -1,5 +1,6 @@
 // Motor do Jarvis (por regras, sem IA externa): perguntas, ações com confirmação e seguimento da conversa.
 // Mesmas respostas da app atual (tests/referencias/jarvis.json); a lógica segue a ordem das regras originais.
+import { pessoasDaFamilia } from '../movimentos/pessoas';
 import { anoMes, type Conta, type Estado, MESES, mesDosSalarios, type Movimento, rendimentoDoMes, salariosDoMes } from '../dados';
 import { CATEGORIAS_POR_OMISSAO } from '../dados/esquema';
 import { categoriaDespesa, categoriaReceita } from '../movimentos/categorias';
@@ -125,6 +126,9 @@ export class MotorJarvis {
         id: Date.now(), title: titulo || cat, detail: `${dd.getDate()} ${hc[dd.getMonth()]} · ${cat}`, amount: ty === 'income' ? amt : -amt,
         kind: tipoVisual(ty, cat), movementType: ty, date: iso(dd), affectsBalance: true, ...(accM ? { account: accM.id } : {}),
       };
+      // com um só membro, a despesa é dele (com dois ou mais, sem pessoa = «Ambos»)
+      const membros = pessoasDaFamilia(c.estado);
+      if (ty === 'expense' && membros.length === 1) obj.person = membros[0]!;
       // registar também pede confirmação (como apagar e editar)
       this.pendente = { type: 'add-tx', payload: obj };
       return `Vou registar ${ty === 'income' ? 'a receita' : 'a despesa'} «${obj.title}» — ${A(amt)} · hoje · ${cat}${accM ? ` · conta ${accM.name}` : ''}. Confirmas?`;
