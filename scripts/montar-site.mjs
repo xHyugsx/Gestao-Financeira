@@ -11,7 +11,7 @@ import { build } from 'vite';
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), '..');
 const APP = join(RAIZ, 'app');
 const SITE = join(RAIZ, '_site');
-const { versao: VERSAO } = JSON.parse(readFileSync(join(APP, 'versao.json'), 'utf8'));
+const { versao: VERSAO, nativo: NATIVO = 1 } = JSON.parse(readFileSync(join(APP, 'versao.json'), 'utf8'));
 
 function copiar(origem, destino) {
   if (!existsSync(origem)) throw new Error(`ficheiro em falta: ${origem}`);
@@ -38,7 +38,7 @@ copiar(join(APP, 'estatico', 'manifest.webmanifest'), join(SITE, 'manifest.webma
 copiar(join(APP, 'service-worker.js'), join(SITE, 'service-worker.js'));
 const ficheiros = listar(SITE).map((c) => relative(SITE, c).split('\\').join('/'))
   .filter((f) => f !== 'service-worker.js' && f !== 'version.json' && !f.endsWith('LICENSE')).sort();
-writeFileSync(join(SITE, 'version.json'), JSON.stringify({ version: VERSAO, files: ficheiros }, null, 2) + '\n');
+writeFileSync(join(SITE, 'version.json'), JSON.stringify({ version: VERSAO, nativo: NATIVO, files: ficheiros }, null, 2) + '\n');
 
 // Versões retiradas
 const retiradas = [

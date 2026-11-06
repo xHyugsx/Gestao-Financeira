@@ -82,6 +82,8 @@ export function classificar(ext: Extrato, ctx: Contexto, pessoais: RegraPessoal[
     o.k = tipo ?? (l.amount > 0 ? 'inc' : 'exp');
     if (o.k === 'exp' && (!o.c || o.c === 'Outros') && hist[normalizar(o.t)]) o.c = hist[normalizar(o.t)]!;
     if (o.k === 'exp' && !o.c) o.c = 'Outros';
+    // salário reconhecido pela descrição, mesmo sem regra pessoal (v2.60.0: «TRF SALARIO …» ficava em «Outras receitas»)
+    if (o.k === 'inc' && !o.c && /\b(SALARIO|ORDENADO|VENCIMENTO|VENCIM)\b/.test(N)) o.c = ctx.inc.find((c) => /^sal[aá]rio/i.test(c)) ?? null;
     if (o.k === 'inc' && !o.c) o.c = /^TFI|GENERALI|VCHER|INSTITUTO/.test(N) ? 'Reembolsos' : 'Outras receitas';
     if (o.k === 'inc' && !ctx.inc.includes(o.c!)) o.c = 'Outras receitas';
     o.on = o.k === 'exp' || o.k === 'inc' || o.k === 'sal' || (o.k === 'ask' && !!o.ch && o.ch !== 'Ignorar');

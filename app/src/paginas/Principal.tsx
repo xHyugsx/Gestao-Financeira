@@ -1,4 +1,4 @@
-import { agendado, anoMes, dia, type Estado, gastos, inicioDoMes, MESES, mesDoRendimento, mesDosSalarios, type Movimento, rendimentoDoMes } from '../dados';
+import { agendado, anoMes, dia, type Estado, gastos, haSalarios, inicioDoMes, MESES, mesDoRendimento, mesDosSalarios, type Movimento, rendimentoDoMes } from '../dados';
 import { aspetosCategorias, simplificar } from '../movimentos/categorias';
 import { LinhaMovimento } from '../movimentos/Movimento';
 import { porConfirmar } from '../movimentos/recorrentes';
@@ -137,15 +137,19 @@ export function Principal({ estado, mes, ocultos, lista, mudarLista, vibrar, abr
   const semana = Array.from({ length: 7 }, (_, i) => new Date(segunda.getFullYear(), segunda.getMonth(), segunda.getDate() + i));
   const agendadosMes = porData.filter((m) => agendado(m, hoje)).reverse();
   const proximo = agendadosMes[0];
+  const semSalarios = !haSalarios(estado);
   const valorAgendado = (m: Movimento) => (porConfirmar(m) ? 'A definir' : eur(Math.abs(m.revolut ? m.transferValue || 0 : m.amount || m.transferValue || 0)));
 
   return (
     <main className="finance-grid ffprincipal">
-      <section className="ffhero ffhero-orbita" aria-label={rotuloRendimento}>
+      <section className={`ffhero ffhero-orbita${semSalarios ? ' ffhero-compacto' : ''}`} aria-label={rotuloRendimento}>
         <div className="ffhero-txt">
           <p>{rotuloRendimento}</p>
-          <strong className="ffhero-valor">{eur(rendimento.valor)}</strong>
-          {!rendimento.valor ? (
+          {semSalarios ? (
+            // nunca houve salários (ex.: estudante, app nova): cartão pequeno com o que fazer, em vez de «0,00 €» em grande (v2.60.0)
+            <span className="ffhero-var ffhero-falta">Ainda sem salários. Regista-o no + › Receita › Salário.</span>
+          ) : <strong className="ffhero-valor">{eur(rendimento.valor)}</strong>}
+          {semSalarios ? null : !rendimento.valor ? (
             // sem salários desse mês: diz o que falta em vez de «100% vs …» (v2.59.0)
             <span className="ffhero-var ffhero-falta">{`Sem salários registados em ${MESES[mesDosSalarios(estado, mesRendimento).getMonth()]}`}</span>
           ) : rendimento.variacao !== null ? (

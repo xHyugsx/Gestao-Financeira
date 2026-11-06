@@ -2,6 +2,7 @@
 import { App } from '@capacitor/app';
 import { VERSAO } from '../config';
 import { eNativo } from './plataforma';
+import { aplicarSePronta, maisRecente, verificarAtualizacao } from './atualizarWeb';
 
 const JANELAS = "[role='dialog']:not(.settings-sheet), [role='alertdialog'], .ffmore-ov, #pwa-update-overlay";
 
@@ -21,14 +22,11 @@ export function acaoDoEndereco(url: string | undefined): string | null {
   return m?.[1] ?? null;
 }
 
-/** Compara versões «2.47.0». */
-export function maisRecente(a: string, b: string): boolean {
-  const pa = a.split('.').map(Number), pb = b.split('.').map(Number);
-  for (let i = 0; i < 3; i++) if ((pa[i] ?? 0) !== (pb[i] ?? 0)) return (pa[i] ?? 0) > (pb[i] ?? 0);
-  return false;
-}
+export { maisRecente } from './atualizarWeb';
 
 async function verificarVersao(ignoradas: Set<string>) {
+  // primeiro a atualização sozinha (só a parte web); o aviso da APK só quando muda a parte Android (v2.60.0)
+  if (await verificarAtualizacao() !== 'apk') return;
   try {
     const r = await fetch('https://api.github.com/repos/xHyugsx/Gestao-Financeira/releases/latest', { cache: 'no-store' });
     if (!r.ok) return;
@@ -76,4 +74,6 @@ export function iniciarAndroid(): void {
   const ignoradas = new Set<string>();
   void verificarVersao(ignoradas);
   void App.addListener('resume', () => void verificarVersao(ignoradas));
+  // ao sair da app, a versão descarregada passa a ser usada (depois do backup automático e das notificações)
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') setTimeout(() => { if (document.visibilityState === 'hidden') void aplicarSePronta(); }, 6000); });
 }

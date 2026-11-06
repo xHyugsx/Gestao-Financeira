@@ -15,9 +15,13 @@ export const eReceitaDeSalario = (m: Pick<Movimento, 'movementType' | 'title' | 
 
 /** Ainda não há salários (nem na tabela nem nos movimentos, além de `exceto`) e não se escolheu quando se recebe: é altura de perguntar. */
 export function perguntarQuandoSalario(dados: Pick<Dados, 'salaries' | 'transactions' | 'profile'>, exceto: Movimento['id']): boolean {
-  if (dados.profile.salaryMonth) return false;
+  return !dados.profile.salaryMonth && !haSalarios(dados, exceto);
+}
+
+/** Já houve algum salário (na tabela ou nas receitas)? Sem nenhum, a Principal mostra o cartão do rendimento pequeno (v2.60.0). */
+export function haSalarios(dados: Pick<Dados, 'salaries' | 'transactions'>, exceto?: Movimento['id']): boolean {
   const naTabela = Object.values(dados.salaries).some((pessoas) => Object.values(pessoas ?? {}).some((v) => Array.isArray(v) && v.some((x) => x > 0)));
-  return !naTabela && !dados.transactions.some((m) => m.id !== exceto && eReceitaDeSalario(m) && m.amount > 0);
+  return naTabela || dados.transactions.some((m) => m.id !== exceto && eReceitaDeSalario(m) && m.amount > 0);
 }
 
 /**

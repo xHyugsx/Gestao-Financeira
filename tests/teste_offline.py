@@ -12,10 +12,13 @@ async def t_funciona_sem_internet(app):
     verificar(ok, 'a app não abriu sem internet')
 
 
-async def t_aviso_de_nova_versao(app):
+async def t_nova_versao_sem_pergunta_nem_recarregar_a_meio(app):
+    """v2.60.0: a versão nova não pergunta nem recarrega com a app à vista (aplica-se ao ir para segundo plano)."""
     await app.abrir()
     p = app.page
     await p.reload(); await p.wait_for_timeout(2500)
     await p.route('**/version.json', lambda r: r.fulfill(status=200, content_type='application/json', body='{"version":"9.99.9","files":[]}'))
     await p.evaluate("document.dispatchEvent(new Event('visibilitychange'))"); await p.wait_for_timeout(1500)
-    verificar(await p.query_selector('#pwa-update-overlay'), 'aviso de nova versão não apareceu')
+    url = p.url
+    await p.wait_for_timeout(1500)
+    verificar(not await p.query_selector('#pwa-update-overlay') and p.url == url, 'não devia perguntar nem recarregar com a app à vista')

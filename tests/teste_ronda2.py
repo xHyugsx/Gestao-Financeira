@@ -68,3 +68,13 @@ async def t_pin_errado_avisa_e_app_vazia(app):
     await app.abrir({})
     frase = await p.evaluate(TEXTO('.page-current .ffdica'))
     verificar('seguidos sem despesas' not in frase, f'numa app vazia não há «dias sem despesas»: {frase}')
+
+
+async def t_sem_salarios_o_cartao_fica_pequeno(app):
+    """v2.60.0 (P3): sem nenhum salário, o cartão do rendimento fica pequeno e explica o que fazer; com salários, volta ao normal."""
+    await app.abrir({'transactions': [M(1, '2026-09-20', 'Pão', -2)]})
+    p = app.page
+    verificar(await p.query_selector('.ffhero.ffhero-compacto') and not await p.query_selector('.ffhero-valor'), 'sem salários: cartão pequeno, sem «0,00 €»')
+    verificar('Regista-o' in (await p.text_content('.ffhero-falta') or ''), 'devia dizer onde registar o salário')
+    await app.abrir({'transactions': [M(1, '2026-08-28', 'Ordenado', 1200, 'Salário')]})
+    verificar(not await p.query_selector('.ffhero-compacto') and '1200,00' in (await p.text_content('.ffhero-valor') or ''), 'com salário, o cartão normal')

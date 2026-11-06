@@ -12,6 +12,7 @@ import { VERSAO } from './config';
 import { tratarRespostaGoogle } from './dados/drive';
 import { App } from './layout/App';
 import { iniciarAndroid, prepararAndroid } from './nativo/android';
+import { confirmarArranque } from './nativo/atualizarWeb';
 import { eNativo } from './nativo/plataforma';
 import { iniciarLembretes } from './veterinario/lembretes';
 
@@ -26,5 +27,9 @@ if (tratarRespostaGoogle()) {
   iniciarAutobloqueio(() => ligacoes.bloquear());
   iniciarLembretes();
   iniciarAndroid();
-  void prepararAndroid().finally(() => createRoot(document.getElementById('root')!).render(<App />));
+  void prepararAndroid().finally(() => {
+    createRoot(document.getElementById('root')!).render(<App />);
+    // a app arrancou: a guarda da atualização sozinha (APK) já não volta atrás
+    requestAnimationFrame(() => void confirmarArranque());
+  });
 }

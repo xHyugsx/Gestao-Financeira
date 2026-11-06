@@ -858,3 +858,12 @@ html.nativo.ff-toque :is(.ws-rays, .ws-star, .ws-halo, .ws-moon, .jv-r1, .jv-r2,
 .ffbloq-mi span { position: absolute; left: 0; right: 0; bottom: 0; padding: .4rem; font-size: .72rem; background: rgba(0, 0, 0, .6); }
 .ffbloq-logo { display: grid; place-items: center; background: radial-gradient(70% 50% at 40% 30%, #3b1d7a, transparent 70%), #05091F; }
 .ffbloq-logo img { width: 3.5rem; height: 3.5rem; border-radius: .9rem; margin-bottom: 1.4rem; box-shadow: 0 0 20px rgba(168, 85, 247, .65); }
+
+/* Aviso «Finanças atualizada para a versão X» (v2.60.0) */
+#ff-atualizada { position: fixed; left: 50%; top: calc(14px + env(safe-area-inset-top, 0px)); z-index: 9600; transform: translate(-50%, -12px); opacity: 0; padding: .6rem 1rem; border-radius: 99rem; background: var(--orb-sup2, #1b2150); border: 1px solid color-mix(in oklab, var(--orb-2) 55%, transparent); color: #fff; font-size: .85rem; white-space: nowrap; box-shadow: 0 10px 30px rgba(0,0,0,.45); transition: opacity .35s ease, transform .35s cubic-bezier(.22,1,.36,1); pointer-events: none; }
+#ff-atualizada.in { opacity: 1; transform: translate(-50%, 0); }
+@media (prefers-reduced-motion: reduce) { #ff-atualizada { transition: none; } }
+
+/* Rendimento sem nenhum salário: cartão pequeno, sem o anel (v2.60.0) */
+.ffhero.ffhero-compacto { min-height: 0; padding-top: .9rem; padding-bottom: .9rem; }
+.ffhero.ffhero-compacto .ffhero-anel { display: none; }
