@@ -19,7 +19,7 @@ async def t_recorrentes_do_mes(app):
       [a.querySelector('h3').textContent, a.querySelector('.ffrec-dir small').textContent])""")
     # o Seguro tem periodicidade: a app cria sozinha a cópia de 15 de setembro, por isso aparece como pago
     # agrupados por estado: primeiro o que falta pagar, depois o pago
-    verificar(linhas == [['Internet', 'Por pagar'], ['Renda', 'Pago'], ['Streaming', 'Pago'], ['Seguro', 'Pago']], f'linhas: {linhas}')
+    verificar(linhas == [['Internet', 'A seguir'], ['Renda', 'Pago'], ['Streaming', 'Pago'], ['Seguro', 'Pago']], f'linhas: {linhas}')
     resumo = await p.evaluate("[...document.querySelectorAll('.page-current .ffrec-v-pago, .page-current .ffrec-v-falta, .page-current .ffrec-v-custo')].map(e=>e.textContent.replace(/\\u00a0/g,' '))")
     verificar(resumo[:2] == ['702,00 €', '40,00 €'], f'pago / falta: {resumo}')
     verificar(resumo[2] == '8184,00 €', f'anual (600×12 + 12×12 + 40×12 + 90×4): {resumo}')
