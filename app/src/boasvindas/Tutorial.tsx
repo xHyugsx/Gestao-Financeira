@@ -39,6 +39,8 @@ export function aplicarTutorial(e: Estado, r: ResultadoTutorial): Estado {
       pets: r.animais,
     },
     ...(r.pinHash ? { pinHash: r.pinHash } : {}),
+    // com viatura, a categoria Combustível passa a existir (o «+» mostra a viatura e o combustível)
+    ...(r.viaturas.length && !e.categories.some((c) => /combust/i.test(c)) ? { categories: [...e.categories, 'Combustível'] } : {}),
   };
 }
 

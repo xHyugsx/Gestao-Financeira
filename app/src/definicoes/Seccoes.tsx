@@ -48,8 +48,8 @@ export function Perfil({ estado, mudarEstado, avisar }: { estado: Estado; mudarE
     const f = new FormData(ev.currentTarget);
     const nome = String(f.get('profileName') ?? ''), email = String(f.get('email') ?? '').trim(), telefone = String(f.get('phone') ?? '').trim();
     const erro = erroNome(nome)
-      ?? (email.length > 120 ? 'Use no máximo 120 caracteres.' : email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? 'Introduza um email válido.' : null)
-      ?? (telefone.length > 30 ? 'Use no máximo 30 caracteres.' : !/^[+\d\s().-]*$/.test(telefone) ? 'Introduza um telefone válido.' : null);
+      ?? (email.length > 120 ? 'Use no máximo 120 caracteres.' : email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? 'Escreve um email válido.' : null)
+      ?? (telefone.length > 30 ? 'Use no máximo 30 caracteres.' : !/^[+\d\s().-]*$/.test(telefone) ? 'Escreve um telefone válido.' : null);
     if (erro) { avisar(erro); return; }
     mudarEstado((e) => ({ ...e, profile: { ...e.profile, profileName: nome.trim(), email, phone: telefone } }));
     avisar('Perfil guardado.');

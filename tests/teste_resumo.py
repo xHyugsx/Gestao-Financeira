@@ -20,9 +20,9 @@ async def t_resumo_do_mes_e_destaques(app):
     await p.evaluate("window.ffGoPg('resumo')"); await p.wait_for_timeout(800)
     verificar(await app.gastos() == '810,00 €', f'gastos de setembro: {await app.gastos()}')
     linha = (await p.evaluate(TEXTO('.ffres-linha')))[0]
-    verificar(linha == '↑ 35% vs agosto 62% em Casa', f'comparação e maior categoria: {linha}')
+    verificar(linha == '↑ 35% vs 1 a 28 de agosto 62% em Casa', f'comparação e maior categoria: {linha}')
     ideias = await p.evaluate(TEXTO('.ffideia p'))
-    verificar(ideias[0] == 'Os gastos aumentaram 35% face a agosto — sobretudo em Alimentação (+150%).', ideias)
+    verificar(ideias[0] == 'Os gastos aumentaram 35% face ao mesmo período de agosto — sobretudo em Alimentação (+150%).', ideias)
     verificar(ideias[1] == 'A maior categoria é Casa: 500,00 € (62% dos gastos).', ideias)
     verificar(ideias[2].startswith('25 dias sem despesas — o melhor foram 18 seguidos'), ideias)
     verificar(await p.locator('.page-current .ffrev-abrir .ffrev-stories i').count() == 5, 'falta a faixa do Ano em revista')

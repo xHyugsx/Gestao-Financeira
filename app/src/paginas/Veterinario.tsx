@@ -201,7 +201,7 @@ export function JanelaFotografia({ animal, fotos, fechar, mudarFotos }: {
   return (
     <Dialogo
       aberto={animal !== null} aoMudar={(a) => { if (!a) fechar(); }} className="pet-photo-dialog"
-      titulo={`Fotografia de ${animal ?? ''}`} descricao="Escolha uma fotografia do seu dispositivo."
+      titulo={`Fotografia de ${animal ?? ''}`} descricao="Escolhe uma fotografia do telemóvel."
     >
       {animal ? (
         <div className="pet-photo-editor">

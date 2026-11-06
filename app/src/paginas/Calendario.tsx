@@ -1,4 +1,4 @@
-import { anoMes, dia, diaDeVencimento, type Estado, MESES, type Movimento } from '../dados';
+import { anoMes, dia, diaDeVencimento, eReceitaDeSalario, type Estado, MESES, type Movimento } from '../dados';
 import type { aspetosCategorias } from '../movimentos/categorias';
 import { LinhaMovimento } from '../movimentos/Movimento';
 import { Botao } from '../ui/Botao';
@@ -34,7 +34,9 @@ export function Calendario({ estado, mes, ocultos, diaEscolhido, escolherDia, as
   const doMesAtual = doMes(estado.transactions, mes);
   const vazios = (mes.getDay() + 6) % 7;
   const celulas = [...Array<null>(vazios).fill(null), ...Array.from({ length: diasDoMes(mes) }, (_, i) => i + 1)];
-  const vencimento = diaDeVencimento(mes);
+  // € no dia do salário: o dia do ordenado (3.º dia útil a contar do fim) para quem recebe no fim do mês, e os dias com salários registados (v2.59.0)
+  const vencimento = estado.profile.salaryMonth === 'proprio' ? null : diaDeVencimento(mes);
+  const diasSalario = new Set(estado.transactions.filter((m) => m.date.startsWith(anoMes(mes)) && eReceitaDeSalario(m) && m.amount > 0).map((m) => Number(m.date.slice(8, 10))));
   const hoje = dia(new Date());
   const doDia = (d: number) => doMesAtual.filter((m) => Number(m.date.slice(-2)) === d);
   const escolhidos = doDia(diaEscolhido);
@@ -82,7 +84,7 @@ export function Calendario({ estado, mes, ocultos, diaEscolhido, escolherDia, as
               >
                 <span>{d}</span>
                 {pontos.length ? <span className="ffdots" aria-hidden="true">{pontos.map((c) => <i key={c} className={`ffd-${c}`} />)}</span> : null}
-                {d === vencimento ? <span className="calendar-payday" aria-label="Dia de vencimento">€</span> : null}
+                {d === vencimento || diasSalario.has(d) ? <span className="calendar-payday" aria-label="Dia de vencimento">€</span> : null}
               </Botao>
             );
           })}

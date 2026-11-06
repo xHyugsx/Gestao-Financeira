@@ -5,8 +5,9 @@ import { CATEGORIAS_POR_OMISSAO } from '../dados/esquema';
 import { categoriaDespesa, categoriaReceita } from '../movimentos/categorias';
 import { criaCopias, saltarEsteMes } from '../movimentos/recorrentes';
 import { tipoVisual } from '../movimentos/regras';
-import { categoriaSugerida } from '../movimentos/sugestoes';
-import { categoriasDoMes, eCombustivel, gastosPorConta, percentagem, variacao } from '../paginas/calculos';
+import { categoriaPeloTitulo, categoriaSugerida } from '../movimentos/sugestoes';
+import { calorDoMes, categoriasDoMes, eCombustivel, gastosPorConta, percentagem, variacao } from '../paginas/calculos';
+import { recorrentesDoMes } from '../paginas/subscricoes';
 import { animais, deAnimal } from '../veterinario/animais';
 import type { InfoLembrete, Lembrete } from '../veterinario/lembretes';
 import type { PendenteRecibo } from './recibos';
@@ -102,13 +103,19 @@ export class MotorJarvis {
     }
     if (/\bbackup\b/.test(n) && /restaur|importa/.test(n)) return 'Para restaurar, anexa o ficheiro .json do backup usando o clip 📎.';
     if (/\b(muda\w*|alter\w*|corrig\w*|edit\w*|atualiz\w*|troca\w*)\b/.test(n) && /\bpara\b/.test(n) && !/\bbackup\b/.test(n)) return this.editar(q, n, c);
-    if (/\b(adicion\w*|regist\w*|lan[çc]\w*)\b/.test(n)) {
-      const isInc = /receita|rendimento extra/.test(n), amt = valorNoTexto(q);
+    const rapida = this.respostaRapida(n, c);
+    if (rapida) return rapida;
+    // «gastei 12 € no restaurante», «paguei 30 de água», «recebi o salário de 1200» também registam (com confirmação)
+    const falado = /^(gastei|paguei|comprei|recebi)\b/.test(n) && valorNoTexto(q) != null;
+    if (/\b(adicion\w*|regist\w*|lan[çc]\w*)\b/.test(n) || falado) {
+      const isInc = /receita|rendimento extra|^recebi\b/.test(n), amt = valorNoTexto(q);
       if (amt == null) return 'Não percebi o valor. Tenta algo como «adiciona despesa de 45,90€ em Alimentação».';
       const incCat = categoriaNoTexto(n, c.estado.incomeCategories), expCat = categoriaNoTexto(n, c.estado.categories);
       const ty = incCat ? 'income' : expCat ? (isInc ? 'income' : 'expense') : isInc ? 'income' : 'expense';
       const titulo = tituloDoRegisto(q);
-      const cat = incCat || expCat || (titulo && categoriaSugerida(f, titulo, ty)) || (ty === 'income' ? 'Outras receitas' : 'Outros');
+      const lista = ty === 'income' ? c.estado.incomeCategories : c.estado.categories;
+      const cat = incCat || expCat || (titulo && (categoriaSugerida(f, titulo, ty) || categoriaPeloTitulo(titulo, lista, ty)))
+        || (ty === 'income' ? (lista.includes('Outras receitas') ? 'Outras receitas' : lista[0]) : (lista.includes('Outros') ? 'Outros' : lista[0])) || 'Outros';
       const dd = new Date();
       const accM = c.estado.accounts.filter((a) => a.id !== 'principal').find((a) => {
         const an = semAcentos(a.name);
@@ -141,6 +148,47 @@ export class MotorJarvis {
       return `Vou remover: ${tgt.title} ${A(tgt.amount)} (${new Date(`${tgt.date}T12:00:00`).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}). Confirmas que queres apagar?`;
     }
     return this.perguntar(q, c);
+  }
+
+  /** Perguntas do dia a dia que antes caíam no total do mês (v2.59.0): ajuda, como fazer, semana, fixas, onde gasto mais, quanto ganho, quanto sobra. */
+  private respostaRapida(n: string, c: ContextoJarvis): string | null {
+    const A = c.eur, f = c.estado.transactions, mes = c.mes, nomeMes = MESES[mes.getMonth()]!;
+    if (/^(ajuda|help|socorro)\b|o que (sabes|consegues|podes) fazer|que (perguntas|coisas) (posso|consigo)/.test(n)) {
+      return 'Posso responder a: «Quanto gastei este mês?», «Quanto gastei em Alimentação?», «Quanto gastei esta semana?», «Em que gasto mais?», «Quais são as despesas fixas?», «Quanto ganho?», «Quanto me sobra?», «Previsão de dezembro». E posso registar: «gastei 12 € no café», «recebi o salário de 1200». Peço sempre confirmação antes de mudar alguma coisa.';
+    }
+    if (/\bcomo\b/.test(n) && /\bbackup|copia de seguranca\b/.test(n)) return 'Em Definições › Backup, toca em «Criar backup»: fica um ficheiro .json no telemóvel. Guarda-o fora do telemóvel (Drive, email). Também posso fazê-lo: escreve «faz um backup».';
+    if (/\bcomo\b/.test(n) && /\bcategori/.test(n)) return 'Toca no movimento para o editar e escolhe outra categoria no cartão «Categoria». Para criar ou arrumar categorias, vai a Mais › Categorias.';
+    if (/\bcomo\b/.test(n) && /\b(apag|elimin|remov)/.test(n)) return 'Toca no movimento e no caixote do lixo, no topo (ou faz um toque longo na linha). Durante 5 segundos aparece «Desfazer».';
+    if (/\b(esta|nesta|desta) semana\b/.test(n) && /gast|despes/.test(n)) {
+      const hoje = c.agora, seg = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() - ((hoje.getDay() + 6) % 7));
+      const de = iso(seg), ate = iso(hoje), l = f.filter((m) => m.date >= de && m.date <= ate);
+      const g = gastosDe(l);
+      return g ? `Esta semana (desde segunda, ${seg.getDate()}/${seg.getMonth() + 1}) gastaste ${A(g)} em ${l.filter((m) => m.movementType === 'expense').length} despesas.` : 'Esta semana ainda não há despesas registadas.';
+    }
+    if (/despesas? fixas|\bfixas\b|recorrentes?\b|subscric/.test(n) && !/\b(adicion|regist|apag|remov)/.test(n)) {
+      const r = recorrentesDoMes(f, mes, c.agora);
+      if (!r.lista.length) return `Ainda não há despesas recorrentes. Ao registar uma despesa, liga «Recorrente» para ela se repetir todos os meses.`;
+      const nomes = r.lista.slice(0, 5).map((x) => `${x.titulo} ${A(x.valor)}`).join(' · ');
+      return `Despesas fixas de ${nomeMes}: ${A(r.pago + r.falta)} (${A(r.pago)} pagos, falta ${A(r.falta)}). ${nomes}${r.lista.length > 5 ? ' …' : ''}`;
+    }
+    if (/\bdia\b/.test(n) && /(gast|despes)\w* mais|mais car[oa]/.test(n)) {
+      const cal = calorDoMes(f, mes, c.agora);
+      return cal.maisCaro ? `O dia mais caro de ${nomeMes} foi ${cal.maisCaro}: ${A(cal.gasto[cal.maisCaro]!)}.` : `Ainda não há gastos registados em ${nomeMes}.`;
+    }
+    if (/em que (e que )?(gasto|gastei|gastamos) mais|onde (e que )?(gasto|gastei|gastamos) mais|com que gasto mais/.test(n)) {
+      const vn = categoriasDoMes(c.estado, mes, 'despesas')[0];
+      return vn && vn.amount > 0 ? `Em ${nomeMes} gastas mais em ${vn.name}: ${A(vn.amount)} (${percentagem(vn.share)} dos gastos).` : `Ainda não há gastos registados em ${nomeMes}.`;
+    }
+    if (/quanto (e que )?(ganho|ganhamos|recebo|recebemos)\b/.test(n)) {
+      const r = rendimentoDoMes(c.estado, mes);
+      return r.valor ? `O rendimento de ${nomeMes} é ${A(r.valor)} (salários de ${MESES[mesDosSalarios(c.estado, mes).getMonth()]}).` : `Ainda não há salários registados em ${MESES[mesDosSalarios(c.estado, mes).getMonth()]}. Regista o salário no + (Receita › Salário).`;
+    }
+    if (/quanto (e que )?(me |nos )?(sobr|sobre|resta|fica)/.test(n)) {
+      const r = rendimentoDoMes(c.estado, mes).valor, g = gastosDe(f.filter((m) => m.date.startsWith(anoMes(mes))));
+      if (!r) return `Para saber quanto sobra preciso do rendimento: ainda não há salários registados em ${MESES[mesDosSalarios(c.estado, mes).getMonth()]}.`;
+      return `Em ${nomeMes}: rendimento ${A(r)} − gastos ${A(g)} = ${r - g >= 0 ? 'sobram' : 'faltam'} ${A(Math.abs(r - g))}.`;
+    }
+    return null;
   }
 
   private executar(pd: Pendente, c: ContextoJarvis): string {

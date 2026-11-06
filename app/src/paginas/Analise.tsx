@@ -7,7 +7,7 @@ import { RoboVazio } from '../ui/RoboVazio';
 import { Segmentado } from '../ui/Segmentado';
 import { pessoasDaFamilia } from '../movimentos/pessoas';
 import { agruparLinhas, gruposDe } from '../movimentos/grupos';
-import { caminhoDaFatia, calorDoMes, categoriasDoMes, CORES, coresDistintas, diasDoMes, doMes, fatiasComSeta, type GastoConta, gastosPorConta, gastosPorPessoa, percentagem, receitas, variacao } from './calculos';
+import { ateDia, caminhoDaFatia, calorDoMes, diaLimite, mediaMensal as mediaMensalDe, mesAnteriorComparavel, rotuloComparacao, categoriasDoMes, CORES, coresDistintas, diasDoMes, doMes, fatiasComSeta, type GastoConta, gastosPorConta, gastosPorPessoa, percentagem, receitas, variacao } from './calculos';
 
 const DIAS_SEMANA = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
 
@@ -26,7 +26,7 @@ export function Analise({ estado, mes, ocultos, tipo, mudarTipo }: Props) {
   const eur = (v: number) => formatarEuros(v, ocultos);
   const movimentos = estado.transactions;
   const doMesAtual = doMes(movimentos, mes);
-  const gasto = gastos(doMesAtual), gastoAnterior = gastos(doMes(movimentos, inicioDoMes(mes, -1)));
+  const gasto = gastos(doMesAtual), gastoAnterior = gastos(mesAnteriorComparavel(movimentos, mes));
   const recebido = receitas(doMesAtual);
   const evolucao = variacao(gasto, gastoAnterior);
   const dias = diasDoMes(mes);
@@ -35,7 +35,9 @@ export function Analise({ estado, mes, ocultos, tipo, mudarTipo }: Props) {
   const mesesDoAno = Array.from({ length: mes.getMonth() + 1 }, (_, i) => new Date(mes.getFullYear(), i, 1));
   const aspetos = aspetosCategorias(estado, mes);
   const calor = calorDoMes(movimentos, mes);
-  const mediaMensal = mesesDoAno.map((d) => gastos(doMes(movimentos, d))).reduce((s, v) => s + v, 0) / mesesDoAno.length;
+  const mediaMensal = mediaMensalDe(movimentos, mes, gastos);
+  // média diária: no mês atual, só pelos dias que já passaram (com os gastos até hoje)
+  const diasPassados = diaLimite(mes) || dias, mediaDiaria = gastos(ateDia(doMesAtual, diaLimite(mes))) / diasPassados;
   const gastosDia = Array.from({ length: dias }, (_, i) => gastos(doMesAtual.filter((m) => Number(m.date.slice(8, 10)) === i + 1)));
   // Diário: um dia muito acima dos outros (ex.: a renda) fica com a barra cortada, para não deixar as outras rasas
   const ordenados = [...gastosDia].sort((a, b) => b - a), [maior = 0, segundo = 0] = ordenados;
@@ -218,13 +220,13 @@ export function Analise({ estado, mes, ocultos, tipo, mudarTipo }: Props) {
             <strong className="ffresumo-valor">{eur(tipo === 'gastos' ? gasto : recebido)}</strong>
             {tipo === 'gastos' && gastoAnterior ? (
               <span className={`ffhero-var ${evolucao > 0 ? 'amount-negative' : 'amount-positive'}`}>
-                {`${evolucao > 0 ? '↑' : '↓'} ${formatarPercentagem(evolucao)} vs ${MESES[inicioDoMes(mes, -1).getMonth()]}`}
+                {`${evolucao > 0 ? '↑' : '↓'} ${formatarPercentagem(evolucao)} ${rotuloComparacao(mes, MESES)}`}
               </span>
             ) : null}
             {tipo === 'gastos' ? (
               <div className="ffmedias">
                 <p>Média mensal <strong>{eur(mediaMensal)}</strong></p>
-                <p>Média diária <strong>{eur(gasto / dias)}</strong></p>
+                <p>Média diária <strong>{eur(mediaDiaria)}</strong></p>
               </div>
             ) : null}
           </section>
@@ -242,7 +244,7 @@ export function Analise({ estado, mes, ocultos, tipo, mudarTipo }: Props) {
           {barras()}
           {tipo !== 'diario' && mesesDoAno.length > 1 ? (() => {
             const vs = mesesDoAno.map((d) => Math.abs(tipo === 'gastos' ? gastos(doMes(movimentos, d)) : receitas(doMes(movimentos, d))));
-            const media = vs.reduce((s, v) => s + v, 0) / vs.length, max = Math.max(1, ...vs);
+            const media = Math.abs(mediaMensalDe(movimentos, mes, tipo === 'gastos' ? gastos : receitas)), max = Math.max(1, ...vs);
             return media ? <span className="ffmedia-linha" style={{ '--p': media / max } as React.CSSProperties}><b>{`média ${ocultos ? '•••' : `${Math.round(media).toLocaleString('pt-PT')} €`}`}</b></span> : null;
           })() : null}
         </div>
@@ -252,7 +254,7 @@ export function Analise({ estado, mes, ocultos, tipo, mudarTipo }: Props) {
           <section className="ffresumos-dia">
             <article className="ffbloco">
               <p className="ffbloco-rot">Média diária</p>
-              <strong className="ffbloco-val">{eur(gasto / dias)}</strong>
+              <strong className="ffbloco-val">{eur(mediaDiaria)}</strong>
               <small>{`${calor.semGastos.length} ${calor.semGastos.length === 1 ? 'dia' : 'dias'} sem despesas`}</small>
             </article>
             <article className="ffbloco">

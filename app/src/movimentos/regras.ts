@@ -59,9 +59,9 @@ export function novoMovimento(campos: FormData, c: ContextoNovo): Movimento | Er
   const data = String(campos.get('date') || dia(c.hoje));
   const categoria = String(campos.get('category') || c.categoria);
   const semValor = c.recorrente && c.tipoValor === 'sem';
-  if (!titulo) return ['title', 'Indique uma descrição.'];
+  if (!titulo) return ['title', 'Escreve uma descrição.'];
   if (!Number.isFinite(valor) || valor < 0 || (valor === 0 && !semValor)) {
-    return ['amount', 'Valor inválido. Use, por exemplo, 621,18 ou 1.234,56.'];
+    return ['amount', 'Valor inválido. Usa, por exemplo, 621,18 ou 1.234,56.'];
   }
   const extras = {
     ...(c.recorrente ? { recurring: c.tipoValor, recurringEvery: c.periodicidade || 1, ...(c.diaSalario ? { recurringDay: 'salario' } : {}) } : {}),
@@ -118,6 +118,7 @@ export function movimentoEditado(m: Movimento, campos: FormData): Movimento | nu
     ...m, ...recorrencia, title: titulo, amount: m.movementType === 'expense' ? -valor : m.movementType === 'income' ? valor : m.amount, date: data,
     note: nota || undefined, ...(m.revolut || m.movementType === 'transfer' ? { transferValue: valor } : {}),
     ...(conta != null ? { account: conta === 'principal' ? undefined : String(conta) } : {}),
+    ...(m.movementType === 'transfer' && campos.has('origin') ? { account: campos.get('origin') === 'principal' ? undefined : String(campos.get('origin')), toAccount: String(campos.get('destination') || '') || undefined } : {}),
     ...(campos.has('person') ? { person: String(campos.get('person') || '').trim() || undefined } : {}),
     ...(campos.has('vehicle') ? camposCombustivel(campos) : {}),
     detail: `${diaEMes(data)} · ${categoria || 'Outros'}`,

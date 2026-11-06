@@ -1,4 +1,4 @@
-import { agendado, anoMes, dia, type Estado, gastos, inicioDoMes, MESES, mesDoRendimento, type Movimento, rendimentoDoMes } from '../dados';
+import { agendado, anoMes, dia, type Estado, gastos, inicioDoMes, MESES, mesDoRendimento, mesDosSalarios, type Movimento, rendimentoDoMes } from '../dados';
 import { aspetosCategorias, simplificar } from '../movimentos/categorias';
 import { LinhaMovimento } from '../movimentos/Movimento';
 import { porConfirmar } from '../movimentos/recorrentes';
@@ -145,7 +145,10 @@ export function Principal({ estado, mes, ocultos, lista, mudarLista, vibrar, abr
         <div className="ffhero-txt">
           <p>{rotuloRendimento}</p>
           <strong className="ffhero-valor">{eur(rendimento.valor)}</strong>
-          {rendimento.variacao !== null ? (
+          {!rendimento.valor ? (
+            // sem salários desse mês: diz o que falta em vez de «100% vs …» (v2.59.0)
+            <span className="ffhero-var ffhero-falta">{`Sem salários registados em ${MESES[mesDosSalarios(estado, mesRendimento).getMonth()]}`}</span>
+          ) : rendimento.variacao !== null ? (
             <span className={`ffhero-var ${desceu ? 'amount-negative' : 'amount-positive'}`}>
               <Icone nome={desceu ? 'trending-down' : 'trending-up'} />{' '}{formatarPercentagem(rendimento.variacao)} vs {MESES[inicioDoMes(mesRendimento, -1).getMonth()]}
             </span>

@@ -524,7 +524,7 @@ export function App() {
     restaurar: async (f, senha) => {
       const r = await lerFicheiroBackup(f, senha);
       if (typeof r === 'string') return r;
-      if (!r.ok) { setMensagemBackup('Ficheiro inválido. Escolha uma cópia JSON exportada por esta app.'); return; }
+      if (!r.ok) { setMensagemBackup('Ficheiro inválido. Escolhe uma cópia JSON exportada por esta app.'); return; }
       if (!window.confirm(perguntaRestauro(r, estadoAtual.current.transactions.length))) return;
       aplicarRestauro(r.dados);
       if (r.jarvisThreads) { try { localStorage.setItem(chave('conversaJarvis', PREFIXO), JSON.stringify(r.jarvisThreads)); } catch { /* sem espaço */ } }
@@ -534,7 +534,7 @@ export function App() {
     juntar: async (f, senha) => {
       const r = await lerFicheiroBackup(f, senha);
       if (typeof r === 'string') return r;
-      if (!r.ok) { setMensagemBackup('Ficheiro inválido. Escolha o backup JSON exportado pela app no outro telemóvel.'); return; }
+      if (!r.ok) { setMensagemBackup('Ficheiro inválido. Escolhe o backup JSON exportado pela app no outro telemóvel.'); return; }
       const { novos, repetidos } = prepararJuncao(estadoAtual.current.transactions, r.dados.transactions as unknown[]);
       const jaHavia = repetidos ? ` (${repetidos} já existiam aqui)` : '';
       if (!novos.length) { setMensagemBackup(`Não há movimentos novos para juntar${jaHavia}.`); return; }
@@ -640,7 +640,7 @@ export function App() {
         if (eBackupCifrado(t)) return 'Este backup está protegido com palavra-passe. Restaura-o em Definições › Backup.';
         if (!Array.isArray((t?.data ?? t)?.transactions)) return 'Este JSON não parece um backup desta app (falta a lista de movimentos).';
         const r = lerBackup(texto);
-        if (!r.ok) return 'Ficheiro inválido. Escolha uma cópia JSON exportada por esta app.';
+        if (!r.ok) return 'Ficheiro inválido. Escolhe uma cópia JSON exportada por esta app.';
         if (!window.confirm(perguntaRestauro(r, estadoAtual.current.transactions.length))) return 'Importação cancelada.';
         aplicarRestauro(r.dados);
         if (r.jarvisThreads) { try { localStorage.setItem(chave('conversaJarvis', PREFIXO), JSON.stringify(r.jarvisThreads)); } catch { /* sem espaço */ } }
@@ -1040,7 +1040,7 @@ export function App() {
         aberto={novoAberto} aoMudar={setNovoAberto} estado={visivel} escolhas={escolhas} mudarEscolhas={setEscolhas}
         aspetos={aspetosCategorias(visivel, mes)} aoGuardar={guardarNovo}
       />
-      <NovaDespesaVet aberto={despesaVet} aoMudar={setDespesaVet} aoGuardar={guardarRegisto} animal={vistaVet.animal} />
+      <NovaDespesaVet aberto={despesaVet} aoMudar={setDespesaVet} aoGuardar={guardarRegisto} animal={vistaVet.animal} contas={estado.accounts} />
       <NovoAbastecimento aberto={abastecimento} aoMudar={setAbastecimento} aoGuardar={guardarRegisto} estado={visivel} />
       <EditarMovimento movimento={aEditar} fechar={() => setAEditar(null)} estado={visivel} aoGuardar={guardarEdicao} aoEliminar={eliminar} />
       <ApagarRecorrente movimento={aApagarSerie} fechar={() => setAApagarSerie(null)} saltar={saltarMes} parar={apagar} />

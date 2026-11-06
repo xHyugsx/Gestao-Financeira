@@ -28,7 +28,7 @@ const TITULOS: Record<Seccao, [string, string]> = {
 
 const nomesContas = (c: Conta[]) => (c.length > 2 ? `${c.length} contas` : c.map((e) => e.name).join(' e '));
 const tema = (a: TipoAparencia) => (a.accent === 'violet' ? 'Cósmico' : a.accent === 'blue' ? 'Órbita azul' : 'Nebulosa');
-const resumoPerfil = (e: Estado) => `${e.profile.profileName} · ${e.profile.members.length} membros`;
+const resumoPerfil = (e: Estado) => [e.profile.profileName, `${e.profile.members.length} ${e.profile.members.length === 1 ? 'membro' : 'membros'}`].filter(Boolean).join(' · ');
 const resumoPin = (e: Estado) => (e.pinHash ? 'PIN ativo' : 'Sem PIN');
 
 /** Espaço ocupado pelos dados da app neste navegador (mesma conta da app atual). */
@@ -68,7 +68,7 @@ export function MenuRapido({ posicao, estado, versao, fechar, abrir, jarvis }: {
           </button>
         ))}
         <button type="button" className="set-menu-item set-menu-more" onClick={() => abrir()}>
-          <Icone nome="plus" /><span><strong>Definições</strong></span>
+          <Icone nome="chevron-right" /><span><strong>Todas as definições</strong></span>
         </button>
       </nav>
     </div>
@@ -220,7 +220,7 @@ function Seguranca({ estado, mudarPin, mudarAparencia, mudarEstado }: Pick<Props
           <Icone nome="lock-keyhole" />
           <div>
             <strong>{temPin ? 'PIN ativo' : 'Sem bloqueio'}</strong>
-            <p>{temPin ? 'A app pede o PIN sempre que é aberta.' : 'Crie um PIN local de quatro algarismos.'}</p>
+            <p>{temPin ? 'A app pede o PIN sempre que é aberta.' : 'Cria um PIN local de quatro algarismos.'}</p>
           </div>
         </div>
         <form className="movement-form" onSubmit={guardar}>

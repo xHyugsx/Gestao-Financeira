@@ -13,7 +13,7 @@ import type { NomeIcone } from '../ui/icones';
 import { vibrarCurto } from '../ui/vibracao';
 import { AnoEmRevista } from './AnoEmRevista';
 import { EditarAnual } from './EditarAnual';
-import { categoriasDoPeriodo, CORES, diasSemDespesas, doMes, fechoDoMes, mesesDoPeriodo, receitas, variacao } from './calculos';
+import { ateDia, categoriasDoPeriodo, CORES, diaLimite, diasSemDespesas, doMes, rotuloComparacao, fechoDoMes, mesesDoPeriodo, receitas, variacao } from './calculos';
 import { type DespesaAnual, despesasAnuais, estadoAnual, movimentoDoPagamento, renovar, totalProximos12, valorAnual } from './anuais';
 import { type EstadoRecorrente, recorrentesDoMes } from './subscricoes';
 
@@ -90,13 +90,15 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
     const { meses, anteriores } = mesesDoPeriodo(mes, periodo);
     const juntar = (l: Date[]) => l.flatMap((d) => doMes(movimentos, d));
     const doPeriodo = juntar(meses);
-    const gasto = gastos(doPeriodo), gastoAnterior = gastos(juntar(anteriores)), recebido = receitas(doPeriodo);
+    // o último mês de comparação só até ao mesmo dia, se o período acaba no mês atual (antes: um mês a meio contra um inteiro)
+    const limite = diaLimite(mes), deComparacao = anteriores.flatMap((d, k) => (k === anteriores.length - 1 ? ateDia(doMes(movimentos, d), limite) : doMes(movimentos, d)));
+    const gasto = gastos(doPeriodo), gastoAnterior = gastos(deComparacao), recebido = receitas(doPeriodo);
     const evolucao = variacao(gasto, gastoAnterior);
     const categorias = categoriasDoPeriodo(estado, meses, anteriores), maior = categorias[0];
     const semDespesas = diasSemDespesas(movimentos, meses, hoje), seguidos = semDespesas.seguidos;
     const ano = mes.getFullYear(), ate = MESES[mes.getMonth()]!;
-    const contra = periodo === 'mes' ? MESES[inicioDoMes(mes, -1).getMonth()]! : periodo === 'trimestre' ? '3 meses antes' : String(ano - 1);
-    const face = periodo === 'mes' ? `face a ${contra}` : periodo === 'trimestre' ? 'face aos 3 meses anteriores' : `face ao mesmo período de ${ano - 1}`;
+    const contra = periodo === 'mes' ? rotuloComparacao(mes, MESES).replace(/^vs /, '') : periodo === 'trimestre' ? '3 meses antes' : String(ano - 1);
+    const face = periodo === 'mes' ? (limite ? `face ao mesmo período de ${MESES[inicioDoMes(mes, -1).getMonth()]}` : `face a ${contra}`) : periodo === 'trimestre' ? 'face aos 3 meses anteriores' : `face ao mesmo período de ${ano - 1}`;
     // categoria que mais pesou na subida (ou na descida) face ao mês anterior
     const destaque = gastoAnterior > 0 && evolucao !== 0
       ? [...categorias].sort((a, b) => (evolucao > 0 ? (b.amount - b.anterior) - (a.amount - a.anterior) : (a.amount - a.anterior) - (b.amount - b.anterior)))[0]
@@ -449,7 +451,7 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
             <tfoot><tr><th>Total</th>{totais.map((t, k) => <td key={pessoas[k]}>{eur(t)}</td>)}<td>{eur(global)}</td></tr></tfoot>
           </table>
         </section>
-        <p className="fffecho-nota">Toque num valor para o editar. Use as setas no topo para mudar de ano.</p>
+        <p className="fffecho-nota">Toca num valor para o editar. Usa as setas no topo para mudar de ano.</p>
       </>
     );
   };

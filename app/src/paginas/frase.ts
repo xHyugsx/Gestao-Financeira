@@ -73,9 +73,10 @@ export function fraseDoDia(estado: Pick<Estado, 'transactions'> & Partial<Pick<E
   let semGastos = 0;
   const comGastos = new Set(consumo(l).map((m) => m.date));
   while (semGastos < d - 1 && !comGastos.has(desde(semGastos + 1))) semGastos++;
-  if (semGastos >= 2 && !comGastos.has(dia(hoje))) frases.push(`${semGastos} dias seguidos sem despesas. Continua assim!`);
+  // só quem já registou despesas (numa app vazia, «dias sem despesas» não quer dizer nada)
+  if (semGastos >= 2 && comGastos.size && !comGastos.has(dia(hoje))) frases.push(`${semGastos} dias seguidos sem despesas. Continua assim!`);
 
-  if (!frases.length) return null;
+  if (!frases.length) return l.length ? null : 'Olá! Toca no + para registar a primeira despesa, ou pergunta-me o que quiseres.';
   const diaDoAno = Math.floor((+new Date(hoje.getFullYear(), hoje.getMonth(), d) - +new Date(hoje.getFullYear(), 0, 1)) / 864e5);
   return frases[diaDoAno % frases.length]!;
 }

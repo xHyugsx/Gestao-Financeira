@@ -6,8 +6,15 @@ REF = json.loads((pathlib.Path(__file__).parent / 'referencias' / 'jarvis.json')
 
 # Diferenças intencionais face à 1.9.x: a resposta da referência passa por esta correção antes de comparar
 INTENCIONAIS = {
+    # v2.59.0: frases do dia a dia (antes caíam no total do mês ou em «ainda não sei») e a categoria sugerida pelo título
+    "Despesas recorrentes": lambda r: "Despesas fixas de setembro: 45,00 € (45,00 € pagos, falta 0,00 €). Condomínio 45,00 €",
+    "Quanto gastei esta semana?": lambda r: "Esta semana ainda não há despesas registadas.",
+    "Ajuda": lambda r: "Posso responder a: «Quanto gastei este mês?», «Quanto gastei em Alimentação?», «Quanto gastei esta semana?», «Em que gasto mais?», «Quais são as despesas fixas?», «Quanto ganho?», «Quanto me sobra?», «Previsão de dezembro». E posso registar: «gastei 12 € no café», «recebi o salário de 1200». Peço sempre confirmação antes de mudar alguma coisa.",
+    "O que sabes fazer?": lambda r: "Posso responder a: «Quanto gastei este mês?», «Quanto gastei em Alimentação?», «Quanto gastei esta semana?», «Em que gasto mais?», «Quais são as despesas fixas?», «Quanto ganho?», «Quanto me sobra?», «Previsão de dezembro». E posso registar: «gastei 12 € no café», «recebi o salário de 1200». Peço sempre confirmação antes de mudar alguma coisa.",
+    "Quanto sobrou este mês?": lambda r: "Em setembro: rendimento 2620,00 € − gastos 266,85 € = sobram 2353,15 €.",
+    "Qual o dia em que gastei mais?": lambda r: "O dia mais caro de setembro foi 2: 88,10 €.",
+    "Adiciona despesa de 12,50 no Café Central": lambda r: "Vou registar a despesa «Café Central» — 12,50 € · hoje · Alimentação. Confirmas?",
     # v2.56.0: registar pelo Jarvis pede confirmação e o título vem do texto
-    'Adiciona despesa de 12,50 no Café Central': lambda r: 'Vou registar a despesa «Café Central» — 12,50 € · hoje · Outros. Confirmas?',
     'Adiciona receita de 200 de venda': lambda r: 'Vou registar a receita «Venda» — 200,00 € · hoje · Outras receitas. Confirmas?',
 }
 # v2.36.0: os saldos das contas deixaram de aparecer; as respostas de saldo ficam de fora (teste_previsao cobre as novas)
