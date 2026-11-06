@@ -25,7 +25,7 @@ export function valorNoTexto(s: string): number | null {
 export const categoriaNoTexto = (nrm: string, lista: string[]) => lista.find((c) => nrm.includes(semAcentos(c)));
 
 const PALAVRAS_DO_PEDIDO = new Set([
-  'adiciona', 'adicionar', 'adicione', 'regista', 'registar', 'registe', 'lanca', 'lança', 'lancar', 'lançar', 'lance', 'por', 'favor', 'hoje',
+  'adiciona', 'adicionar', 'adicione', 'gastei', 'paguei', 'comprei', 'recebi', 'regista', 'registar', 'registe', 'lanca', 'lança', 'lancar', 'lançar', 'lance', 'por', 'favor', 'hoje',
   'uma', 'um', 'o', 'a', 'os', 'as', 'despesa', 'receita', 'gasto', 'movimento', 'rendimento', 'extra', 'de', 'do', 'da', 'dos', 'das',
   'em', 'no', 'na', 'nos', 'nas', 'com', 'para', 'euro', 'euros', 'eur', '€', 'valor', 'conta',
 ]);

@@ -64,8 +64,8 @@ export function marcacaoBloqueio(imagem: string | null = null): string {
       + `<div class="ffl-stage"><div class="ffl-base ffl-img"></div><div class="ffl-clouds"><div class="ffl-layer ffl-img"></div></div>${estrelas}<div class="ffl-cw"><div class="ffl-comet"></div></div></div>`;
   return fundo
     + '<div class="ffl-veil"></div>'
-    + `<div class="ffl-hint">${SVG_SETA}<span>Deslize para cima para desbloquear</span><div class="ffl-bar"></div></div>`
-    + `<div class="ffl-pad" aria-hidden="true"><h2>Introduza o PIN</h2><div class="ffl-dots"><i class="ffl-dot"></i><i class="ffl-dot"></i><i class="ffl-dot"></i><i class="ffl-dot"></i></div><div class="ffl-keys">${teclas}</div><button type="button" class="ffl-back">Cancelar</button><button type="button" class="ffl-esqueci">Esqueci-me do PIN</button></div>`
+    + `<div class="ffl-hint">${SVG_SETA}<span>Desliza para cima para desbloquear</span><div class="ffl-bar"></div></div>`
+    + `<div class="ffl-pad" aria-hidden="true"><h2>Introduz o PIN</h2><div class="ffl-dots"><i class="ffl-dot"></i><i class="ffl-dot"></i><i class="ffl-dot"></i><i class="ffl-dot"></i></div><div class="ffl-keys">${teclas}</div><button type="button" class="ffl-back">Cancelar</button><button type="button" class="ffl-esqueci">Esqueci-me do PIN</button></div>`
     + '<div class="ffl-reset" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="ffl-reset-t"><h3 id="ffl-reset-t">Esqueceste-te do PIN?</h3>'
     + '<p>O PIN só existe neste telemóvel e não há forma de o recuperar. Para voltar a entrar, apaga os dados da app neste telemóvel e depois restaura um backup (fica sem PIN).</p>'
     + '<p class="ffl-reset-bio">Se ativaste a impressão digital, cancela e usa o sensor.</p>'

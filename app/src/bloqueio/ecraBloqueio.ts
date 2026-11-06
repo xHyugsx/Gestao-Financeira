@@ -88,6 +88,10 @@ export function montarBloqueio(anfitriao: HTMLElement, { hash, imagem = null, ao
     hashPin(pin).then((h) => {
       if (h === hash) { pontos.classList.add('ok'); vibrar(25); depoisDoPin(); return; }
       pontos.classList.add('err'); vibrar([70, 50, 70]);
+      // diz que o PIN está errado (antes só tremiam os pontos)
+      const titulo = q<HTMLElement>('.ffl-pad h2');
+      titulo.textContent = 'PIN errado. Tenta outra vez.'; titulo.classList.add('ffl-erro');
+      setTimeout(() => { titulo.textContent = 'Introduz o PIN'; titulo.classList.remove('ffl-erro'); }, 1800);
       setTimeout(() => { limpar(); ocupado = false; }, 450);
     });
   }

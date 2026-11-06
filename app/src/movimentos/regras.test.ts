@@ -50,9 +50,9 @@ describe('novo movimento', () => {
   });
 
   it('erros com a mensagem da app atual', () => {
-    expect(novoMovimento(campos({ title: '', amount: '5' }), ctx())).toEqual(['title', 'Indique uma descrição.']);
+    expect(novoMovimento(campos({ title: '', amount: '5' }), ctx())).toEqual(['title', 'Escreve uma descrição.']);
     for (const amount of ['', '0', 'x', '-3']) {
-      expect(novoMovimento(campos({ title: 'A', amount }), ctx())).toEqual(['amount', 'Valor inválido. Use, por exemplo, 621,18 ou 1.234,56.']);
+      expect(novoMovimento(campos({ title: 'A', amount }), ctx())).toEqual(['amount', 'Valor inválido. Usa, por exemplo, 621,18 ou 1.234,56.']);
     }
   });
 

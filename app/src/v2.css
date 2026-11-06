@@ -442,3 +442,8 @@ html[data-tema="floresta"] .ffjv-row .ffjv-seg { border-color: #bef264; backgrou
 
 /* Definições: ver as dicas outra vez (v2.58.0) */
 .ffdef-dicas { display: block; margin: 1rem auto 0; background: none; border: 0; color: var(--muted-foreground); font: inherit; font-size: .82rem; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+/* Com uma folha ou janela aberta, os avisos de backup e veterinário saem da frente (v2.59.0: tapavam «Quem fez» e «Conta») */
+body:has([role=dialog]) #ff-bk, body:has([role=dialog]) #ff-vetbn { opacity: 0 !important; pointer-events: none !important; }
+.ffhero-falta { color: var(--muted-foreground) !important; }
+.ffl-pad h2.ffl-erro { color: #fca5a5; }
+.ffdica-linha { margin: -.2rem 0 .4rem; font-size: .76rem; color: var(--muted-foreground); line-height: 1.4; }

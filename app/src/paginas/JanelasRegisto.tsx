@@ -36,7 +36,11 @@ export function novaDespesaVet(f: FormData, hoje: Date): Movimento | null {
   const clinica = String(f.get('clinic') || '').trim(), categoria = String(f.get('vetCategory') || 'Consultas');
   const valor = lerValor(f.get('amount')), data = String(f.get('date') || dia(hoje));
   if (!Number.isFinite(valor) || valor <= 0) return null;
-  return { id: Date.now(), title: titulo, detail: `${diaEMes(data)} · ${clinica || categoria}`, amount: -valor, kind: 'health', movementType: 'expense', date: data, pet: animal, vetCategory: categoria };
+  const conta = String(f.get('account') || 'principal');
+  return {
+    id: Date.now(), title: titulo, detail: `${diaEMes(data)} · ${clinica || categoria}`, amount: -valor, kind: 'health', movementType: 'expense', date: data, pet: animal, vetCategory: categoria,
+    ...(conta !== 'principal' ? { account: conta } : {}),
+  };
 }
 
 const submeter = (criar: (f: FormData, hoje: Date) => Movimento | null, aoGuardar: (m: Movimento) => void) => (e: FormEvent<HTMLFormElement>) => {
@@ -55,7 +59,7 @@ export function NovoAbastecimento({ aberto, aoMudar, aoGuardar, estado }: PropsJ
   const postos = useMemo(() => [...new Set(estado.transactions.filter((m) => m.title.startsWith('Combustível — ')).sort((x, y) => y.date.localeCompare(x.date))
     .map((m) => m.title.slice('Combustível — '.length).trim()).filter(Boolean))].slice(0, 4), [estado.transactions]);
   return (
-    <Dialogo folha aberto={aberto} aoMudar={aoMudar} className="movement-dialog ffregisto" titulo="Novo abastecimento" descricao="Registe um gasto de combustível.">
+    <Dialogo folha aberto={aberto} aoMudar={aoMudar} className="movement-dialog ffregisto" titulo="Novo abastecimento" descricao="Regista um gasto de combustível.">
       <form className="movement-form ffregisto-form" onSubmit={submeter(novoAbastecimento, aoGuardar)}>
         <ValorGrande tipo="expense" required />
         {aberto ? <CamposCombustivel estado={estado} /> : null}
@@ -78,14 +82,14 @@ export function NovoAbastecimento({ aberto, aoMudar, aoGuardar, estado }: PropsJ
   );
 }
 
-export function NovaDespesaVet({ aberto, aoMudar, aoGuardar, animal }: PropsJanela & { animal: string | null }) {
+export function NovaDespesaVet({ aberto, aoMudar, aoGuardar, animal, contas = [] }: PropsJanela & { animal: string | null; contas?: { id: string; name: string }[] }) {
   const lista = [...animais(), 'A confirmar'];
   const [pet, setPet] = useState(animal || lista[0]!);
   const [cat, setCat] = useState('Consultas');
-  const [origem, setOrigem] = useState('Conta principal');
-  useEffect(() => { if (aberto) { setPet(animal || lista[0]!); setCat('Consultas'); setOrigem('Conta principal'); } }, [aberto]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [conta, setConta] = useState('principal');
+  useEffect(() => { if (aberto) { setPet(animal || lista[0]!); setCat('Consultas'); setConta('principal'); } }, [aberto]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <Dialogo folha aberto={aberto} aoMudar={aoMudar} className="movement-dialog ffregisto" titulo="Nova despesa veterinária" descricao="Registe uma consulta, medicação ou outro cuidado.">
+    <Dialogo folha aberto={aberto} aoMudar={aoMudar} className="movement-dialog ffregisto" titulo="Nova despesa veterinária" descricao="Regista uma consulta, medicação ou outro cuidado.">
       <form className="movement-form ffregisto-form" onSubmit={submeter(novaDespesaVet, aoGuardar)}>
         <ValorGrande tipo="expense" required />
         <label className="fftitulo"><Icone nome="pencil" /><span className="sr-only">Descrição</span><input name="title" placeholder="Ex.: consulta, medicação..." autoComplete="off" /></label>
@@ -97,8 +101,10 @@ export function NovaDespesaVet({ aberto, aoMudar, aoGuardar, animal }: PropsJane
         <EscolhaData />
         <Rotulo>Local / clínica</Rotulo>
         <label className="fftitulo"><Icone nome="house" /><span className="sr-only">Local / clínica</span><input name="clinic" placeholder="Opcional" autoComplete="off" /></label>
-        <Rotulo>Origem do dinheiro</Rotulo>
-        <Escolhas nome="source" rotulo="Origem do dinheiro" valor={origem} aoMudar={setOrigem} opcoes={[{ valor: 'Conta principal', rotulo: 'Conta principal' }, { valor: 'Revolut', rotulo: 'Revolut' }]} />
+        {contas.length > 1 ? (
+          // a conta, como nas outras despesas (antes: «Origem do dinheiro» com a Revolut fixa, que nem era gravada)
+          <><Rotulo>Conta</Rotulo><Escolhas nome="account" rotulo="Conta" valor={conta} aoMudar={setConta} opcoes={contas.map((c) => ({ valor: c.id, rotulo: c.name }))} /></>
+        ) : null}
         <Guardar rotulo="Guardar despesa" />
       </form>
     </Dialogo>

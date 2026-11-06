@@ -23,7 +23,9 @@ export function Combustivel({ estado, mes, agora, ocultos, abrirMovimento }: Pro
   const doMesAtual = doAno.filter((m) => Number(m.date.slice(5, 7)) === mes.getMonth() + 1).sort((a, b) => b.date.localeCompare(a.date));
   const porMes = MESES.map((_, i) => soma(doAno.filter((m) => Number(m.date.slice(5, 7)) === i + 1)));
   const total = porMes.reduce((s, v) => s + v, 0);
-  const meses = ano < agora.getFullYear() ? 12 : ano > agora.getFullYear() ? 0 : agora.getMonth() + 1;
+  // média só desde o 1.º mês com abastecimentos (antes dividia por todos os meses desde janeiro)
+  const ultimo = ano < agora.getFullYear() ? 12 : ano > agora.getFullYear() ? 0 : agora.getMonth() + 1, primeiro = porMes.findIndex((v) => v > 0);
+  const meses = primeiro < 0 ? 0 : Math.max(1, ultimo - primeiro), comDados = porMes.filter((v) => v > 0).length;
   const gastoMes = soma(doMesAtual);
   // carros e mota à parte: os carros são os que mais se usam (decisão do dono)
   const viaturas = viaturasDe(estado);
@@ -47,7 +49,7 @@ export function Combustivel({ estado, mes, agora, ocultos, abrirMovimento }: Pro
         <p className="ffbloco-rot">{`Combustível em ${MESES[mes.getMonth()]}`}</p>
         <strong className="ffresumo-valor fffuel-total">{eur(gastoMes)}</strong>
         <div className="ffres-linha">
-          {media && gastoMes ? <span className={`ffhero-var ${varMedia > 0 ? 'amount-negative' : 'amount-positive'}`}>{`${varMedia > 0 ? '↑' : '↓'} ${formatarPercentagem(varMedia)} vs média`}</span> : <span />}
+          {media && gastoMes && comDados > 1 ? <span className={`ffhero-var ${varMedia > 0 ? 'amount-negative' : 'amount-positive'}`}>{`${varMedia > 0 ? '↑' : '↓'} ${formatarPercentagem(varMedia)} vs média`}</span> : <span />}
           <small>{`${doMesAtual.length} ${doMesAtual.length === 1 ? 'abastecimento' : 'abastecimentos'}`}</small>
         </div>
         <div className="ffmedias"><p>Média mensal <strong>{meses ? eur(media) : '—'}</strong></p><p>{`Em ${ano}`} <strong>{eur(total)}</strong></p></div>
@@ -91,7 +93,7 @@ export function Combustivel({ estado, mes, agora, ocultos, abrirMovimento }: Pro
           ) : null}
         </section>
       ) : null}
-      {!viaturas.length ? <p className="fffuel-dica">Para somar os carros à parte da mota, acrescente as viaturas em Definições › Perfil e família.</p> : null}
+      {!viaturas.length ? <p className="fffuel-dica">Para somar os carros à parte da mota, acrescenta as viaturas em Definições › Perfil e família.</p> : null}
       <section className="ffcartao fffuel-meses" aria-label="Últimos 6 meses">
         <p className="ffbloco-rot">Últimos 6 meses</p>
         <div className="fffuel-barras">

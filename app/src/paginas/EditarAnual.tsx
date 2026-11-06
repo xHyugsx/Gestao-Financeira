@@ -24,7 +24,7 @@ export function EditarAnual({ despesa: e, fechar, guardar, eliminar }: {
             const nome = String(f.get('name') || '').trim(), texto = String(f.get('value') || '').trim(), valor = texto ? lerValor(texto) : 0;
             const [ano, mes] = String(f.get('month') || '').split('-').map(Number);
             if (!nome || !ano || !mes) { setErro('Preenche a descrição e o mês previsto.'); return; }
-            if (!Number.isFinite(valor) || (!valor && !variavel)) { setErro('Valor inválido. Use, por exemplo, 150 ou 1.234,56.'); return; }
+            if (!Number.isFinite(valor) || (!valor && !variavel)) { setErro('Valor inválido. Usa, por exemplo, 150 ou 1.234,56.'); return; }
             const { variable: _v, ...resto } = e;
             guardar({ ...resto, name: nome, value: Math.abs(valor), month: mes, year: ano, ...(variavel ? { variable: true } : {}) });
           }}

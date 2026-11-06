@@ -7,6 +7,25 @@ import { CATALOGO_ICONES, CATEGORIAS_BASE, type NomeIcone } from '../ui/icones';
 export const doMes = (movimentos: Movimento[], mes: Date) => movimentos.filter((m) => m.date.startsWith(anoMes(mes)));
 export const receitas = (l: Movimento[]) => l.filter((m) => m.movementType === 'income').reduce((s, m) => s + m.amount, 0);
 export const variacao = (atual: number, anterior: number) => (anterior ? ((atual - anterior) / anterior) * 100 : 0);
+
+/** No mês atual, o dia de hoje (compara-se com o mesmo período de outro mês); noutro mês, 0 = o mês inteiro (v2.59.0). */
+export const diaLimite = (mes: Date, hoje = new Date()) => (anoMes(mes) === anoMes(hoje) ? hoje.getDate() : 0);
+/** Movimentos até ao dia `limite` do mês (0 = todos). */
+export const ateDia = <T extends { date: string }>(l: T[], limite: number) => (limite ? l.filter((m) => Number(m.date.slice(8, 10)) <= limite) : l);
+/** O mês anterior a `mes`, comparável: se `mes` é o atual, só até ao mesmo dia (antes comparava um mês a meio com um inteiro). */
+export const mesAnteriorComparavel = (movimentos: Movimento[], mes: Date, hoje = new Date()) => ateDia(doMes(movimentos, inicioDoMes(mes, -1)), diaLimite(mes, hoje));
+/** «vs outubro» ou, no mês atual, «vs 1 a 6 de outubro». */
+export function rotuloComparacao(mes: Date, nomes: readonly string[], hoje = new Date()): string {
+  const ant = nomes[inicioDoMes(mes, -1).getMonth()]!, d = diaLimite(mes, hoje);
+  return d ? `vs 1${d > 1 ? ` a ${d}` : ''} de ${ant}` : `vs ${ant}`;
+}
+/** Média mensal do ano até `mes`, a contar só a partir do primeiro mês com movimentos (antes dividia por todos os meses desde janeiro). */
+export function mediaMensal(movimentos: Movimento[], mes: Date, valor: (l: Movimento[]) => number): number {
+  const ano = mes.getFullYear(), ate = mes.getMonth();
+  const primeiro = Array.from({ length: ate + 1 }, (_, i) => i).find((i) => doMes(movimentos, new Date(ano, i, 1)).length) ?? ate;
+  const meses = Array.from({ length: ate - primeiro + 1 }, (_, k) => new Date(ano, primeiro + k, 1));
+  return meses.reduce((s, d) => s + valor(doMes(movimentos, d)), 0) / meses.length;
+}
 export const diasDoMes = (mes: Date) => new Date(mes.getFullYear(), mes.getMonth() + 1, 0).getDate();
 /** "12,3%" sem arredondar para inteiro (valor com sinal). */
 export const percentagem = (v: number) => `${(+v || 0).toLocaleString('pt-PT', { maximumFractionDigits: 1 })}%`;
@@ -50,9 +69,9 @@ export interface LinhaCategoria {
 }
 
 /** Categorias de despesa ou de receita do mês, da maior para a menor. */
-export function categoriasDoMes(estado: Estado, mes: Date, tipo: 'despesas' | 'receitas'): LinhaCategoria[] {
+export function categoriasDoMes(estado: Estado, mes: Date, tipo: 'despesas' | 'receitas', ate = 0): LinhaCategoria[] {
   const despesas = tipo === 'despesas';
-  const atual = doMes(estado.transactions, mes), anterior = doMes(estado.transactions, inicioDoMes(mes, -1));
+  const atual = ateDia(doMes(estado.transactions, mes), ate), anterior = mesAnteriorComparavel(estado.transactions, mes);
   const definidas = despesas ? estado.categories : estado.incomeCategories;
   const tipoMov = despesas ? 'expense' : 'income';
   const categoria = despesas ? categoriaDespesa : categoriaReceita;
@@ -169,12 +188,15 @@ export function mesesDoPeriodo(mes: Date, periodo: 'mes' | 'trimestre' | 'ano'):
 
 /** Categorias de despesa somadas em vários meses (o «anterior» de cada uma é a soma nos meses de comparação). */
 export function categoriasDoPeriodo(estado: Estado, meses: Date[], anteriores: Date[]): LinhaCategoria[] {
-  const somar = (l: Date[]) => {
+  const somar = (l: Date[], ate = 0) => {
     const r = new Map<string, LinhaCategoria>();
-    for (const d of l) for (const c of categoriasDoMes(estado, d, 'despesas')) { const x = r.get(c.name); r.set(c.name, x ? { ...x, amount: x.amount + c.amount } : { ...c }); }
+    for (const [k, d] of l.entries()) {
+      for (const c of categoriasDoMes(estado, d, 'despesas', k === l.length - 1 ? ate : 0)) { const x = r.get(c.name); r.set(c.name, x ? { ...x, amount: x.amount + c.amount } : { ...c }); }
+    }
     return r;
   };
-  const agora = somar(meses), antes = somar(anteriores);
+  // o último mês de comparação conta só até ao mesmo dia quando o período acaba no mês atual
+  const agora = somar(meses), antes = somar(anteriores, diaLimite(meses[meses.length - 1] ?? new Date()));
   const total = [...agora.values()].reduce((s, c) => s + c.amount, 0);
   return [...agora.values()].map((c) => ({ ...c, share: total ? Math.round((c.amount / total) * 1000) / 10 : 0, anterior: antes.get(c.name)?.amount ?? 0 }))
     .sort((a, b) => b.amount - a.amount);
@@ -212,9 +234,9 @@ const TONS_CONTAS = ['violet', 'cyan', 'amber', 'emerald', 'fuchsia', 'sky', 'ro
 export function gastosPorConta(estado: Pick<Estado, 'transactions' | 'accounts'>, mes: Date): GastoConta[] {
   const ids = new Set(estado.accounts.map((c) => c.id));
   const contaDe = (m: Movimento) => (!m.account ? 'principal' : ids.has(m.account) ? m.account : '?');
-  const somar = (d: Date) => doMes(estado.transactions, d).filter((m) => m.movementType === 'expense')
+  const somar = (l: Movimento[]) => l.filter((m) => m.movementType === 'expense')
     .reduce((r, m) => r.set(contaDe(m), (r.get(contaDe(m)) || 0) + Math.abs(m.amount)), new Map<string, number>());
-  const agora = somar(mes), antes = somar(inicioDoMes(mes, -1));
+  const agora = somar(doMes(estado.transactions, mes)), antes = somar(mesAnteriorComparavel(estado.transactions, mes));
   const total = [...agora.values()].reduce((s, v) => s + v, 0);
   return [...estado.accounts.map((c, i) => ({ id: c.id, name: c.name, tone: TONS_CONTAS[i % TONS_CONTAS.length]! })),
     { id: '?', name: 'Outras contas', tone: 'blue' }]
@@ -248,9 +270,9 @@ export function calorDoMes(movimentos: Movimento[], mes: Date, hoje = new Date()
  * pessoa neste mês ou no anterior; senão devolve uma lista vazia.
  */
 export function gastosPorPessoa(estado: Pick<Estado, 'transactions'>, mes: Date, pessoas: string[]): GastoConta[] {
-  const somar = (d: Date) => doMes(estado.transactions, d).filter((m) => m.movementType === 'expense')
+  const somar = (l: Movimento[]) => l.filter((m) => m.movementType === 'expense')
     .reduce((r, m) => { const k = typeof m.person === 'string' && m.person ? m.person : ''; return r.set(k, (r.get(k) || 0) + Math.abs(m.amount)); }, new Map<string, number>());
-  const agora = somar(mes), antes = somar(inicioDoMes(mes, -1));
+  const agora = somar(doMes(estado.transactions, mes)), antes = somar(mesAnteriorComparavel(estado.transactions, mes));
   if (![...agora.keys(), ...antes.keys()].some(Boolean)) return [];
   const total = [...agora.values()].reduce((s, v) => s + v, 0);
   const nomes = [...new Set([...pessoas, ...agora.keys(), ...antes.keys()].filter(Boolean))];

@@ -10,7 +10,7 @@ import { DIA_DO_SALARIO, PERIODICIDADES } from './recorrentes';
 import { novoMovimento } from './regras';
 import { COLUNA_SEM_MEMBROS } from './salarios';
 import { pessoasDaFamilia, ultimaPessoa } from './pessoas';
-import { categoriaSugerida, titulosAnteriores } from './sugestoes';
+import { categoriaPeloTitulo, categoriaSugerida, titulosAnteriores } from './sugestoes';
 import { CamposCombustivel } from './CamposCombustivel';
 import { CampoCategoria } from './EscolhaCategoria';
 import { EscolhaData, Escolhas, LinhaInterruptor, Rotulo, ValorGrande } from '../ui/Escolhas';
@@ -50,6 +50,7 @@ export function NovoMovimento({ aberto, aoMudar, estado, escolhas: e, mudarEscol
   // Sugestão de categoria pelo histórico, só enquanto a pessoa não escolher a categoria à mão
   const [manual, setManual] = useState(false);
   const [sugerida, setSugerida] = useState<string | null>(null);
+  const [origemSugestao, setOrigemSugestao] = useState('do histórico');
   useEffect(() => { if (aberto) { setManual(false); setSugerida(null); } }, [aberto]);
   const tipoComCategoria = e.tipo === 'income' ? 'income' : 'expense';
   const titulos = useMemo(() => (e.tipo === 'transfer' ? [] : titulosAnteriores(estado.transactions, tipoComCategoria)), [estado.transactions, e.tipo, tipoComCategoria]);
@@ -59,6 +60,7 @@ export function NovoMovimento({ aberto, aoMudar, estado, escolhas: e, mudarEscol
   const [pessoa, setPessoa] = useState(pessoaSugerida);
   const [conta, setConta] = useState('principal');
   const contas = estado.accounts.map((c) => ({ valor: c.id, rotulo: c.name }));
+  const temRevolut = estado.accounts.some((c) => c.id === 'revolut');
   const outraConta = (id: string) => contas.find((c) => c.valor !== id)?.valor ?? id;
   const [origem, setOrigem] = useState('principal');
   const [destino, setDestino] = useState(() => outraConta('principal'));
@@ -72,8 +74,10 @@ export function NovoMovimento({ aberto, aoMudar, estado, escolhas: e, mudarEscol
   const mudarDestino = (id: string) => { setDestino(id); if (id === origem) setOrigem(outraConta(id)); };
   const aoEscreverTitulo = (titulo: string) => {
     if (e.tipo === 'transfer' || manual) return;
-    const c = categoriaSugerida(estado.transactions, titulo, tipoComCategoria);
-    if (c && lista.includes(c)) { setSugerida(c); if (c !== e.categoria) mudar({ categoria: c }); } else setSugerida(null);
+    // 1.º a categoria usada da última vez com este título; senão, pelas palavras do título («Renda» → Habitação)
+    const doHistorico = categoriaSugerida(estado.transactions, titulo, tipoComCategoria);
+    const c = doHistorico && lista.includes(doHistorico) ? doHistorico : categoriaPeloTitulo(titulo, lista, tipoComCategoria);
+    if (c) { setSugerida(c); setOrigemSugestao(c === doHistorico ? 'do histórico' : 'sugerida'); if (c !== e.categoria) mudar({ categoria: c }); } else setSugerida(null);
   };
 
   const guardar = (ev: FormEvent<HTMLFormElement>) => {
@@ -97,7 +101,8 @@ export function NovoMovimento({ aberto, aoMudar, estado, escolhas: e, mudarEscol
   const [titulo, setTitulo] = useState('');
   const recentes = titulos.filter((t) => !titulo.trim() || (simplificarTitulo(t).includes(simplificarTitulo(titulo)) && t !== titulo)).slice(0, 4);
   const usarTitulo = (t: string) => { if (tituloRef.current) tituloRef.current.value = t; setTitulo(t); aoEscreverTitulo(t); };
-  const categoriaAtual = lista.includes(e.categoria) ? e.categoria : lista[0] ?? '';
+  // sem categoria escolhida: nas receitas, o Salário (antes ficava a 1.ª por ordem alfabética, «Investimentos»)
+  const categoriaAtual = lista.includes(e.categoria) ? e.categoria : (e.tipo === 'income' ? lista.find((c) => /^sal[aá]rio/i.test(c)) : undefined) ?? lista[0] ?? '';
   // salário: «Quem recebe» (a tabela de Salários acompanha); pré-escolhe quem recebeu o último
   const salario = e.tipo === 'income' && !e.revolut && eReceitaDeSalario({ movementType: 'income', title: titulo, detail: categoriaAtual });
   const ultimoRecebe = useMemo(() => estado.transactions.find((m) => eReceitaDeSalario(m) && typeof m.person === 'string' && pessoas.includes(m.person))?.person ?? pessoas[0] ?? '', [estado.transactions, pessoas]);
@@ -106,7 +111,7 @@ export function NovoMovimento({ aberto, aoMudar, estado, escolhas: e, mudarEscol
   const rotuloGuardar = e.tipo === 'expense' ? 'Guardar despesa' : e.tipo === 'income' ? 'Guardar receita' : 'Guardar transferência';
 
   return (
-    <Dialogo folha aberto={aberto} aoMudar={aoMudar} className="movement-dialog ffregisto" titulo="Novo movimento" descricao="Registe uma despesa, receita ou transferência.">
+    <Dialogo folha aberto={aberto} aoMudar={aoMudar} className="movement-dialog ffregisto" titulo="Novo movimento" descricao="Regista uma despesa, receita ou transferência.">
       <Segmentado valor={e.tipo} rotulo="Tipo de movimento" opcoes={TIPOS} aoMudar={(tipo) => mudar({ tipo })} />
       <form key={abertura} className="movement-form ffregisto-form" onSubmit={guardar}>
         <ValorGrande tipo={e.revolut ? 'transfer' : e.tipo} placeholder={semValor ? 'A definir' : '0,00'} required={!semValor} />
@@ -130,9 +135,9 @@ export function NovoMovimento({ aberto, aoMudar, estado, escolhas: e, mudarEscol
           </>
         ) : (
           <>
-            <Rotulo extra={sugerida && sugerida === e.categoria ? 'do histórico' : undefined}>Categoria</Rotulo>
+            <Rotulo extra={sugerida && sugerida === e.categoria ? origemSugestao : undefined}>Categoria</Rotulo>
             <CampoCategoria estado={estado} lista={lista} valor={categoriaAtual} aoMudar={escolherCategoria} receita={e.tipo === 'income'} mapaAspetos={aspetos} />
-            {sugerida && sugerida === e.categoria ? <small className="ffv2-sugestao sr-only" role="status">Categoria do histórico: {sugerida}</small> : null}
+            {sugerida && sugerida === e.categoria ? <small className="ffv2-sugestao sr-only" role="status">Categoria {origemSugestao}: {sugerida}</small> : null}
           </>
         )}
         {aberto && e.tipo === 'expense' && !e.revolut && eCategoriaCombustivel(categoriaAtual) ? <CamposCombustivel estado={estado} /> : null}
@@ -151,6 +156,8 @@ export function NovoMovimento({ aberto, aoMudar, estado, escolhas: e, mudarEscol
         ) : null}
         <div className="movement-checks ffregisto-mais">
           <LinhaInterruptor icone="calendar-clock" rotulo="Recorrente" ligado={e.recorrente} aoMudar={(v) => mudar({ recorrente: v })} />
+          {salario && !e.recorrente ? <p className="ffdica-linha">Dica: liga «Recorrente» para o salário aparecer sozinho todos os meses.</p> : null}
+          {e.recorrente && e.diaSalario ? <p className="ffdica-linha">O «dia do salário» é o 3.º dia útil a contar do fim do mês (sem fins de semana nem feriados).</p> : null}
           {e.recorrente ? (
             <div className="form-grid">
               <label className="ffv2-extra">Periodicidade
@@ -170,7 +177,8 @@ export function NovoMovimento({ aberto, aoMudar, estado, escolhas: e, mudarEscol
               </label>
             </div>
           ) : null}
-          <LinhaInterruptor icone="arrow-right-left" rotulo="Transferência para Revolut" ligado={e.revolut} aoMudar={(v) => mudar({ revolut: v })} />
+          {/* só para quem tem a conta Revolut (numa instalação nova pelo tutorial não existe) */}
+          {temRevolut || e.revolut ? <LinhaInterruptor icone="arrow-right-left" rotulo="Transferência para Revolut" ligado={e.revolut} aoMudar={(v) => mudar({ revolut: v })} /> : null}
           {e.revolut ? (
             <div className="form-grid">
               <label>Revolut Conjunta

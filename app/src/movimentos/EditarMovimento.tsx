@@ -29,6 +29,7 @@ function Formulario({ m, estado, aoGuardar, aoEliminar }: { m: Movimento } & Pic
   const [categoria, setCategoria] = useState(atual);
   const [pessoa, setPessoa] = useState(m.person || '');
   const [conta, setConta] = useState(m.account || 'principal');
+  const [destino, setDestino] = useState(typeof m.toAccount === 'string' ? m.toAccount : '');
   const aspetos = aspetosCategorias(estado, new Date(`${m.date}T12:00:00`));
   // Valor variável por confirmar: campo vazio e o valor da última vez à mão
   const pendente = porConfirmar(m);
@@ -70,6 +71,15 @@ function Formulario({ m, estado, aoGuardar, aoEliminar }: { m: Movimento } & Pic
       {comCategoria && !m.revolut ? (
         <><Rotulo>Conta</Rotulo><Escolhas nome="account" rotulo="Conta" valor={conta} aoMudar={setConta} opcoes={estado.accounts.map((c) => ({ valor: c.id, rotulo: c.name }))} /></>
       ) : null}
+      {m.movementType === 'transfer' && !m.revolut && estado.accounts.length > 1 ? (
+        // transferência: as contas de origem e de destino também se mudam (v2.59.0)
+        <>
+          <Rotulo>Conta de origem</Rotulo>
+          <Escolhas nome="origin" rotulo="Conta de origem" valor={conta} aoMudar={setConta} opcoes={estado.accounts.map((c) => ({ valor: c.id, rotulo: c.name }))} />
+          <Rotulo>Conta de destino</Rotulo>
+          <Escolhas nome="destination" rotulo="Conta de destino" valor={destino} aoMudar={setDestino} opcoes={estado.accounts.map((c) => ({ valor: c.id, rotulo: c.name }))} />
+        </>
+      ) : null}
       <div className="movement-checks ffv2-extra ffregisto-mais">
         <LinhaInterruptor icone="calendar-clock" rotulo="Recorrente" nome="recurring" ligado={recorrente} aoMudar={setRecorrente} />
         {recorrente ? (
@@ -98,7 +108,7 @@ function Formulario({ m, estado, aoGuardar, aoEliminar }: { m: Movimento } & Pic
 
 export function EditarMovimento({ movimento: m, fechar, estado, aoGuardar, aoEliminar }: Props) {
   return (
-    <Dialogo folha aberto={m !== null} aoMudar={(a) => { if (!a) fechar(); }} className="movement-dialog ffregisto" titulo="Editar movimento" descricao="Altere os dados ou elimine este movimento.">
+    <Dialogo folha aberto={m !== null} aoMudar={(a) => { if (!a) fechar(); }} className="movement-dialog ffregisto" titulo="Editar movimento" descricao="Altera os dados ou elimina este movimento.">
       {m ? <Formulario key={m.id} m={m} estado={estado} aoGuardar={aoGuardar} aoEliminar={aoEliminar} /> : null}
     </Dialogo>
   );
