@@ -1,10 +1,13 @@
 import { type TouchEvent, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { EcraBloqueio } from '../bloqueio/EcraBloqueio';
+import { Dicas } from '../boasvindas/Dicas';
+import { aplicarTutorial, Tutorial } from '../boasvindas/Tutorial';
 import { apagarPorPinEsquecido, esquecerMarcaDoPin, pinFoiEsquecido } from '../bloqueio/esquecido';
 import { ligacoes } from '../bloqueio/estado';
 import { PREFIXO, VERSAO } from '../config';
 import { iniciarEspaco } from '../definicoes/espaco';
 import { pedirPersistencia } from '../definicoes/persistencia';
+import { eCombustivel } from '../paginas/calculos';
 import { iniciarAvisos } from '../definicoes/lembreteBackup';
 import type { AcoesBackup, AcoesImportacao } from '../definicoes/Seccoes';
 import { FolhaDefinicoes, MenuRapido, type PosicaoMenu, type Seccao } from '../definicoes/Definicoes';
@@ -91,7 +94,7 @@ interface Transicao { para: string; dir: Direcao; dx: number; volta?: boolean }
 interface Toque { x: number; y: number; t: number; eixo: 'x' | 'y' | null; dx?: number }
 
 const NAO_DESLIZA = "input, textarea, select, [role='slider'], .segmented, .calendar-grid, table, .bottom-nav, [role='dialog'], .ffmeses, .ffchips";
-const ids = PAGINAS.map((p) => p.id);
+const TODAS = PAGINAS.map((p) => p.id);
 const reduzMovimento = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
 export function App() {
@@ -109,6 +112,27 @@ export function App() {
   const [mais, setMais] = useState<boolean | 'out'>(false);
   const [onda, setOnda] = useState(0);
   const [bloqueada, setBloqueada] = useState(() => !!estado.pinHash);
+  // Boas-vindas: só numa instalação nova (sem movimentos, membros nem PIN) e uma vez por telemóvel
+  const [tutorial, setTutorial] = useState<'ecras' | 'dicas' | null>(() => {
+    let visto = false;
+    try { visto = !!localStorage.getItem(chave('tutorial', PREFIXO)); } catch { /* sem armazenamento */ }
+    return !visto && !estado.transactions.length && !estado.profile.members.length && !estado.pinHash ? 'ecras' : null;
+  });
+  // Definições › «Ver as dicas outra vez»: fecha as Definições e mostra as três dicas
+  useEffect(() => {
+    const ver = () => { setFolha(null); setSeccao(null); setTimeout(() => { window.ffGoPg?.('principal'); setTutorial('dicas'); }, 450); };
+    window.addEventListener('ff-dicas', ver);
+    return () => window.removeEventListener('ff-dicas', ver);
+  }, []);
+  const marcarTutorial = () => { try { localStorage.setItem(chave('tutorial', PREFIXO), new Date().toISOString()); } catch { /* sem armazenamento */ } };
+  // Sem viaturas nem abastecimentos, o Combustível sai do «Mais»; sem animais nem lembretes, o Veterinário (v2.58.0)
+  const escondidas = useMemo(() => {
+    const e: string[] = [];
+    if (!(estado.profile.vehicles ?? []).length && !estado.transactions.some((m) => eCombustivel(m))) e.push('combustivel');
+    if (!animaisDe(estado, todosLembretes()).length && !todosLembretes().length) e.push('veterinario');
+    return e;
+  }, [estado]);
+  const ids = useMemo(() => TODAS.filter((id) => !escondidas.includes(id)), [escondidas]);
   const [lista, setLista] = useState<ListaMovimentos>({ expandida: false, pesquisa: '', conta: 'all' });
   const [aviso, setAviso] = useState('');
   const [novoAberto, setNovoAberto] = useState(false);
@@ -308,8 +332,8 @@ export function App() {
   }, [folha, jarvis]);
 
   const irPara = useCallback((para: string, dx = 0) => {
-    if (!para || para === pagina || transicao || !ids.includes(para)) return;
-    const dir: Direcao = ids.indexOf(para) > ids.indexOf(pagina) ? 'left' : 'right';
+    if (!para || para === pagina || transicao || !TODAS.includes(para)) return;
+    const dir: Direcao = TODAS.indexOf(para) > TODAS.indexOf(pagina) ? 'left' : 'right';
     const moldura = document.querySelector('.app-shell');
     vibrar(8);
     setDirecao(dir);
@@ -802,7 +826,7 @@ export function App() {
       if (s.eixo === 'y') { toque.current = null; return; }
       setAArrastar(true);
     }
-    const k = ids.indexOf(pagina), naBorda = dx < 0 ? !ids[k + 1] : !ids[k - 1];
+    const o = ids.includes(pagina) ? ids : TODAS, k = o.indexOf(pagina), naBorda = dx < 0 ? !o[k + 1] : !o[k - 1];
     s.dx = naBorda ? dx * 0.3 : dx;
     setArrasto(s.dx);
   };
@@ -811,7 +835,7 @@ export function App() {
     toque.current = null;
     if (!s || s.eixo !== 'x') return;
     const dx = s.dx || 0, largura = document.querySelector('.page-viewport')?.clientWidth || window.innerWidth || 400;
-    const para = ids[ids.indexOf(pagina) + (dx < 0 ? 1 : -1)], rapido = Math.abs(dx) > 50 && Date.now() - s.t < 350;
+    const o = ids.includes(pagina) ? ids : TODAS, para = o[o.indexOf(pagina) + (dx < 0 ? 1 : -1)], rapido = Math.abs(dx) > 50 && Date.now() - s.t < 350;
     setAArrastar(false);
     if (para && (Math.abs(dx) > largura * 0.28 || rapido)) irPara(para, dx);
     else if (para && dx) {
@@ -889,8 +913,8 @@ export function App() {
     </div>
   );
 
-  const k = ids.indexOf(pagina);
-  const seguinte = transicao ? transicao.para : aArrastar && arrasto ? (arrasto < 0 ? ids[k + 1] : ids[k - 1]) : null;
+  const ordem = ids.includes(pagina) ? ids : TODAS, k = ordem.indexOf(pagina);
+  const seguinte = transicao ? transicao.para : aArrastar && arrasto ? (arrasto < 0 ? ordem[k + 1] : ordem[k - 1]) : null;
   const sinal = (transicao ? transicao.dir : arrasto < 0 ? 'left' : 'right') === 'left' ? 1 : -1;
   const larguraVista = document.querySelector('.page-viewport')?.clientWidth || window.innerWidth || 400;
   const progresso = (v: number) => Math.min(1, Math.abs(v) / (larguraVista * 0.6));
@@ -1001,7 +1025,7 @@ export function App() {
         <div className={`ffmore-ov${mais === 'out' ? ' is-out' : ''}`} onClick={(e) => { if (e.target === e.currentTarget) fecharMais(); }}>
           <div className="ffmore" role="menu" aria-label="Mais páginas" {...tocarMais} onTouchCancel={tocarMais.onTouchEnd}>
             <span className="ffmore-pega" aria-hidden="true" />
-            {PAGINAS.filter((p) => PAGINAS_MAIS.includes(p.id)).map((p) => (
+            {PAGINAS.filter((p) => PAGINAS_MAIS.includes(p.id) && ids.includes(p.id)).map((p) => (
               <button
                 key={p.id} type="button" role="menuitem" className={`ffmore-it${pagina === p.id ? ' on' : ''}`} style={{ '--c': COR_MAIS[p.id] } as React.CSSProperties}
                 onClick={() => { fecharMais(); irPara(p.id); }}
@@ -1021,6 +1045,14 @@ export function App() {
       <EditarMovimento movimento={aEditar} fechar={() => setAEditar(null)} estado={visivel} aoGuardar={guardarEdicao} aoEliminar={eliminar} />
       <ApagarRecorrente movimento={aApagarSerie} fechar={() => setAApagarSerie(null)} saltar={saltarMes} parar={apagar} />
       <Confirmacao evento={confirmacao} />
+      {tutorial === 'ecras' ? (
+        <Tutorial
+          estado={estado}
+          concluir={(r) => { if (r) setEstado((e) => aplicarTutorial(e, r)); marcarTutorial(); setTutorial('dicas'); }}
+          restaurar={() => { marcarTutorial(); setTutorial(null); abrirBackupRef.current(); }}
+        />
+      ) : null}
+      {tutorial === 'dicas' && !folha ? <Dicas fechar={() => setTutorial(null)} /> : null}
       <DadosApagados
         aberto={pinEsquecido && !folha && !estado.transactions.length} restaurar={() => abrirBackupRef.current()} fechar={() => setPinEsquecido(false)}
       />

@@ -21,6 +21,8 @@ export const NOMES = {
   backupAutomatico: 'auto-backup',
   /** «Esqueci-me do PIN» (v2.57.0): os dados foram apagados; o próximo restauro chega sem o PIN do backup. */
   pinEsquecido: 'pin-forgot',
+  /** Boas-vindas já vistas ou saltadas neste telemóvel (v2.58.0; não vai no backup). */
+  tutorial: 'tutorial',
 } as const;
 
 export type NomeChave = keyof typeof NOMES;

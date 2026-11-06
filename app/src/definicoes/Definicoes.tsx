@@ -173,6 +173,7 @@ export function FolhaDefinicoes(props: PropsFolha) {
               {linha('data', 'database', 'Dados', `${espaco} ocupados neste dispositivo`, false, 'linear-gradient(135deg,#a78bfa,#6366f1)')}
               {linha('import', 'receipt', 'Importação', `Extratos bancários · ${regrasPessoais(estado).length} regras pessoais`, true, 'linear-gradient(135deg,#fb923c,#ef4444)')}
             </div>
+            <button type="button" className="ffdef-dicas" onClick={() => window.dispatchEvent(new CustomEvent('ff-dicas'))}>Ver as dicas outra vez</button>
             <p className="ffdef-versao">{`Finanças · v${VERSAO}`}</p>
           </section>
         )}

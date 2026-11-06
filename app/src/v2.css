@@ -439,3 +439,6 @@ html[data-tema="floresta"] .ffjv-row .ffjv-seg { border-color: #bef264; backgrou
 .ffanual[role=button] { cursor: pointer; }
 .ffanu-editar .ffanu-form { margin: 0; }
 .ffanu-erro { color: var(--negative); }
+
+/* Definições: ver as dicas outra vez (v2.58.0) */
+.ffdef-dicas { display: block; margin: 1rem auto 0; background: none; border: 0; color: var(--muted-foreground); font: inherit; font-size: .82rem; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
