@@ -758,6 +758,7 @@ body .calendar-day.ffcal-zero { background: transparent; }
 .ffdef-ic svg { width: 1rem !important; height: 1rem !important; color: #fff !important; }
 .ffdef-estado { flex: none; font-style: normal; padding: .15rem .55rem; border-radius: 999px; font-size: .64rem; font-weight: 700; }
 .ffdef-bom { color: #6ee7a0; background: rgba(74, 222, 128, .15); } .ffdef-aviso { color: #fbbf24; background: rgba(251, 191, 36, .15); } .ffdef-mau { color: #fca5a5; background: rgba(248, 113, 113, .15); }
+.ffdef-atualizacao { margin-top: .25rem !important; padding: 0 1rem; }
 .ffdef-versao { margin: 1rem 0 0; text-align: center; font-size: .72rem; color: color-mix(in oklab, var(--foreground) 40%, transparent); }
 /* Aparência */
 .ffaparencia { display: grid; gap: .7rem; background: none !important; border: 0 !important; padding: 0 !important; box-shadow: none !important; }

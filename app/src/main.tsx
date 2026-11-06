@@ -29,7 +29,8 @@ if (tratarRespostaGoogle()) {
   iniciarAndroid();
   void prepararAndroid().finally(() => {
     createRoot(document.getElementById('root')!).render(<App />);
-    // a app arrancou: a guarda da atualização sozinha (APK) já não volta atrás
-    requestAnimationFrame(() => void confirmarArranque());
+    // a app arrancou: a guarda da atualização sozinha (APK) já não volta atrás. Sem esperar por um fotograma:
+    // a versão nova é aplicada com a app em segundo plano, onde não há fotogramas (v2.63.0)
+    void confirmarArranque();
   });
 }

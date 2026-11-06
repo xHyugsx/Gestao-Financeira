@@ -17,5 +17,7 @@ describe('atualização sozinha da APK', () => {
     expect(html).toContain('__ffArrancou');
     expect(html).toContain("setServerAssetPath");
     expect(html).toContain('"2.61.0"');
+    // com a app em segundo plano a guarda espera (a versão é aplicada ao sair da app)
+    expect(html).toContain("visibilityState==='hidden'");
   });
 });

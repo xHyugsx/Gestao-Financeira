@@ -1,4 +1,5 @@
 import { eNativo } from '../nativo/plataforma';
+import { estadoAtualizacao } from '../nativo/atualizarWeb';
 import { Notificacoes } from './Notificacoes';
 import { ImagemBloqueio } from './ImagemBloqueio';
 import { VERSAO } from '../config';
@@ -175,6 +176,11 @@ export function FolhaDefinicoes(props: PropsFolha) {
             </div>
             <button type="button" className="ffdef-dicas" onClick={() => window.dispatchEvent(new CustomEvent('ff-dicas'))}>Ver as dicas outra vez</button>
             <p className="ffdef-versao">{`Finanças · v${VERSAO}`}</p>
+            {eNativo() ? (() => {
+              // diagnóstico da atualização sozinha (v2.63.0): para se perceber no telemóvel porque não atualizou
+              const u = estadoAtualizacao();
+              return <p className="ffdef-versao ffdef-atualizacao">{u ? `Atualização: ${u.resultado}${u.publicada ? ` · publicada ${u.publicada}` : ''} · ${new Date(u.quando).toLocaleString('pt-PT', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}` : 'Atualização: ainda não verificou'}</p>;
+            })() : null}
           </section>
         )}
       </main>

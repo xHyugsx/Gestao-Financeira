@@ -46,6 +46,8 @@ async function verificarVersao(ignoradas: Set<string>) {
 /** Antes de montar a app: o atalho com que foi aberta passa para o endereço (lido pela App). */
 export async function prepararAndroid(): Promise<void> {
   if (!eNativo()) return;
+  // uma versão descarregada que ficou por aplicar (a app foi fechada antes): aplica já, antes de mostrar a app
+  if (await aplicarSePronta()) await new Promise((r) => setTimeout(r, 3000));
   const acao = acaoDoEndereco((await App.getLaunchUrl().catch(() => undefined))?.url);
   if (acao) window.history.replaceState(window.history.state, '', `?acao=${acao}`);
 }
