@@ -35,7 +35,7 @@ async def t_recorrente_com_periodicidade_cria_as_copias(app):
     datas = sorted(m['date'] for m in (await dados(app))['transactions'])
     verificar(datas == ['2026-06-10', '2026-07-10', '2026-08-10', '2026-09-10'], f'cópias criadas: {datas}')
     copia = next(m for m in (await dados(app))['transactions'] if m['date'] == '2026-09-10')
-    verificar(copia['detail'] == '10 setembro · Alimentação' and copia['amount'] == -600 and copia['recurringEvery'] == 1, f'cópia: {copia}')
+    verificar(copia['detail'] == '10 setembro · Habitação' and copia['amount'] == -600 and copia['recurringEvery'] == 1, f'cópia: {copia}')
     await p.reload(); await p.wait_for_timeout(1500)
     verificar(len((await dados(app))['transactions']) == 4, 'ao reabrir criou cópias repetidas')
 

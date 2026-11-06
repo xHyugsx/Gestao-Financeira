@@ -98,7 +98,7 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
     const semDespesas = diasSemDespesas(movimentos, meses, hoje), seguidos = semDespesas.seguidos;
     const ano = mes.getFullYear(), ate = MESES[mes.getMonth()]!;
     const contra = periodo === 'mes' ? rotuloComparacao(mes, MESES).replace(/^vs /, '') : periodo === 'trimestre' ? '3 meses antes' : String(ano - 1);
-    const face = periodo === 'mes' ? `face a ${contra}` : periodo === 'trimestre' ? 'face aos 3 meses anteriores' : `face ao mesmo período de ${ano - 1}`;
+    const face = periodo === 'mes' ? (limite ? `face ao mesmo período de ${MESES[inicioDoMes(mes, -1).getMonth()]}` : `face a ${contra}`) : periodo === 'trimestre' ? 'face aos 3 meses anteriores' : `face ao mesmo período de ${ano - 1}`;
     // categoria que mais pesou na subida (ou na descida) face ao mês anterior
     const destaque = gastoAnterior > 0 && evolucao !== 0
       ? [...categorias].sort((a, b) => (evolucao > 0 ? (b.amount - b.anterior) - (a.amount - a.anterior) : (a.amount - a.anterior) - (b.amount - b.anterior)))[0]

@@ -22,7 +22,7 @@ async def t_categoria_sugerida_pelo_titulo(app):
 
 async def t_medias_e_comparacoes_justas(app):
     # hoje = 28 de setembro (correr.py); o primeiro movimento é de agosto
-    await app.abrir({'transactions': [M(1, '2026-08-05', -100), M(2, '2026-08-30', -300), M(3, '2026-09-10', -150)]})
+    await app.abrir({'transactions': [M(1, '2026-08-05', 'A', -100), M(2, '2026-08-30', 'B', -300), M(3, '2026-09-10', 'C', -150)]})
     p = app.page
     await p.evaluate("window.ffGoPg('analise')"); await p.wait_for_timeout(900)
     medias = await p.evaluate(TEXTO('.page-current .ffmedias'))
@@ -39,12 +39,12 @@ async def t_aviso_veterinario_fora_das_folhas(app):
     await p.wait_for_selector('#ff-vetbn', timeout=9000)
     await p.click('.ffplus'); await p.wait_for_timeout(700)
     verificar(await p.evaluate("getComputedStyle(document.querySelector('#ff-vetbn')).opacity") == '0', 'o lembrete devia sair da frente da folha')
-    await p.keyboard.press('Escape'); await p.wait_for_timeout(600)
+    await p.keyboard.press('Escape'); await p.wait_for_timeout(1500)
     verificar(await p.evaluate("getComputedStyle(document.querySelector('#ff-vetbn')).opacity") == '1', 'e voltar ao fechar a folha')
 
 
 async def t_jarvis_frases_do_dia_a_dia(app):
-    await app.abrir({'transactions': [M(1, '2026-09-28', -12), M(2, '2026-09-21', -40), M(3, '2026-09-02', -450, 'Habitação', recurring='com')]})
+    await app.abrir({'transactions': [M(1, '2026-09-28', 'Pão', -12), M(2, '2026-09-21', 'Mercado', -40), M(3, '2026-09-02', 'Renda', -450, 'Habitação', recurring='com')]})
     r = await app.jarvis('quanto gastei esta semana?')
     verificar('Esta semana' in r and '12,00 €' in r.replace(' ', ' '), f'semana: {r}')
     verificar('Posso responder' in await app.jarvis('ajuda'), 'ajuda')
@@ -54,7 +54,7 @@ async def t_jarvis_frases_do_dia_a_dia(app):
     verificar('fixas' in r and '450' in r, f'fixas: {r}')
     r = await app.jarvis('gastei 8 euros no café')
     verificar('Vou registar a despesa «Café»' in r and 'Confirmas' in r, f'«gastei» regista com confirmação: {r}')
-    verificar('Backup' in await app.jarvis('cancelar') or True, '')
+    await app.jarvis('cancelar')
     verificar('Definições › Backup' in await app.jarvis('como faço um backup?'), 'como fazer backup')
 
 

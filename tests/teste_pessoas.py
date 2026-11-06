@@ -29,7 +29,8 @@ async def t_quem_fez_a_despesa(app):
     await p.click('[aria-label="Adicionar movimento"]'); await p.wait_for_timeout(500)
     verificar(await p.input_value('[role=dialog] input[name=person]') == 'Pessoa A', 'não lembrou a última pessoa')
     await p.click('[role=dialog] .segmented button:text-is("Receita")'); await p.wait_for_timeout(200)
-    verificar(not await p.query_selector('[role=dialog] [data-campo=\"person\"]'), 'o campo aparece nas receitas')
+    # nas receitas de salário (a categoria por omissão) aparece «Quem recebe», não «Quem fez» (v2.57.0/v2.59.0)
+    verificar(await p.get_attribute('[role=dialog] [data-campo=\"person\"]', 'aria-label') == 'Quem recebe', 'nas receitas, «Quem fez» não aparece')
     await p.keyboard.press('Escape'); await p.wait_for_timeout(400)
 
     await p.click('article[aria-label="Editar Padaria"]'); await p.wait_for_timeout(500)

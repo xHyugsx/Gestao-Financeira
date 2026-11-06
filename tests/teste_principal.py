@@ -99,7 +99,7 @@ async def t_robo_no_topo_abre_jarvis_e_definicoes(app):
     verificar(not await p.query_selector('.jarvis-fab, button[aria-label="Definições"]'), 'o robô flutuante e a engrenagem saíram')
     await p.click('button[aria-label="Jarvis e definições"]'); await p.wait_for_timeout(500)
     itens = await p.evaluate("[...document.querySelectorAll('.set-menu-item strong')].map(e=>e.textContent)")
-    verificar(itens == ['Perguntar ao Jarvis', 'Perfil e família', 'Contas bancárias', 'Aparência', 'Segurança', 'Definições'], f'menu: {itens}')
+    verificar(itens == ['Perguntar ao Jarvis', 'Perfil e família', 'Contas bancárias', 'Aparência', 'Segurança', 'Todas as definições'], f'menu: {itens}')
     await p.click('.set-menu-jarvis'); await p.wait_for_timeout(600)
     verificar(await p.query_selector('.jarvis-overlay'), '«Perguntar ao Jarvis» devia abrir o Jarvis')
     await p.keyboard.press('Escape'); await p.wait_for_timeout(500)

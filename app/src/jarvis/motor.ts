@@ -6,7 +6,7 @@ import { categoriaDespesa, categoriaReceita } from '../movimentos/categorias';
 import { criaCopias, saltarEsteMes } from '../movimentos/recorrentes';
 import { tipoVisual } from '../movimentos/regras';
 import { categoriaPeloTitulo, categoriaSugerida } from '../movimentos/sugestoes';
-import { categoriasDoMes, eCombustivel, gastosPorConta, percentagem, variacao } from '../paginas/calculos';
+import { calorDoMes, categoriasDoMes, eCombustivel, gastosPorConta, percentagem, variacao } from '../paginas/calculos';
 import { recorrentesDoMes } from '../paginas/subscricoes';
 import { animais, deAnimal } from '../veterinario/animais';
 import type { InfoLembrete, Lembrete } from '../veterinario/lembretes';
@@ -170,6 +170,10 @@ export class MotorJarvis {
       if (!r.lista.length) return `Ainda não há despesas recorrentes. Ao registar uma despesa, liga «Recorrente» para ela se repetir todos os meses.`;
       const nomes = r.lista.slice(0, 5).map((x) => `${x.titulo} ${A(x.valor)}`).join(' · ');
       return `Despesas fixas de ${nomeMes}: ${A(r.pago + r.falta)} (${A(r.pago)} pagos, falta ${A(r.falta)}). ${nomes}${r.lista.length > 5 ? ' …' : ''}`;
+    }
+    if (/\bdia\b/.test(n) && /(gast|despes)\w* mais|mais car[oa]/.test(n)) {
+      const cal = calorDoMes(f, mes, c.agora);
+      return cal.maisCaro ? `O dia mais caro de ${nomeMes} foi ${cal.maisCaro}: ${A(cal.gasto[cal.maisCaro]!)}.` : `Ainda não há gastos registados em ${nomeMes}.`;
     }
     if (/em que (e que )?(gasto|gastei|gastamos) mais|onde (e que )?(gasto|gastei|gastamos) mais|com que gasto mais/.test(n)) {
       const vn = categoriasDoMes(c.estado, mes, 'despesas')[0];

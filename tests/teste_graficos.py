@@ -86,5 +86,5 @@ async def t_diario_com_calor_e_barra_cortada(app):
 async def t_contas_numa_barra_dividida(app):
     await abrir_analise(app)
     verificar(await app.page.locator('.page-current .ffresumo-mes').count() == 1, 'falta o cartão-resumo do mês')
-    verificar('vs agosto' in (await app.page.text_content('.page-current .ffresumo-mes .ffhero-var') or ''), 'comparação com o mês anterior no cartão')
+    verificar('vs 1 a 28 de agosto' in (await app.page.text_content('.page-current .ffresumo-mes .ffhero-var') or ''), 'comparação com o mês anterior no cartão')
     verificar(not await app.page.query_selector('.page-current .ffcontas') or await app.page.locator('.page-current .ffcontas .ffpilha i').count() >= 1, 'barra dividida das contas')
