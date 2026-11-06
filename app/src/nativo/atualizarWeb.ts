@@ -19,8 +19,10 @@ interface Estado {
   pronta?: { versao: string; caminho: string };
   /** Versão acabada de aplicar (ao arrancar mostra «Atualizada para a versão …»). */
   aplicada?: string;
-  /** Versões que não arrancaram (não se voltam a tentar). */
+  /** Versões que não arrancaram (não se voltam a tentar até instalar outra APK). */
   falhadas?: string[];
+  /** Última verificação (para Definições): quando, versão publicada e o que aconteceu. */
+  ultima?: { quando: string; publicada?: string; resultado: string };
 }
 
 export interface Remota { version: string; nativo?: number; files?: string[] }
@@ -41,16 +43,26 @@ export function decidir(remota: Remota, atual: string, nativoDaApk: number, falh
   return (remota.nativo ?? 1) === nativoDaApk ? 'web' : 'apk';
 }
 
-/** Guarda que, se a versão descarregada não arrancar em 20 s, a app volta à parte web da APK (fica marcada como falhada). */
+/** Guarda: se a versão descarregada não arrancar em 20 s com a app à vista, volta à parte web da APK (fica marcada como falhada).
+ *  Com a app em segundo plano a contagem espera (a versão é aplicada ao sair da app). */
 export function comGuarda(html: string, versao: string): string {
-  const guarda = `<script>(function(){setTimeout(function(){if(window.__ffArrancou)return;try{var k=${JSON.stringify(CHAVE)},e=JSON.parse(localStorage.getItem(k)||'{}');`
+  const guarda = `<script>(function(){function v(){if(window.__ffArrancou)return;if(document.visibilityState==='hidden'){setTimeout(v,5000);return;}`
+    + `try{var k=${JSON.stringify(CHAVE)},e=JSON.parse(localStorage.getItem(k)||'{}');`
     + `e.falhadas=(e.falhadas||[]).concat(${JSON.stringify(versao)});delete e.pronta;localStorage.setItem(k,JSON.stringify(e));}catch(x){}`
-    + `var C=window.Capacitor;if(C&&C.nativePromise)C.nativePromise('WebView','setServerAssetPath',{path:'public'});},20000);})();</script>`;
+    + `var C=window.Capacitor;if(C&&C.nativePromise)C.nativePromise('WebView','setServerAssetPath',{path:'public'});}setTimeout(v,20000);})();</script>`;
   return html.includes('<head>') ? html.replace('<head>', `<head>${guarda}`) : guarda + html;
 }
 
 
 let aDescarregar = false;
+
+function registar(publicada: string | undefined, resultado: string) {
+  const e = ler();
+  gravar({ ...e, ultima: { quando: new Date().toISOString(), publicada: publicada ?? e.ultima?.publicada, resultado } });
+}
+
+/** Para Definições (só na APK): a última verificação da atualização sozinha. */
+export function estadoAtualizacao(): Estado['ultima'] { return ler().ultima; }
 
 /** Ao abrir e ao voltar à app: vê se há versão nova; se for só a parte web, descarrega-a. Devolve 'apk' quando é preciso instalar a APK. */
 export async function verificarAtualizacao(): Promise<'nada' | 'web' | 'apk'> {
@@ -59,13 +71,17 @@ export async function verificarAtualizacao(): Promise<'nada' | 'web' | 'apk'> {
   try {
     const { build } = await App.getInfo();
     // 1.ª abertura de uma APK nova: a parte web é a original, por isso o nível Android é o desta compilação
-    if (e.binario !== build) { e.binario = build; e.nativo = NATIVO; delete e.pronta; gravar(e); }
+    if (e.binario !== build) { e.binario = build; e.nativo = NATIVO; delete e.pronta; delete e.falhadas; gravar(e); }
     // pedidos pelo lado Android (sem as restrições de CORS da WebView)
     const r = await CapacitorHttp.get({ url: `${SITE}version.json?t=${Date.now()}`, responseType: 'json', headers: { 'Cache-Control': 'no-cache' } });
-    if (r.status !== 200) return 'nada';
+    if (r.status !== 200) { registar(undefined, `Sem resposta do site (${r.status})`); return 'nada'; }
     const remota = (typeof r.data === 'string' ? JSON.parse(r.data) : r.data) as Remota;
     const d = decidir(remota, VERSAO, e.nativo ?? NATIVO, e.falhadas);
-    if (d !== 'web' || e.pronta?.versao === remota.version) return d;
+    if (d !== 'web' || e.pronta?.versao === remota.version) {
+      registar(remota.version, d === 'apk' ? 'Precisa da APK nova' : e.pronta?.versao === remota.version ? 'Descarregada; aplica-se ao sair da app'
+        : e.falhadas?.includes(remota.version) ? 'Esta versão falhou antes' : 'Em dia');
+      return d;
+    }
     aDescarregar = true;
     const pasta = `${PASTA}/${remota.version}`;
     for (const f of [...new Set(['index.html', 'version.json', ...(remota.files ?? [])])]) {
@@ -78,26 +94,31 @@ export async function verificarAtualizacao(): Promise<'nada' | 'web' | 'apk'> {
     }
     const { uri } = await Filesystem.getUri({ path: pasta, directory: Directory.Data });
     gravar({ ...ler(), pronta: { versao: remota.version, caminho: uri.replace(/^file:\/\//, '') } });
+    registar(remota.version, 'Descarregada; aplica-se ao sair da app');
     return 'web';
-  } catch { return 'nada'; } finally { aDescarregar = false; }
+  } catch (x) { registar(undefined, `Erro: ${x instanceof Error ? x.message : String(x)}`.slice(0, 120)); return 'nada'; } finally { aDescarregar = false; }
 }
 
-/** Ao sair da app: se há uma versão pronta, passa a usá-la (a app recarrega em segundo plano). */
-export async function aplicarSePronta(): Promise<void> {
-  if (!eNativo()) return;
+/** Ao sair da app (ou ao abrir, se ficou por aplicar): se há uma versão pronta, passa a usá-la (a app recarrega).
+ *  O caminho só fica guardado depois de a versão nova arrancar (`confirmarArranque`): o recarregar começa logo e
+ *  a resposta deste pedido já não chega. Devolve true se a app vai recarregar. */
+export async function aplicarSePronta(): Promise<boolean> {
+  if (!eNativo()) return false;
   const e = ler();
-  if (!e.pronta || !maisRecente(e.pronta.versao, VERSAO)) return;
+  if (!e.pronta || !maisRecente(e.pronta.versao, VERSAO) || e.falhadas?.includes(e.pronta.versao)) return false;
   try {
     gravar({ ...e, aplicada: e.pronta.versao });
     await WebView.setServerBasePath({ path: e.pronta.caminho });
-    await WebView.persistServerBasePath();
-  } catch { /* fica para a próxima vez */ }
+    return true;
+  } catch { return false; }
 }
 
 /** Depois de a app arrancar: marca o arranque (a guarda não volta atrás) e apaga as versões antigas descarregadas. */
 export async function confirmarArranque(): Promise<void> {
   (window as unknown as { __ffArrancou?: boolean }).__ffArrancou = true;
   if (!eNativo()) return;
+  // a correr de uma versão descarregada: fica guardada para os próximos arranques
+  try { const { path } = await WebView.getServerBasePath(); if (path.includes(`/${PASTA}/`)) await WebView.persistServerBasePath(); } catch { /* fica a da APK */ }
   const e = ler();
   if (e.pronta && !maisRecente(e.pronta.versao, VERSAO)) { delete e.pronta; gravar(e); }
   if (e.aplicada === VERSAO) { delete e.aplicada; gravar(e); avisoAtualizada(VERSAO); }
