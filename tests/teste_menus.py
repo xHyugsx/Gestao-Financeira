@@ -1,7 +1,8 @@
 """Menus: painel «Mais» (cascata, ícones com cor, arrastar para fechar), onda do botão «+» e brilho na linha acabada de gravar."""
 from correr import verificar
 
-DADOS = {'transactions': [{'id': 1, 'title': 'Padaria', 'amount': -3, 'date': '2026-09-03', 'detail': 'x · Outros', 'movementType': 'expense'}]}
+DADOS = {'transactions': [{'id': 1, 'title': 'Padaria', 'amount': -3, 'date': '2026-09-03', 'detail': 'x · Outros', 'movementType': 'expense'}],
+         'profile': {'profileName': '', 'email': '', 'phone': '', 'members': [], 'vehicles': [{'name': 'Carro', 'type': 'carro'}], 'pets': [{'name': 'Animal', 'sex': 'f'}]}}
 
 ARRASTAR = """async dy => {
   const el = document.querySelector('.ffmore'), r = el.getBoundingClientRect(), x = r.x + r.width / 2, y = r.y + 20;

@@ -23,7 +23,7 @@ function devido(b: Backup) {
   const a = idade();
   return a === null || a > 30;
 }
-const pronta = () => !document.getElementById('ff-lock') && !!document.querySelector('.bottom-nav') && !document.querySelector('.settings-sheet') && document.visibilityState === 'visible';
+const pronta = () => !document.getElementById('ff-lock') && !document.querySelector('.ffbv, .ffdicas') && !!document.querySelector('.bottom-nav') && !document.querySelector('.settings-sheet') && document.visibilityState === 'visible';
 const fechar = (el: HTMLElement) => { el.classList.remove('in'); setTimeout(() => el.remove(), 400); };
 
 function ficheiro(b: Backup): File | null {

@@ -44,10 +44,11 @@ class App:
         self.raiz = raiz or url  # raiz do site
         page.on('pageerror', lambda e: self.erros.append(str(e)))
 
-    async def abrir(self, dados=None, extra=None, sem_backup_aviso=True):
+    async def abrir(self, dados=None, extra=None, sem_backup_aviso=True, tutorial=False):
         p = self.page
         await p.goto(self.url); await self.esperar_sw()
         extra = {chave(k): v for k, v in (extra or {}).items()}
+        if not tutorial: extra.setdefault(PREFIXO + 'tutorial', '2026-01-01')  # as boas-vindas só nos testes que as pedem
         await p.evaluate("""([d,x,s,P])=>{localStorage.clear();if(d)localStorage.setItem(P+'v3',JSON.stringify(d));
           if(s)localStorage.setItem(P+'last-backup',new Date().toISOString());
           for(const k in (x||{}))localStorage.setItem(k,typeof x[k]==='string'?x[k]:JSON.stringify(x[k]))}""", [dados, extra, sem_backup_aviso, PREFIXO])
