@@ -58,7 +58,7 @@ async def t_analise_mostra_gastos_por_conta(app):
     await app.abrir(DADOS)
     p = app.page
     await p.evaluate("window.ffGoPg('analise')"); await p.wait_for_timeout(1200)
-    linhas = await p.evaluate("""[...document.querySelectorAll('.ffcontas .chart-legend > div')].map(d=>[...d.children].slice(1,5).map(e=>e.textContent.replace(/\\u00a0/g,' ')))""")
+    linhas = await p.evaluate("""[...document.querySelectorAll('.ffcontas:not(.ffpessoas) .chart-legend > div')].map(d=>[...d.children].slice(1,5).map(e=>e.textContent.replace(/\\u00a0/g,' ')))""")
     verificar(linhas == [['Principal', '1000,00 €', '95,2%', ''], ['Cartão refeição', '30,00 €', '2,9%', ''], ['Revolut Conjunta', '20,00 €', '1,9%', '↓ 75%']],
               f'gastos por conta: {linhas}')
     await p.click('.segmented button:text-is("Receitas")'); await p.wait_for_timeout(300)

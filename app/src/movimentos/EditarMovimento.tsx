@@ -5,7 +5,7 @@ import { Dialogo } from '../ui/Dialogo';
 import { formatarEuros } from '../ui/formatos';
 import { Icone } from '../ui/Icone';
 import { aspetosCategorias, categoriaDoDetalhe } from './categorias';
-import { pessoasDaFamilia } from './pessoas';
+import { opcoesQuemFez, pessoasDaFamilia } from './pessoas';
 import { CamposCombustivel } from './CamposCombustivel';
 import { CampoCategoria } from './EscolhaCategoria';
 import { EscolhaData, Escolhas, LinhaInterruptor, Rotulo, ValorGrande } from '../ui/Escolhas';
@@ -40,7 +40,8 @@ function Formulario({ m, estado, aoGuardar, aoEliminar }: { m: Movimento } & Pic
     const novo = movimentoEditado(m, new FormData(ev.currentTarget));
     if (novo) aoGuardar(novo);
   };
-  const pessoasOp = [...[...new Set([...pessoas, ...(m.person ? [m.person] : [])])].map((p, k) => ({ valor: p, rotulo: p, classe: k === 0 ? 'ffp1' : k === 1 ? 'ffp2' : undefined })), { valor: '', rotulo: '—' }];
+  const pessoasOp = opcoesQuemFez(pessoas, m.person ? [m.person] : []);
+  const recebeOp = [...pessoasOp.slice(1), { valor: '', rotulo: '—' }];
   const tipoValor = m.revolut ? 'transfer' : m.movementType ?? 'expense';
   const comCategoria = m.movementType === 'expense' || m.movementType === 'income';
   return (
@@ -63,9 +64,9 @@ function Formulario({ m, estado, aoGuardar, aoEliminar }: { m: Movimento } & Pic
       <Rotulo>Data</Rotulo>
       <EscolhaData inicial={m.date} />
       {m.movementType === 'income' && eReceitaDeSalario({ ...m, detail: `x · ${categoria}` }) && (pessoas.length || m.person) ? (
-        <div className="ffv2-extra"><Rotulo>Quem recebe</Rotulo><Escolhas nome="person" rotulo="Quem recebe" valor={pessoa} aoMudar={setPessoa} opcoes={pessoasOp} /></div>
+        <div className="ffv2-extra"><Rotulo>Quem recebe</Rotulo><Escolhas nome="person" rotulo="Quem recebe" valor={pessoa} aoMudar={setPessoa} opcoes={recebeOp} /></div>
       ) : null}
-      {m.movementType === 'expense' && !m.revolut && (pessoas.length || m.person) ? (
+      {m.movementType === 'expense' && !m.revolut && (pessoas.length > 1 || (m.person && m.person !== pessoas[0])) ? (
         <div className="ffv2-extra"><Rotulo>Quem fez</Rotulo><Escolhas nome="person" rotulo="Quem fez" valor={pessoa} aoMudar={setPessoa} opcoes={pessoasOp} /></div>
       ) : null}
       {comCategoria && !m.revolut ? (

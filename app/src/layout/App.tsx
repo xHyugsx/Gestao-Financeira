@@ -42,6 +42,7 @@ import { eReceitaDeSalario, perguntarQuandoSalario } from '../dados/rendimento';
 
 const CATEGORIA_INICIAL = 'Alimentação';
 import { animais, animaisDe, definirAnimais } from '../veterinario/animais';
+import { definirPessoas, pessoasDaFamilia } from '../movimentos/pessoas';
 import { feito as lembreteFeito, info as infoLembrete, ordenados as lembretesOrdenados } from '../veterinario/lembretes';
 import { formatarEuros } from '../ui/formatos';
 import { type EscolhasNovo, NovoMovimento } from '../movimentos/NovoMovimento';
@@ -167,6 +168,7 @@ export function App() {
   const [despesaVet, setDespesaVet] = useState(false);
 
   definirAnimais(animaisDe(estado, todosLembretes()));
+  definirPessoas(pessoasDaFamilia(estado));
   const ocultos = estado.hideValues;
   const setOcultos = useCallback((v: boolean | ((a: boolean) => boolean)) =>
     setEstado((s) => ({ ...s, hideValues: typeof v === 'function' ? v(s.hideValues) : v })), [setEstado]);

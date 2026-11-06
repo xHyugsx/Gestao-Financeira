@@ -2,7 +2,7 @@
 import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { dia, type Estado, type Movimento } from '../dados';
 import { CamposCombustivel } from '../movimentos/CamposCombustivel';
-import { pessoasDaFamilia, ultimaPessoa } from '../movimentos/pessoas';
+import { opcoesQuemFez, pessoasDaFamilia } from '../movimentos/pessoas';
 import { camposCombustivel } from '../movimentos/viaturas';
 import { diaEMes, lerValor } from '../movimentos/regras';
 import { Botao } from '../ui/Botao';
@@ -51,7 +51,7 @@ const submeter = (criar: (f: FormData, hoje: Date) => Movimento | null, aoGuarda
 
 export function NovoAbastecimento({ aberto, aoMudar, aoGuardar, estado }: PropsJanela & { estado: Estado }) {
   const pessoas = useMemo(() => pessoasDaFamilia(estado), [estado]);
-  const sugerida = useMemo(() => ultimaPessoa(estado.transactions, pessoas), [estado.transactions, pessoas]);
+  const sugerida = pessoas.length === 1 ? pessoas[0]! : '';
   const [pessoa, setPessoa] = useState(sugerida);
   const posto = useRef<HTMLInputElement>(null);
   useEffect(() => { if (aberto) setPessoa(sugerida); }, [aberto, sugerida]);
@@ -63,10 +63,9 @@ export function NovoAbastecimento({ aberto, aoMudar, aoGuardar, estado }: PropsJ
       <form className="movement-form ffregisto-form" onSubmit={submeter(novoAbastecimento, aoGuardar)}>
         <ValorGrande tipo="expense" required />
         {aberto ? <CamposCombustivel estado={estado} /> : null}
-        {pessoas.length ? (
-          <><Rotulo>Quem fez</Rotulo><Escolhas nome="person" rotulo="Quem fez" valor={pessoa} aoMudar={setPessoa}
-            opcoes={[...pessoas.map((p, k) => ({ valor: p, rotulo: p, classe: k === 0 ? 'ffp1' : k === 1 ? 'ffp2' : undefined })), { valor: '', rotulo: '—' }]} /></>
-        ) : null}
+        {pessoas.length > 1 ? (
+          <><Rotulo>Quem fez</Rotulo><Escolhas nome="person" rotulo="Quem fez" valor={pessoa} aoMudar={setPessoa} opcoes={opcoesQuemFez(pessoas)} /></>
+        ) : pessoas.length === 1 ? <input type="hidden" name="person" value={pessoas[0]} /> : null}
         <Rotulo>Posto</Rotulo>
         <label className="fftitulo"><Icone nome="fuel" /><span className="sr-only">Posto</span><input ref={posto} name="station" placeholder="Ex.: Galp (opcional)" autoComplete="off" /></label>
         {postos.length ? (

@@ -261,9 +261,10 @@ body .calendar-day.ffcal-zero { background: transparent; }
 .calendar-movements .section-heading > strong { flex: none; width: auto; min-width: 1.9rem; height: 1.9rem; padding: 0 .5rem; border-radius: 999px; display: grid; place-items: center; font-size: .8rem; }
 .calendar-panel, .calendar-movements, .chart-panel, .evolution-panel { -webkit-backdrop-filter: none; backdrop-filter: none; }
 
-/* Gastos por pessoa: cores fixas (1.º membro azul, 2.º cor-de-rosa, «Sem pessoa» cinzento) */
+/* Gastos por pessoa: cores fixas (1.º membro azul, 2.º cor-de-rosa, «Ambos»/«Todos» roxo) */
 .tone-azul { background: oklch(68% .16 250); } .tone-text-azul { color: oklch(68% .16 250); }
 .tone-rosa { background: oklch(76% .15 350); } .tone-text-rosa { color: oklch(76% .15 350); }
+.tone-roxo { background: oklch(66% .2 300); } .tone-text-roxo { color: oklch(66% .2 300); }
 .tone-cinza { background: oklch(62% .02 270); } .tone-text-cinza { color: oklch(62% .02 270); }
 
 /* ===== Etapa 3 (v2.42.0): Resumo ===== */
@@ -516,6 +517,7 @@ body .calendar-day.ffcal-zero { background: transparent; }
 .ffescolha.on { color: var(--background); background: var(--foreground); border-color: transparent; }
 .ffescolha.ffp1 { color: oklch(78% .13 250); border-color: oklch(68% .16 250 / .45); } .ffescolha.ffp1.on { color: #fff; background: oklch(68% .16 250); }
 .ffescolha.ffp2 { color: oklch(82% .12 350); border-color: oklch(76% .15 350 / .45); } .ffescolha.ffp2.on { color: #fff; background: oklch(76% .15 350); }
+.ffescolha.ffpambos { color: oklch(80% .14 300); border-color: oklch(66% .2 300 / .45); } .ffescolha.ffpambos.on { color: #fff; background: oklch(66% .2 300); }
 .fftitulos .ffescolha { padding: .4rem .7rem; font-size: .76rem; }
 .ffviaturas { display: grid; grid-template-columns: repeat(auto-fill, minmax(6.4rem, 1fr)); }
 .ffviaturas .ffescolha { display: grid; justify-items: start; gap: .3rem; padding: .7rem .75rem; border-radius: 1rem; text-align: left; }

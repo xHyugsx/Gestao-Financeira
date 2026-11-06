@@ -3,6 +3,7 @@ import { anoMes, dia, type Estado, gastos, inicioDoMes, type Movimento } from '.
 import { categoriaDespesa, categoriaReceita, simplificar } from '../movimentos/categorias';
 import { coresCategorias, TONS } from '../movimentos/cores';
 import { CATALOGO_ICONES, CATEGORIAS_BASE, type NomeIcone } from '../ui/icones';
+import { rotuloAmbos } from '../movimentos/pessoas';
 
 export const doMes = (movimentos: Movimento[], mes: Date) => movimentos.filter((m) => m.date.startsWith(anoMes(mes)));
 export const receitas = (l: Movimento[]) => l.filter((m) => m.movementType === 'income').reduce((s, m) => s + m.amount, 0);
@@ -270,15 +271,17 @@ export function calorDoMes(movimentos: Movimento[], mes: Date, hoje = new Date()
  * pessoa neste mês ou no anterior; senão devolve uma lista vazia.
  */
 export function gastosPorPessoa(estado: Pick<Estado, 'transactions'>, mes: Date, pessoas: string[]): GastoConta[] {
+  // sem pessoa escolhida: com um só membro é dele; com dois ou mais é de «Ambos»/«Todos» (chave '')
+  const chave = (m: Movimento) => (typeof m.person === 'string' && m.person ? m.person : pessoas.length === 1 ? pessoas[0]! : '');
   const somar = (l: Movimento[]) => l.filter((m) => m.movementType === 'expense')
-    .reduce((r, m) => { const k = typeof m.person === 'string' && m.person ? m.person : ''; return r.set(k, (r.get(k) || 0) + Math.abs(m.amount)); }, new Map<string, number>());
+    .reduce((r, m) => r.set(chave(m), (r.get(chave(m)) || 0) + Math.abs(m.amount)), new Map<string, number>());
   const agora = somar(doMes(estado.transactions, mes)), antes = somar(mesAnteriorComparavel(estado.transactions, mes));
-  if (![...agora.keys(), ...antes.keys()].some(Boolean)) return [];
-  const total = [...agora.values()].reduce((s, v) => s + v, 0);
   const nomes = [...new Set([...pessoas, ...agora.keys(), ...antes.keys()].filter(Boolean))];
-  // Cores fixas (decisão do dono): 1.º membro do perfil azul, 2.º cor-de-rosa, «Sem pessoa» cinzento; os nomes vêm dos dados
+  if (nomes.length < 2) return [];
+  const total = [...agora.values()].reduce((s, v) => s + v, 0);
+  // Cores fixas (decisão do dono): 1.º membro do perfil azul, 2.º cor-de-rosa, «Ambos»/«Todos» roxo; os nomes vêm dos dados
   const TONS_PESSOAS = ['azul', 'rosa', ...TONS_CONTAS];
-  return [...nomes.map((n, i) => ({ id: n, name: n, tone: TONS_PESSOAS[i % TONS_PESSOAS.length]! })), { id: '', name: 'Sem pessoa', tone: 'cinza' }]
+  return [...nomes.map((n, i) => ({ id: n, name: n, tone: TONS_PESSOAS[i % TONS_PESSOAS.length]! })), { id: '', name: rotuloAmbos(Math.max(pessoas.length, 2)), tone: 'roxo' }]
     .map((c) => ({ ...c, amount: agora.get(c.id) || 0, anterior: antes.get(c.id) || 0, share: total ? ((agora.get(c.id) || 0) / total) * 100 : 0 }))
     .filter((c) => c.amount > 0 || c.anterior > 0)
     .sort((a, b) => b.amount - a.amount);
