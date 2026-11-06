@@ -18,11 +18,11 @@ describe('recorrentes e subscrições', () => {
     r('2026-09-02', 'Mercado', -50, { recurring: undefined }),
   ];
 
-  it('mês atual: pago, agendado, por pagar e atrasado; séries terminadas ficam de fora', () => {
+  it('mês atual: pago, agendado, a seguir (dia ainda não chegou) e atrasado; séries terminadas ficam de fora', () => {
     const x = recorrentesDoMes(l, new Date(2026, 9, 1), HOJE);
     expect(x.lista.map((i) => [i.titulo, i.dia, i.estado, i.valor])).toEqual([
-      ['Renda', 1, 'pago', 600], ['Cofre', 5, 'atrasado', 100], ['Ginásio', 8, 'atrasado', 30], ['Seguro', 15, 'por pagar', 90],
-      ['streaming', 20, 'agendado', 12], ['Internet', 25, 'por pagar', 40]]);
+      ['Renda', 1, 'pago', 600], ['Cofre', 5, 'atrasado', 100], ['Ginásio', 8, 'atrasado', 30], ['Seguro', 15, 'a seguir', 90],
+      ['streaming', 20, 'agendado', 12], ['Internet', 25, 'a seguir', 40]]);
     expect(x.pago).toBe(600);
     expect(x.falta).toBe(272);
     expect(x.anual).toBe(600 * 12 + 30 * 12 + 12 * 12 + 40 * 12 + 90 * 4 + 100 * 12);
@@ -39,7 +39,7 @@ describe('recorrentes e subscrições', () => {
     expect(recorrentesDoMes(l, new Date(2026, 8, 1), HOJE).lista.every((i) => i.estado === 'pago')).toBe(true);
     const nov = recorrentesDoMes(l, new Date(2026, 10, 1), HOJE);
     expect(nov.lista.map((i) => i.titulo)).toEqual(['Renda', 'Cofre', 'Ginásio', 'streaming', 'Internet']);
-    expect(nov.lista.every((i) => i.estado === 'por pagar')).toBe(true);
+    expect(nov.lista.every((i) => i.estado === 'a seguir')).toBe(true);
     expect(recorrentesDoMes(l, new Date(2027, 0, 1), HOJE).lista.map((i) => i.titulo)).toContain('Seguro');
   });
 
@@ -54,7 +54,7 @@ describe('recorrentes e subscrições', () => {
     const confirmada = recorrentesDoMes([...luz.slice(0, 4), { ...luz[4]!, amount: -45 }], new Date(2026, 9, 1), HOJE);
     expect(confirmada.lista.map((i) => [i.estado, i.valor, i.estimado])).toEqual([['pago', 45, false]]);
     const novembro = recorrentesDoMes([...luz.slice(0, 4), { ...luz[4]!, amount: -45 }], new Date(2026, 10, 1), HOJE);
-    expect(novembro.lista.map((i) => [i.estado, i.valor, i.estimado])).toEqual([['por pagar', 51.67, true]]);
+    expect(novembro.lista.map((i) => [i.estado, i.valor, i.estimado])).toEqual([['a seguir', 51.67, true]]);
   });
 
   it('movimento do mês com data futura: «Agendado», em «falta pagar» (ainda não saiu do saldo)', () => {
@@ -64,13 +64,13 @@ describe('recorrentes e subscrições', () => {
     expect(x.falta).toBe(600);
   });
 
-  it('mês saltado aparece como «saltado» (para repor) mas não conta; o mês seguinte continua «por pagar»', () => {
+  it('mês saltado aparece como «saltado» (para repor) mas não conta; o mês seguinte continua «a seguir»', () => {
     const l = [r('2026-09-01', 'Renda', -600, { recurringEvery: 1, recurringDone: true }), r('2026-10-01', 'Renda', -600, { recurringEvery: 1, skipped: true })];
     const out = recorrentesDoMes(l, new Date(2026, 9, 1), HOJE);
     expect(out.lista.map((i) => [i.titulo, i.estado])).toEqual([['Renda', 'saltado']]);
     expect(out.pago + out.falta).toBe(0);
     expect(out.anual).toBe(7200);
-    expect(recorrentesDoMes(l, new Date(2026, 10, 1), HOJE).lista.map((i) => [i.estado, i.valor])).toEqual([['por pagar', 600]]);
+    expect(recorrentesDoMes(l, new Date(2026, 10, 1), HOJE).lista.map((i) => [i.estado, i.valor])).toEqual([['a seguir', 600]]);
   });
 
   it('mês saltado com outro movimento da série nesse mês não aparece (sem «Repor» a dobrar)', () => {
@@ -78,5 +78,12 @@ describe('recorrentes e subscrições', () => {
       r('2026-10-03', 'Renda', -600)];
     expect(recorrentesDoMes(l, new Date(2026, 9, 1), HOJE).lista.map((i) => i.estado)).toEqual(['pago']);
   });
-});
 
+  it('no próprio dia fica «por pagar»; receitas recorrentes (ordenado) à parte', () => {
+    const renda = recorrentesDoMes([r('2026-09-12', 'Renda', -600)], new Date(2026, 9, 1), HOJE);
+    expect(renda.lista.map((i) => i.estado)).toEqual(['por pagar']);
+    const salario = [r('2026-09-28', 'Ordenado', 1500, { movementType: 'income' }), r('2026-10-28', 'Ordenado', 1500, { movementType: 'income' })];
+    expect(recorrentesDoMes(salario, new Date(2026, 9, 1), HOJE).lista).toEqual([]);
+    expect(recorrentesDoMes(salario, new Date(2026, 9, 1), HOJE, true).lista.map((i) => [i.titulo, i.estado, i.valor])).toEqual([['Ordenado', 'agendado', 1500]]);
+  });
+});

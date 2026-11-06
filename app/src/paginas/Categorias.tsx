@@ -141,7 +141,7 @@ export function Categorias({ estado, mes, ocultos, vista, mudarVista, mudarEstad
       />
       {sugestoes.length ? (
         <section className="ffsugest" aria-label="Arrumar em grupos">
-          <div className="ffsugest-t"><span className="ffsugest-ic"><Icone nome="tags" /></span><div><strong>Arrumar em grupos</strong><small>{`Encontrei ${sugestoes.reduce((s, x) => s + x.categorias.length, 0)} categorias soltas que podem ir para um grupo`}</small></div></div>
+          <div className="ffsugest-t"><span className="ffsugest-ic"><Icone nome="tags" /></span><div><strong>Arrumar em grupos</strong><small>{((n) => `Encontrei ${n} ${n === 1 ? 'categoria solta que pode' : 'categorias soltas que podem'} ir para um grupo`)(sugestoes.reduce((s, x) => s + x.categorias.length, 0))}</small></div></div>
           <ul>
             {sugestoes.map((s) => (
               <li key={s.grupo}>

@@ -28,6 +28,7 @@ const SECCOES: { valor: SeccaoResumo; rotulo: string }[] = [
 ];
 const ESTADOS: { estado: EstadoRecorrente; rotulo: string }[] = [
   { estado: 'atrasado', rotulo: 'Atrasado' }, { estado: 'por pagar', rotulo: 'Por pagar' }, { estado: 'por confirmar', rotulo: 'Por confirmar' },
+  { estado: 'a seguir', rotulo: 'A seguir' },
   { estado: 'agendado', rotulo: 'Agendado' }, { estado: 'pago', rotulo: 'Pago' }, { estado: 'saltado', rotulo: 'Saltado' },
 ];
 const COR_PESSOA = ['azul', 'rosa', 'cyan', 'amber', 'emerald'];
@@ -163,11 +164,12 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
 
   const recorrentes = () => {
     const r = recorrentesDoMes(todos, mes, hoje);
+    const receitas = recorrentesDoMes(todos, mes, hoje, true).lista.filter((i) => i.estado !== 'saltado');
     const total = r.pago + r.falta;
     const aspetos = aspetosCategorias(estado, mes);
     const soma = (...e: EstadoRecorrente[]) => r.lista.filter((i) => e.includes(i.estado)).reduce((s, i) => s + i.valor, 0);
     const partes = [
-      { rotulo: 'Pago', valor: r.pago, cls: 'pago' }, { rotulo: 'Por pagar', valor: soma('por pagar', 'atrasado'), cls: 'por-pagar' },
+      { rotulo: 'Pago', valor: r.pago, cls: 'pago' }, { rotulo: 'Por pagar', valor: soma('por pagar', 'a seguir', 'atrasado'), cls: 'por-pagar' },
       { rotulo: 'Por confirmar', valor: soma('por confirmar'), cls: 'por-confirmar' }, { rotulo: 'Agendado', valor: soma('agendado'), cls: 'agendado' },
     ].filter((x) => x.valor > 0);
     return (
@@ -220,7 +222,29 @@ export function Resumo({ estado, mes, ocultos, seccao, mudarSeccao, periodo, mud
               </div>
             </section>
           );
-        }) : <div className="vet-empty ffvazio-linha"><RoboVazio pequeno />Sem recorrentes neste mês. Marque um movimento como «Recorrente» para aparecer aqui.</div>}
+        }) : <div className="vet-empty ffvazio-linha"><RoboVazio pequeno />Sem recorrentes neste mês. Marca um movimento como «Recorrente» para aparecer aqui.</div>}
+        {receitas.length ? (
+          // receitas recorrentes (ex.: o ordenado): só para ver, fora dos totais de cima
+          <section className="ffrec-grupo ffrec-receitas">
+            <p className="ffgrupo"><span>Receitas recorrentes</span><span>{receitas.length}</span></p>
+            <div className="transaction-list">
+              {receitas.map((i) => (
+                <ArtigoMovimento key={`${i.titulo}-${i.movimento.id}`} movimento={i.movimento} aoAbrir={abrirMovimento}>
+                  <div className="transaction-main">
+                    {(() => { const a = aspetoDoMovimento(i.movimento, aspetos); return <IconeCor nome={a?.icone ?? 'calendar-clock'} tom={a?.tone ?? 'green'} />; })()}
+                    <div className="min-w-0"><h3>{i.titulo}</h3><p>Dia {i.dia} · {i.periodicidade}</p></div>
+                  </div>
+                  <div className="ffrec-dir">
+                    <strong className={`amount-positive${i.estimado ? ' ffrec-estimado' : ''}`}>{i.valor ? `${i.estimado ? '≈ ' : ''}${eur(i.valor)}` : 'A definir'}</strong>
+                    <small className={`ffest ffest-${i.estado === 'pago' ? 'recebido' : i.estado === 'por confirmar' ? 'por-confirmar' : i.estado === 'atrasado' ? 'por-pagar' : 'a-seguir'}`}>
+                      {i.estado === 'pago' ? 'Recebido' : i.estado === 'por confirmar' ? 'Confirmar valor' : i.estado === 'atrasado' ? 'Por receber' : 'A receber'}
+                    </small>
+                  </div>
+                </ArtigoMovimento>
+              ))}
+            </div>
+          </section>
+        ) : null}
         {r.anual > 0 ? (
           <section className="ffcal-resumos ffrec-anual">
             <article className="ffbloco"><p className="ffbloco-rot">Custo anual</p><strong className="ffbloco-val ffrec-v-custo">{eur(r.anual)}</strong><small>se nada mudar</small></article>

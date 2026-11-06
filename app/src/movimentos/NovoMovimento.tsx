@@ -13,7 +13,7 @@ import { opcoesQuemFez, pessoasDaFamilia } from './pessoas';
 import { categoriaPeloTitulo, categoriaSugerida, titulosAnteriores } from './sugestoes';
 import { CamposCombustivel } from './CamposCombustivel';
 import { CampoCategoria } from './EscolhaCategoria';
-import { EscolhaData, Escolhas, LinhaInterruptor, Rotulo, ValorGrande } from '../ui/Escolhas';
+import { EscolhaData, Escolhas, LinhaInterruptor, Rotulo, ValorGrande, valorAltoPorConfirmar } from '../ui/Escolhas';
 import { simplificar as simplificarTitulo } from './categorias';
 import { eCategoriaCombustivel } from './viaturas';
 
@@ -84,6 +84,7 @@ export function NovoMovimento({ aberto, aoMudar, estado, escolhas: e, mudarEscol
   const guardar = (ev: FormEvent<HTMLFormElement>) => {
     ev.preventDefault();
     const form = ev.currentTarget;
+    if (valorAltoPorConfirmar(form)) return;
     const r = novoMovimento(new FormData(form), { ...e, hoje: new Date(), id: Date.now() });
     if (Array.isArray(r)) {
       const campo = form.elements.namedItem(r[0]) as HTMLInputElement | null;
@@ -118,7 +119,7 @@ export function NovoMovimento({ aberto, aoMudar, estado, escolhas: e, mudarEscol
         <ValorGrande tipo={e.revolut ? 'transfer' : e.tipo} placeholder={semValor ? 'A definir' : '0,00'} required={!semValor} />
         <label className="fftitulo"><Icone nome="pencil" /><span className="sr-only">Descrição</span>
           <input
-            ref={tituloRef} name="title" placeholder={e.tipo === 'transfer' ? 'Ex.: Reforço Revolut' : 'Ex.: Continente'} required autoComplete="off"
+            ref={tituloRef} name="title" placeholder={e.tipo === 'transfer' ? 'Ex.: Poupança' : e.tipo === 'income' ? 'Ex.: Ordenado' : 'Ex.: Continente'} required autoComplete="off"
             onChange={(x) => { setTitulo(x.target.value); aoEscreverTitulo(x.target.value); }}
           />
         </label>

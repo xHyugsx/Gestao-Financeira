@@ -41,7 +41,7 @@ export function Calendario({ estado, mes, ocultos, diaEscolhido, escolherDia, as
   const doDia = (d: number) => doMesAtual.filter((m) => Number(m.date.slice(-2)) === d);
   const escolhidos = doDia(diaEscolhido);
   const calor = calorDoMes(estado.transactions, mes);
-  // total gasto em cada semana (coluna à direita): as células vão de 7 em 7, a última semana completa-se com vazios
+  // total de cada semana, com os agendados como no total do mês (coluna à direita): as células vão de 7 em 7, a última semana completa-se com vazios
   const semanas = Array.from({ length: Math.ceil(celulas.length / 7) }, (_, k) => celulas.slice(k * 7, k * 7 + 7));
   const totalCurto = (v: number) => (ocultos ? '•••' : `${Math.round(v).toLocaleString('pt-PT')} €`);
   const nomeDia = (d: number) => NOMES_DIA[new Date(mes.getFullYear(), mes.getMonth(), d).getDay()]!;
@@ -70,7 +70,7 @@ export function Calendario({ estado, mes, ocultos, diaEscolhido, escolherDia, as
         <div key={anoMes(mes)} className="calendar-grid ffcal-com-semana">
           {semanas.flatMap((semana, k) => [...semana, ...Array<null>(7 - semana.length).fill(null)].map((d, j) => ({ d, i: k * 8 + j })).concat([{ d: -1 - k, i: k * 8 + 7 }])).map(({ d, i }) => {
             if (d !== null && d < 0) {
-              const total = (semanas[-1 - d] ?? []).reduce<number>((s, x) => s + (x ? calor.gasto[x] ?? 0 : 0), 0);
+              const total = (semanas[-1 - d] ?? []).reduce<number>((s, x) => s + (x ? (calor.gasto[x] ?? 0) + (calor.previsto[x] ?? 0) : 0), 0);
               return <span key={`sem-${-1 - d}`} className={`ffcal-semana${total ? '' : ' ffcal-semana-zero'}`} style={{ '--i': i } as React.CSSProperties} aria-label={total ? `Total da semana: ${formatarEuros(total, ocultos)}` : 'Semana sem despesas'}>{total ? totalCurto(total) : '—'}</span>;
             }
             if (d === null) return <span key={`empty-${i}`} className="calendar-empty" style={{ '--i': i } as React.CSSProperties} />;

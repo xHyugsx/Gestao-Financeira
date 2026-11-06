@@ -124,7 +124,7 @@ export function avisosPrevistos(e: Estado, { agora, lembretes, ultimoBackup, con
       for (const r of recorrentesDoMes(e.transactions, mes, agora).lista) {
         const linha = `${r.titulo}${r.estimado ? aprox(r.valor, ocultos) : euros(-r.valor, ocultos)}`;
         if (r.estado === 'atrasado' && am === anoMes(agora)) { atrasados.push(linha); continue; }
-        if (r.estado !== 'agendado' && r.estado !== 'por pagar') continue;
+        if (r.estado !== 'agendado' && r.estado !== 'por pagar' && r.estado !== 'a seguir') continue;
         const dia = `${am}-${pad(r.dia)}`;
         if (dia < hoje || dia > limite) continue;
         porDia.set(dia, [...(porDia.get(dia) ?? []), linha]);

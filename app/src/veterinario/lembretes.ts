@@ -94,7 +94,7 @@ export function feito(id: string | number) {
 
 function janela(id: string | null) {
   const r = id ? todos().find((x) => String(x.id) === String(id)) ?? null : null;
-  const atual: Partial<Lembrete> = r || { pet: animais()[0] ?? '', type: 'vacina', every: 12, last: '', note: '' };
+  const atual: Partial<Lembrete> = r || { pet: animais()[0] ?? '', type: 'vacina', every: 12, last: hoje(), note: '' };
   const ov = document.createElement('div');
   ov.className = 'ffvr-ov';
   const opcoesTipo = TIPOS.map((t) => `<option value="${t[0]}"${t[0] === atual.type ? ' selected' : ''}>${t[1]}</option>`).join('');
@@ -141,8 +141,8 @@ function janela(id: string | null) {
   };
   f.onsubmit = (e) => {
     e.preventDefault();
-    const cada = +repetir.value, ultima = data.value || (cada > 0 ? hoje() : ''), rotulo = String(campo('label').value || '').trim();
-    if (!ultima) { erro.textContent = 'Indica a data.'; return; }
+    const cada = +repetir.value, ultima = data.value, rotulo = String(campo('label').value || '').trim();
+    if (!ultima) { erro.textContent = cada > 0 ? 'Indica a data da última vez.' : 'Indica a data.'; return; }
     if (tipo.value === 'outro' && !rotulo) { erro.textContent = 'Indica o nome do lembrete.'; return; }
     const novo: Lembrete = { id: r ? r.id : Date.now(), pet: animal, type: tipo.value, label: tipo.value === 'outro' ? rotulo : undefined, last: ultima, every: cada, note: String(campo('note').value || '').trim() || undefined };
     let a = todos();

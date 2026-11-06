@@ -7,7 +7,7 @@ import { camposCombustivel } from '../movimentos/viaturas';
 import { diaEMes, lerValor } from '../movimentos/regras';
 import { Botao } from '../ui/Botao';
 import { Dialogo } from '../ui/Dialogo';
-import { EscolhaData, Escolhas, Rotulo, ValorGrande } from '../ui/Escolhas';
+import { EscolhaData, Escolhas, Rotulo, ValorGrande, valorAltoPorConfirmar } from '../ui/Escolhas';
 import { Icone } from '../ui/Icone';
 import { animais } from '../veterinario/animais';
 
@@ -45,6 +45,7 @@ export function novaDespesaVet(f: FormData, hoje: Date): Movimento | null {
 
 const submeter = (criar: (f: FormData, hoje: Date) => Movimento | null, aoGuardar: (m: Movimento) => void) => (e: FormEvent<HTMLFormElement>) => {
   e.preventDefault();
+  if (valorAltoPorConfirmar(e.currentTarget)) return;
   const m = criar(new FormData(e.currentTarget), new Date());
   if (m) aoGuardar(m);
 };
