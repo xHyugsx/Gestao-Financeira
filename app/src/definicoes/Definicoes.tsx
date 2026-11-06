@@ -214,7 +214,7 @@ function Seguranca({ estado, mudarPin, mudarAparencia, mudarEstado }: Pick<Props
   return (
     <div className="settings-subview">
       <Cabecalho seccao="security" />
-      {eNativo() ? <ImagemBloqueio estado={estado} mudarEstado={mudarEstado} /> : null}
+      <ImagemBloqueio estado={estado} mudarEstado={mudarEstado} />
       <section className="settings-panel">
         <div className="security-intro">
           <Icone nome="lock-keyhole" />

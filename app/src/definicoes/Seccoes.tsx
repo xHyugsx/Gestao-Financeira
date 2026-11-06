@@ -127,7 +127,7 @@ function Membros({ estado, mudarEstado, avisar }: { estado: Estado; mudarEstado:
   );
 }
 
-interface LinhaAnimal extends Animal { antes: string }
+interface LinhaAnimal extends Omit<Animal, 'sex'> { sex: Animal['sex'] | ''; antes: string }
 
 /** Animais da família (só na app nova): nome e sexo; mudar o nome atualiza as despesas, as fotografias e os lembretes. */
 function Animais({ estado, mudarEstado, avisar }: { estado: Estado; mudarEstado: Mudar; avisar: (m: string) => void }) {
@@ -137,11 +137,12 @@ function Animais({ estado, mudarEstado, avisar }: { estado: Estado; mudarEstado:
     const limpas = linhas.map((a) => ({ ...a, name: a.name.trim() })).filter((a) => a.name);
     const nomes = limpas.map((a) => a.name.toLocaleLowerCase('pt-PT'));
     if (nomes.some((n, i) => nomes.indexOf(n) !== i)) { avisar('Há dois animais com o mesmo nome.'); return; }
+    if (limpas.some((a) => !a.sex)) { avisar('Escolhe se cada animal é macho ou fêmea.'); return; }
     const trocas = new Map(limpas.filter((a) => a.antes && a.antes !== a.name).map((a) => [a.antes, a.name]));
     const novo = (n: unknown) => (typeof n === 'string' && trocas.has(n) ? trocas.get(n)! : n);
     mudarEstado((e) => ({
       ...e,
-      profile: { ...e.profile, pets: limpas.map(({ name, sex }) => ({ name, sex })) },
+      profile: { ...e.profile, pets: limpas.map(({ name, sex }) => ({ name, sex: sex as Animal['sex'] })) },
       transactions: trocas.size ? e.transactions.map((m) => (m.pet && trocas.has(m.pet) ? { ...m, pet: novo(m.pet) as string } : m)) : e.transactions,
       petPhotos: trocas.size ? Object.fromEntries(Object.entries(e.petPhotos).map(([k, v]) => [novo(k) as string, v])) : e.petPhotos,
     }));
@@ -158,13 +159,13 @@ function Animais({ estado, mudarEstado, avisar }: { estado: Estado; mudarEstado:
           <div key={i} className="ffv2-regra">
             <input aria-label={`Nome do animal ${i + 1}`} value={a.name} maxLength={30} placeholder="Nome" onChange={(e) => mudar(i, { name: e.target.value })} />
             <select aria-label={`Sexo do animal ${i + 1}`} value={a.sex} onChange={(e) => mudar(i, { sex: e.target.value as Animal['sex'] })}>
-              <option value="m">Macho</option><option value="f">Fêmea</option>
+              {a.sex ? null : <option value="" disabled>Sexo…</option>}<option value="m">Macho</option><option value="f">Fêmea</option>
             </select>
             <Botao type="button" variante="ghost" tamanho="icone" aria-label={`Apagar o animal ${i + 1}`} onClick={() => setLinhas((l) => l.filter((_, k) => k !== i))}><Icone nome="trash-2" /></Botao>
           </div>
         ))}
       </div>
-      <Botao type="button" variante="contorno" onClick={() => setLinhas((l) => [...l, { name: '', sex: 'm', antes: '' }])}><Icone nome="plus" />Novo animal</Botao>
+      <Botao type="button" variante="contorno" onClick={() => setLinhas((l) => [...l, { name: '', sex: '', antes: '' }])}><Icone nome="plus" />Novo animal</Botao>
       <Botao type="button" onClick={guardar}>Guardar animais</Botao>
     </section>
   );

@@ -14,7 +14,7 @@ import { FolhaDefinicoes, MenuRapido, type PosicaoMenu, type Seccao } from '../d
 import { aplicarBackup, type Backup, chave, cifrarBackup, criarBackup, decifrarBackup, eBackupCifrado, dia, type Estado, inicioDoMes, lerBackup, type LeituraBackup, MESES, perguntaRestauro, type Movimento, nomeFicheiroBackup, PREFIXO_REAL } from '../dados';
 import { aviso as avisoVeterinario, definir as definirLembretes, todos as todosLembretes } from '../veterinario/lembretes';
 import { useDados } from '../estado/useDados';
-import { aspetosCategorias } from '../movimentos/categorias';
+import { aspetosCategorias, categoriasNovas } from '../movimentos/categorias';
 import { ApagarRecorrente, DuplicadoRecorrente, EditarMovimento } from '../movimentos/EditarMovimento';
 import { aplicarJuncao, novoLote, prepararJuncao, semJuncao, ultimaJuncao } from '../movimentos/juntar';
 import { copiaNoMes, criaCopias, gerarRecorrentes, porConfirmar, preencherCopia, recorrenciaNaSerie, salarioDaReceita, saltarEsteMes, semSaltados } from '../movimentos/recorrentes';
@@ -207,7 +207,7 @@ export function App() {
   // as receitas de salário com «Quem recebe» atualizam a tabela de Salários (gravar, editar, apagar, desfazer, Jarvis)
   const mudarMovimentos = (f: (l: Movimento[]) => Movimento[]) => setEstado((s) => {
     const transactions = f(s.transactions);
-    return { ...s, transactions, salaries: sincronizarSalarios(s.transactions, transactions, s.salaries) };
+    return { ...s, transactions, salaries: sincronizarSalarios(s.transactions, transactions, s.salaries), categories: categoriasNovas(s.transactions, transactions, s.categories) };
   });
   // a linha do movimento acabado de gravar brilha por instantes (depois de a janela fechar)
   const realcar = (id: Movimento['id']) => setTimeout(() => {
@@ -808,7 +808,7 @@ export function App() {
   }, [desvioMes, bloqueada]);
 
   if (bloqueada) {
-    const imagem = eNativo() && typeof estado.extras.lockImage === 'string' ? estado.extras.lockImage : null;
+    const imagem = typeof estado.extras.lockImage === 'string' ? estado.extras.lockImage : null;
     return <EcraBloqueio key="ff-lock" hash={estado.pinHash} imagem={imagem} aoDesbloquear={() => setBloqueada(false)} aoApagarDados={() => apagarPorPinEsquecido([PREFIXO_REAL, PREFIXO])} />;
   }
 

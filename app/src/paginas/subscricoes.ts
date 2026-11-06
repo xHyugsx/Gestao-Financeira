@@ -5,7 +5,7 @@
 import { anoMes, dia, type Movimento } from '../dados';
 import { dataSeguinte, estimativa, PERIODICIDADES, porConfirmar, serieDe, valorRecorrente as valorDe } from '../movimentos/recorrentes';
 
-export type EstadoRecorrente = 'pago' | 'por pagar' | 'atrasado' | 'por confirmar' | 'agendado' | 'saltado';
+export type EstadoRecorrente = 'pago' | 'por pagar' | 'a seguir' | 'atrasado' | 'por confirmar' | 'agendado' | 'saltado';
 
 export interface Recorrente {
   titulo: string;
@@ -35,10 +35,11 @@ export interface Recorrentes {
 
 const rotulo = (cada: number) => PERIODICIDADES.find((p) => p.meses === cada)?.rotulo ?? `A cada ${cada} meses`;
 
-export function recorrentesDoMes(movimentos: Movimento[], mes: Date, hoje = new Date()): Recorrentes {
+/** Recorrentes do mês: despesas (e transferências para a Revolut) ou, com `receitas`, as receitas (ex.: o ordenado). */
+export function recorrentesDoMes(movimentos: Movimento[], mes: Date, hoje = new Date(), receitas = false): Recorrentes {
   const series = new Map<string, Movimento[]>();
   for (const m of movimentos) {
-    if (!m.recurring || !m.date || !(m.movementType === 'expense' || m.revolut)) continue;
+    if (!m.recurring || !m.date || (receitas ? m.movementType !== 'income' : !(m.movementType === 'expense' || m.revolut))) continue;
     const k = serieDe(m);
     series.set(k, [...(series.get(k) ?? []), m]);
   }
@@ -77,10 +78,10 @@ export function recorrentesDoMes(movimentos: Movimento[], mes: Date, hoje = new 
     while (previsto.slice(0, 7) < alvo) previsto = dataSeguinte(ultimo, previsto, cada);
     if (previsto.slice(0, 7) !== alvo && !(alvo === atual && seguinte < `${alvo}-01`)) continue;
     const data = previsto.slice(0, 7) === alvo ? previsto : seguinte;
-    lista.push({ ...base, valor: valorPrevisto, estimado: variavel, dia: Number(data.slice(8, 10)), estado: data < hojeDia && alvo === atual ? 'atrasado' : 'por pagar' });
+    lista.push({ ...base, valor: valorPrevisto, estimado: variavel, dia: Number(data.slice(8, 10)), estado: data < hojeDia && alvo === atual ? 'atrasado' : data > hojeDia ? 'a seguir' : 'por pagar' });
   }
   lista.sort((a, b) => a.dia - b.dia || a.titulo.localeCompare(b.titulo));
   const soma = (e: EstadoRecorrente[]) => lista.filter((r) => e.includes(r.estado)).reduce((s, r) => s + r.valor, 0);
-  // Por confirmar e agendado contam em «falta pagar»: ainda não saíram do saldo
-  return { lista, pago: soma(['pago']), falta: soma(['por pagar', 'atrasado', 'por confirmar', 'agendado']), anual };
+  // Por confirmar, a seguir e agendado contam em «falta pagar»: ainda não saíram do saldo
+  return { lista, pago: soma(['pago']), falta: soma(['por pagar', 'a seguir', 'atrasado', 'por confirmar', 'agendado']), anual };
 }

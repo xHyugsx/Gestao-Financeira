@@ -23,6 +23,14 @@ export function categoriaDespesa(m: Movimento): string {
   return m.pet ? 'Animais' : categoriaDoDetalhe(m) || 'Outros';
 }
 
+/** Categorias de despesas acabadas de gravar que ainda não estão na lista (ex.: «Combustível» do 1.º abastecimento) passam a estar. */
+export function categoriasNovas(antes: Movimento[], depois: Movimento[], categorias: string[]): string[] {
+  const ids = new Set(antes.map((m) => m.id));
+  const novas = [...new Set(depois.filter((m) => !ids.has(m.id) && m.movementType === 'expense' && !m.pet).map(categoriaDoDetalhe))]
+    .filter((c) => c && !categorias.includes(c));
+  return novas.length ? [...categorias, ...novas] : categorias;
+}
+
 export function categoriaReceita(m: Movimento): string {
   return categoriaDoDetalhe(m) || 'Outras receitas';
 }

@@ -48,8 +48,8 @@ const SVG_APAGAR = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" 
 
 const tecla = (k: string, conteudo = k, extra = '') => `<button type="button" class="ffl-key${extra}" data-k="${k}"${extra ? ` aria-label="${k === 'bio' ? 'Biometria' : 'Apagar'}"` : ''}>${conteudo}</button>`;
 
-/** APK: fundo do bloqueio — a imagem do dono em ecrã inteiro ou, sem ela, o logótipo animado. */
-function fundoNativo(imagem: string | null, estrelas: string): string {
+/** Fundo do bloqueio (APK e versão web, desde a v2.62.0): a imagem escolhida em ecrã inteiro ou, sem ela, o logótipo animado. */
+function fundoDoBloqueio(imagem: string | null, estrelas: string): string {
   if (imagem && /^data:image\/[a-z+]+;base64,[A-Za-z0-9+/=]+$/.test(imagem)) return `<div class="ffl-foto" style="background-image:url('${imagem}')"></div><div class="ffl-sombra"></div>`;
   return `<div class="ffl-cosmo"></div>${estrelas}<div class="ffl-logo"><div class="ffl-orb"><i class="ffl-anel ffl-anel2"></i><img src="icons/icon-512.png" alt=""><i class="ffl-anel"></i><span class="ffl-orbita"><i class="ffl-lua"></i></span></div><h1>Finanças</h1><p>Bem-vindo de volta!</p></div>`;
 }
@@ -59,9 +59,7 @@ export function marcacaoBloqueio(imagem: string | null = null): string {
     `<i class="ffl-star" style="left:${l}%;top:${t}%;width:${s}px;height:${s}px;animation-duration:${d}s;animation-delay:${a}s;--peak:${p}"></i>`).join('');
   const teclas = ['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((k) => tecla(k)).join('')
     + tecla('bio', '', ' ghost') + tecla('0') + tecla('del', SVG_APAGAR, ' ghost');
-  const fundo = eNativo() ? fundoNativo(imagem, estrelas)
-    : '<div class="ffl-backdrop ffl-img"></div>'
-      + `<div class="ffl-stage"><div class="ffl-base ffl-img"></div><div class="ffl-clouds"><div class="ffl-layer ffl-img"></div></div>${estrelas}<div class="ffl-cw"><div class="ffl-comet"></div></div></div>`;
+  const fundo = fundoDoBloqueio(imagem, estrelas);
   return fundo
     + '<div class="ffl-veil"></div>'
     + `<div class="ffl-hint">${SVG_SETA}<span>Desliza para cima para desbloquear</span><div class="ffl-bar"></div></div>`

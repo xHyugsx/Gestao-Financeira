@@ -1,4 +1,4 @@
-// Definições › Segurança › Imagem do ecrã de bloqueio (só na APK). Guardada reduzida em `lockImage` (vai no backup).
+// Definições › Segurança › Imagem do ecrã de bloqueio (APK e, desde a v2.62.0, versão web). Guardada reduzida em `lockImage` (vai no backup).
 import { type ChangeEvent, useRef, useState } from 'react';
 import type { Estado } from '../dados';
 import { reduzirImagem, TAMANHOS } from '../ui/imagem';

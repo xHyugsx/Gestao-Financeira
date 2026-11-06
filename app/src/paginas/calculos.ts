@@ -267,8 +267,8 @@ export function calorDoMes(movimentos: Movimento[], mes: Date, hoje = new Date()
 }
 
 /**
- * Despesas do mês por pessoa («Quem fez»). As sem pessoa ficam em «Sem pessoa». Só aparece se houver despesas com
- * pessoa neste mês ou no anterior; senão devolve uma lista vazia.
+ * Despesas do mês por pessoa («Quem fez»). As sem pessoa são de «Ambos»/«Todos» (com um só membro, dele). Só aparece
+ * com duas pessoas ou mais; senão devolve uma lista vazia.
  */
 export function gastosPorPessoa(estado: Pick<Estado, 'transactions'>, mes: Date, pessoas: string[]): GastoConta[] {
   // sem pessoa escolhida: com um só membro é dele; com dois ou mais é de «Ambos»/«Todos» (chave '')

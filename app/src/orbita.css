@@ -283,6 +283,8 @@ body .calendar-day.ffcal-zero { background: transparent; }
 .ffest { display: inline-block; font-size: .62rem; font-weight: 700; padding: .15rem .5rem; border-radius: 999px; white-space: nowrap; }
 .ffest-pago { color: #6ee7a0; background: rgba(74, 222, 128, .14); }
 .ffest-por-pagar { color: #a5b4fc; background: rgba(129, 140, 248, .16); }
+.ffest-a-seguir { color: var(--orb-suave); background: rgba(148, 163, 184, .14); }
+.ffest-recebido { color: #86efac; background: rgba(74, 222, 128, .14); }
 .ffest-atrasado, .ffanual-estado-em-atraso { color: #fca5a5; background: rgba(248, 113, 113, .16); }
 .ffest-por-confirmar, .ffanual-estado-por-pagar { color: #fbbf24; background: rgba(251, 191, 36, .15); }
 .ffest-agendado { color: #7dd3fc; background: rgba(56, 189, 248, .15); }
@@ -505,6 +507,7 @@ body .calendar-day.ffcal-zero { background: transparent; }
 .ffvalor-sinal { font-size: 2.4rem; } .ffvalor-eur { font-size: 1.5rem; color: var(--orb-suave); }
 .ffvalor-expense label { color: var(--despesa) !important; } .ffvalor-income label { color: var(--positive) !important; }
 .ffvalor small { font-size: .72rem; color: var(--orb-suave); }
+.ffvalor small.ffvalor-alto { display: block; margin-top: .3rem; color: oklch(82% .14 75); font-weight: 600; text-align: center; }
 /* título e nota */
 .fftitulo, .ffnota { display: flex !important; align-items: center; gap: .6rem !important; padding: 0 .85rem; border-radius: 1rem; background: color-mix(in oklab, var(--background) 70%, transparent); border: 1px solid var(--orb-linha); }
 .fftitulo svg, .ffnota svg { flex: none; width: 1rem; height: 1rem; color: var(--orb-suave); }

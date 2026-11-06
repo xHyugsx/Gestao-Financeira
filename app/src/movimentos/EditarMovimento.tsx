@@ -8,7 +8,7 @@ import { aspetosCategorias, categoriaDoDetalhe } from './categorias';
 import { opcoesQuemFez, pessoasDaFamilia } from './pessoas';
 import { CamposCombustivel } from './CamposCombustivel';
 import { CampoCategoria } from './EscolhaCategoria';
-import { EscolhaData, Escolhas, LinhaInterruptor, Rotulo, ValorGrande } from '../ui/Escolhas';
+import { EscolhaData, Escolhas, LinhaInterruptor, Rotulo, ValorGrande, valorAltoPorConfirmar } from '../ui/Escolhas';
 import { eCategoriaCombustivel } from './viaturas';
 import { DIA_DO_SALARIO, PERIODICIDADES, porConfirmar, valorRecorrente, valoresDaSerie } from './recorrentes';
 import { diaEMes } from './regras';
@@ -37,6 +37,7 @@ function Formulario({ m, estado, aoGuardar, aoEliminar }: { m: Movimento } & Pic
   const campoValor = useRef<HTMLInputElement>(null);
   const guardar = (ev: FormEvent<HTMLFormElement>) => {
     ev.preventDefault();
+    if (valorAltoPorConfirmar(ev.currentTarget)) return;
     const novo = movimentoEditado(m, new FormData(ev.currentTarget));
     if (novo) aoGuardar(novo);
   };
