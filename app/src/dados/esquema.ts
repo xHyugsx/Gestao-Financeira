@@ -72,8 +72,8 @@ export interface Aparencia {
   expenseColor?: string;
   /** Som suave ao guardar, alterar e eliminar movimentos (v2.45.1); sem valor = ligado. */
   sounds?: boolean;
-  /** Animações da interface (v2.64.0); sem valor = ligadas. Desligadas, a app comporta-se como com movimento reduzido. */
-  animations?: boolean;
+  /** Animações da interface (v2.64.0): false = desligadas, 'leves' (v2.65.0), true = todas; sem valor = leves na APK, todas na web. */
+  animations?: boolean | 'leves';
   [extra: string]: unknown;
 }
 

@@ -1,4 +1,5 @@
 // Secções das Definições (Perfil, Categorias, Contas, Aparência, Dados e Backup) — mesmo HTML e regras da app atual.
+import { nivelAnimacoes, valorDoNivel, type NivelAnimacoes } from '../ui/movimento';
 import { type ChangeEvent, type FormEvent, type ReactNode, useRef, useState } from 'react';
 import { anoMes, type Conta, type Estado } from '../dados';
 import { renomearCategoria } from '../movimentos/categorias';
@@ -32,6 +33,12 @@ export function Subvista({ titulo, subtitulo, mensagem, children }: { titulo: st
     </div>
   );
 }
+
+const NIVEIS: { id: NivelAnimacoes; rotulo: string; texto: string }[] = [
+  { id: 'todas', rotulo: 'Todas', texto: 'Transições, gráficos, números e decorações a mexer' },
+  { id: 'leves', rotulo: 'Leves', texto: 'Só as transições curtas: mais fluida' },
+  { id: 'nenhuma', rotulo: 'Desligadas', texto: 'Sem animações: a mais leve' },
+];
 
 const NOME_MAX = 60;
 function erroNome(v: string): string | null {
@@ -380,14 +387,16 @@ export function Aparencia({ estado, mudarEstado }: { estado: Estado; mudarEstado
         <span><strong>Sons</strong><small>{a.sounds === false ? 'Desligados' : 'Som suave ao guardar, alterar e eliminar'}</small></span>
         <i className={a.sounds === false ? 'toggle' : 'toggle toggle-on'} />
       </Botao>
-      <Botao
-        type="button" variante="ghost" className="setting-row ffanimacoes" aria-pressed={a.animations !== false}
-        onClick={() => mudar({ animations: a.animations === false })}
-      >
+      <div className="setting-row ffanimacoes" role="group" aria-label="Animações">
         <Icone nome="zap" />
-        <span><strong>Animações</strong><small>{a.animations === false ? 'Desligadas: a app fica mais leve' : 'Transições, gráficos e números a mexer'}</small></span>
-        <i className={a.animations === false ? 'toggle' : 'toggle toggle-on'} />
-      </Botao>
+        <span><strong>Animações</strong><small>{NIVEIS.find((x) => x.id === nivelAnimacoes(a.animations))!.texto}</small></span>
+      </div>
+      <div className="ffanimacoes-niveis" role="radiogroup" aria-label="Nível das animações">
+        {NIVEIS.map((x) => (
+          <button key={x.id} type="button" role="radio" aria-checked={nivelAnimacoes(a.animations) === x.id} data-nivel={x.id}
+            className={nivelAnimacoes(a.animations) === x.id ? 'on' : undefined} onClick={() => mudar({ animations: valorDoNivel(x.id) })}>{x.rotulo}</button>
+        ))}
+      </div>
       </div>
     </section>
   );

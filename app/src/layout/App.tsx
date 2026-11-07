@@ -62,7 +62,7 @@ import { Botao } from '../ui/Botao';
 import { Icone } from '../ui/Icone';
 import { useAnimacaoNumeros } from './animacaoNumeros';
 import { aplicarCorDespesa, aplicarTema, corDespesaDe, temaDe } from '../ui/temas';
-import { aplicarAnimacoes, semAnimacoes } from '../ui/movimento';
+import { aplicarAnimacoes, nivelAnimacoes, semAnimacoes } from '../ui/movimento';
 import { COR_MAIS, PAGINAS, PAGINAS_MAIS } from './paginas';
 import { guardarEPartilhar } from '../nativo/ficheiros';
 import { eNativo } from '../nativo/plataforma';
@@ -181,7 +181,7 @@ export function App() {
   useEffect(() => { aplicarTema(bloqueada ? null : tema); }, [tema, bloqueada]);
   const corDespesa = corDespesaDe(aparencia);
   useEffect(() => { aplicarCorDespesa(corDespesa); }, [corDespesa]);
-  const animacoes = estado.appearance.animations !== false;
+  const animacoes = nivelAnimacoes(estado.appearance.animations);
   useEffect(() => { aplicarAnimacoes(animacoes); }, [animacoes]);
 
   vibracao.ligada = aparencia.haptics !== false;

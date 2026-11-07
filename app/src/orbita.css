@@ -879,3 +879,15 @@ html.ff-sem-animacoes *, html.ff-sem-animacoes *::before, html.ff-sem-animacoes 
   animation-duration: 1ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important;
   transition-duration: 1ms !important; transition-delay: 0s !important; scroll-behavior: auto !important;
 }
+
+/* Animações leves (v2.65.0): ficam as transições e as janelas a abrir/fechar (folhas, menus, Jarvis, confirmação, avisos);
+   o resto das animações (decorações sem fim, gráficos a crescer, listas em cascata, brilhos) passa logo ao estado final */
+html.ff-animacoes-leves :not(:is([role=dialog], [role=dialog] > *, [data-state], .fffolha, .set-menu-overlay, .set-menu, .ffmore-ov, .ffmore, .jarvis-overlay, .jarvis-box, .ffconf, .ffconf *, .ffv2-aviso, #pwa-update-overlay, .pwa-update-card)),
+html.ff-animacoes-leves :not(:is([role=dialog], [data-state], .ffconf, .ffconf *))::before,
+html.ff-animacoes-leves :not(:is([role=dialog], [data-state], .ffconf, .ffconf *))::after {
+  animation-duration: 1ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important;
+}
+.ffanimacoes { pointer-events: none; }
+.ffanimacoes-niveis { display: flex; gap: .4rem; padding: 0 1rem .8rem 3.2rem; }
+.ffanimacoes-niveis button { flex: 1; padding: .5rem .4rem; border-radius: 999px; font: inherit; font-size: .78rem; font-weight: 600; color: var(--orb-suave); background: rgba(255, 255, 255, .05); border: 1px solid var(--orb-linha); cursor: pointer; transition: background-color .15s, color .15s; }
+.ffanimacoes-niveis button.on { color: #fff; background: color-mix(in oklab, var(--orb-2) 55%, transparent); border-color: transparent; }
