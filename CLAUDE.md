@@ -66,7 +66,7 @@ A app é feita em **React + Vite + TypeScript** (código em `app/`), compilada p
 | `css/app.css`, `img/`, `fonts/`, `icons/`, `vendor/` | Estilos e recursos usados pela app |
 | `scripts/montar-site.mjs` | Monta `_site/` |
 
-- Testes: `npm run verificar` (tipos + unitários) e `python tests/correr.py` (interface, Playwright). `tests/teste_atualizacao.py` cobre a atualização com dados preservados e `tests/teste_retirados.py` a retirada das versões antigas.
+- Testes: `npm run verificar` (tipos + unitários) e `python tests/correr.py` (interface, Playwright). **Publicação mais rápida** (07/11/2026, pedido do dono, com a segurança como prioridade): o `testes.yml` corre em cada PR (já não em cada envio para um ramo) e no `main`; no `main`, se o conteúdo for **exatamente igual** (mesma árvore de ficheiros) à última versão de um PR fundido cujos testes `testes` passaram, só corre os testes rápidos e os de publicação (arranque, atualização com os dados, offline, bloqueio, compatibilidade) e publica em poucos minutos; em qualquer outro caso (alteração direta no `main`, PR desatualizado, testes do PR não verdes, `workflow_dispatch`) corre a bateria completa antes de publicar. `correr.py` aceita vários filtros separados por vírgulas. `tests/teste_atualizacao.py` cobre a atualização com dados preservados e `tests/teste_retirados.py` a retirada das versões antigas.
 - Diferenças intencionais face à 1.9.x em `docs/PLANO-FASE-2.md` §4.1, §4.2 e §7.
 
 ---
