@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { semAnimacoes } from '../ui/movimento';
 import { anoMes, type Estado, gastos, inicioDoMes, MESES, type Movimento, type Salarios } from '../dados';
 import { aspetoDoMovimento, aspetosCategorias } from '../movimentos/categorias';
 import { ArtigoMovimento } from '../movimentos/Movimento';
@@ -32,7 +33,7 @@ const ESTADOS: { estado: EstadoRecorrente; rotulo: string }[] = [
   { estado: 'agendado', rotulo: 'Agendado' }, { estado: 'pago', rotulo: 'Pago' }, { estado: 'saltado', rotulo: 'Saltado' },
 ];
 const COR_PESSOA = ['azul', 'rosa', 'cyan', 'amber', 'emerald'];
-const reduzMovimento = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+const reduzMovimento = semAnimacoes;
 
 /**
  * Pessoas da tabela de salários: as que já têm salários guardados (a app atual tem os nomes fixos no código;

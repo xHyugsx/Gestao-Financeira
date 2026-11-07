@@ -86,3 +86,20 @@ async def t_cor_das_despesas(app):
     await p.go_back(); await p.wait_for_timeout(300); await p.go_back(); await p.wait_for_timeout(600)
     verificar(await cor() == vivo, f'«Vermelho vivo» é o de antes: {await cor()} / {vivo}')
     verificar(not app.erros, f'erros: {app.erros}')
+
+
+async def t_desligar_animacoes(app):
+    """Aparência › Animações (v2.64.0): desligar fica gravado e põe a app como com movimento reduzido."""
+    await app.abrir({'transactions': []})
+    p = app.page
+    await aparencia(app)
+    sem = "document.documentElement.classList.contains('ff-sem-animacoes')"
+    verificar(not await p.evaluate(sem), 'animações desligadas por omissão')
+    await p.click('.ffanimacoes'); await p.wait_for_timeout(300)
+    verificar(await p.evaluate(sem), 'o interruptor não desligou as animações')
+    dados = json.loads(await p.evaluate("P=>localStorage.getItem(P+'v3')", PREFIXO))
+    verificar(dados['appearance'].get('animations') is False, f'não gravou: {dados["appearance"]}')
+    duracao = await p.evaluate("getComputedStyle(document.querySelector('.ffanimacoes i')).transitionDuration")
+    verificar(duracao in ('0.001s', '1e-03s', '0s'), f'transições não ficaram instantâneas: {duracao}')
+    await p.reload(); await p.wait_for_timeout(800)
+    verificar(await p.evaluate(sem), 'ao abrir de novo, as animações voltaram')

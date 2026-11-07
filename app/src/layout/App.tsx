@@ -62,6 +62,7 @@ import { Botao } from '../ui/Botao';
 import { Icone } from '../ui/Icone';
 import { useAnimacaoNumeros } from './animacaoNumeros';
 import { aplicarCorDespesa, aplicarTema, corDespesaDe, temaDe } from '../ui/temas';
+import { aplicarAnimacoes, semAnimacoes } from '../ui/movimento';
 import { COR_MAIS, PAGINAS, PAGINAS_MAIS } from './paginas';
 import { guardarEPartilhar } from '../nativo/ficheiros';
 import { eNativo } from '../nativo/plataforma';
@@ -96,7 +97,7 @@ interface Toque { x: number; y: number; t: number; eixo: 'x' | 'y' | null; dx?: 
 
 const NAO_DESLIZA = "input, textarea, select, [role='slider'], .segmented, .calendar-grid, table, .bottom-nav, [role='dialog'], .ffmeses, .ffchips";
 const TODAS = PAGINAS.map((p) => p.id);
-const reduzMovimento = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+const reduzMovimento = semAnimacoes;
 
 export function App() {
   const [estado, setEstado] = useDados();
@@ -180,6 +181,8 @@ export function App() {
   useEffect(() => { aplicarTema(bloqueada ? null : tema); }, [tema, bloqueada]);
   const corDespesa = corDespesaDe(aparencia);
   useEffect(() => { aplicarCorDespesa(corDespesa); }, [corDespesa]);
+  const animacoes = estado.appearance.animations !== false;
+  useEffect(() => { aplicarAnimacoes(animacoes); }, [animacoes]);
 
   vibracao.ligada = aparencia.haptics !== false;
   const vibrar = useCallback((padrao: number | number[]) => {
@@ -306,7 +309,7 @@ export function App() {
   }, [sairFolha]);
   const fecharMenu = useCallback(() => {
     setMenu((m) => m && { ...m, out: true });
-    setTimeout(() => setMenu(null), window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 0 : 380);
+    setTimeout(() => setMenu(null), semAnimacoes() ? 0 : 380);
   }, []);
   // Botão "voltar" do telemóvel: fecha as Definições ou, numa página que não seja a Principal, volta à Principal
   useEffect(() => {
@@ -799,7 +802,7 @@ export function App() {
   useLayoutEffect(() => {
     const antes = mesVisto.current;
     mesVisto.current = desvioMes;
-    if (antes === desvioMes || bloqueada || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    if (antes === desvioMes || bloqueada || semAnimacoes()) return;
     const sentido = desvioMes > antes ? 1 : -1, curva = 'cubic-bezier(.22, 1, .36, 1)';
     const deslizar = (seletor: string, px: number, ms: number) => document.querySelectorAll<HTMLElement>(seletor).forEach((el) => el.animate?.(
       [{ transform: `translateX(${sentido * px}px)`, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: ms, easing: curva }));
