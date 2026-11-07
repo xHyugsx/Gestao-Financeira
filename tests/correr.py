@@ -130,7 +130,8 @@ async def main(filtro):
     alvo = os.environ.get('FF_URL', '')
     url = alvo if alvo.startswith('http') else raiz + alvo
     ficheiros = sorted(pathlib.Path(__file__).parent.glob('teste_*.py'))
-    if filtro: ficheiros = [f for f in ficheiros if filtro in f.name]
+    # vários filtros separados por vírgulas (ex.: «teste_arranque,teste_offline»)
+    if filtro: ficheiros = [f for f in ficheiros if any(x and x in f.name for x in filtro.split(','))]
     resultados = []
     async with async_playwright() as pw:
         browser = await pw.chromium.launch()

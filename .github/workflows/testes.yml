@@ -1,12 +1,17 @@
 name: Testes da app
 
+# Os testes completos correm em cada PR. No main só se repetem quando o conteúdo publicado não é exatamente o que
+# passou nos testes de um PR (por exemplo, uma alteração feita diretamente no main): nesse caso corre tudo outra vez.
 on:
   push:
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
+  pull-requests: read
+  checks: read
 
 jobs:
   testes:
@@ -22,6 +27,23 @@ jobs:
         run: |
           npm ci
           npm run verificar
+      # No main: o conteúdo é igual (mesma árvore de ficheiros) à última versão de um PR fundido cujos testes passaram?
+      - name: Já testado num PR?
+        id: origem
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          R: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          pr=$(gh api "repos/$R/commits/$SHA/pulls" --jq '[.[] | select(.merged_at != null)][0].number // empty' || true)
+          if [ -z "$pr" ]; then echo "Sem PR fundido: testes completos."; exit 0; fi
+          cabeca=$(gh api "repos/$R/pulls/$pr" --jq .head.sha)
+          passou=$(gh api "repos/$R/commits/$cabeca/check-runs?check_name=testes" --jq '[.check_runs[] | select(.conclusion == "success")] | length')
+          arvore_pr=$(gh api "repos/$R/git/commits/$cabeca" --jq .tree.sha)
+          arvore_main=$(git rev-parse "$SHA^{tree}")
+          echo "PR #$pr · testes ok: $passou · árvore igual: $([ "$arvore_pr" = "$arvore_main" ] && echo sim || echo não)"
+          if [ "${passou:-0}" -gt 0 ] && [ "$arvore_pr" = "$arvore_main" ]; then echo "testado=true" >> "$GITHUB_OUTPUT"; fi
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -29,8 +51,13 @@ jobs:
         run: |
           pip install playwright
           python -m playwright install --with-deps chromium
-      - name: Testes da app
+      - name: Testes da app (completos)
+        if: steps.origem.outputs.testado != 'true'
         run: python tests/correr.py
+      # Já testado no PR: só os testes de segurança da publicação (arranque, atualização com os dados, offline, bloqueio)
+      - name: Testes da app (publicação)
+        if: steps.origem.outputs.testado == 'true'
+        run: python tests/correr.py teste_arranque,teste_atualizacao,teste_offline,teste_bloqueio,teste_compatibilidade
       - name: Guardar o site montado
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@v3
