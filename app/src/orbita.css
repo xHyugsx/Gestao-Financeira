@@ -873,3 +873,9 @@ html.nativo.ff-toque :is(.ws-rays, .ws-star, .ws-halo, .ws-moon, .jv-r1, .jv-r2,
 /* Rendimento sem nenhum salário: cartão pequeno, sem o anel (v2.60.0) */
 .ffhero.ffhero-compacto { min-height: 0; padding-top: .9rem; padding-bottom: .9rem; }
 .ffhero.ffhero-compacto .ffhero-anel { display: none; }
+
+/* Animações desligadas em Definições › Aparência (v2.64.0): tudo passa ao estado final de imediato, como com movimento reduzido */
+html.ff-sem-animacoes *, html.ff-sem-animacoes *::before, html.ff-sem-animacoes *::after {
+  animation-duration: 1ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important;
+  transition-duration: 1ms !important; transition-delay: 0s !important; scroll-behavior: auto !important;
+}

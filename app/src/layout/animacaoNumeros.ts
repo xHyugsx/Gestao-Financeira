@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef } from 'react';
 import { MOEDA } from '../ui/formatos';
+import { semAnimacoes } from '../ui/movimento';
 
 const DURACAO = 700;
 const EXCLUIR = '.transaction-list,.transactions-panel,.calendar-movements,.calendar-grid,[role=dialog]';
@@ -11,7 +12,7 @@ const EXCLUIR = '.transaction-list,.transactions-panel,.calendar-movements,.cale
 export function useAnimacaoNumeros(chave: string, seletor: string, desligado: boolean) {
   const estado = useRef({ chave: '', t0: 0 });
   useLayoutEffect(() => {
-    if (desligado || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    if (desligado || semAnimacoes()) return;
     let st = estado.current;
     if (st.chave !== chave) estado.current = st = { chave, t0: performance.now() };
     else if (performance.now() - st.t0 >= DURACAO) return;

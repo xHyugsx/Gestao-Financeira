@@ -380,6 +380,14 @@ export function Aparencia({ estado, mudarEstado }: { estado: Estado; mudarEstado
         <span><strong>Sons</strong><small>{a.sounds === false ? 'Desligados' : 'Som suave ao guardar, alterar e eliminar'}</small></span>
         <i className={a.sounds === false ? 'toggle' : 'toggle toggle-on'} />
       </Botao>
+      <Botao
+        type="button" variante="ghost" className="setting-row ffanimacoes" aria-pressed={a.animations !== false}
+        onClick={() => mudar({ animations: a.animations === false })}
+      >
+        <Icone nome="zap" />
+        <span><strong>Animações</strong><small>{a.animations === false ? 'Desligadas: a app fica mais leve' : 'Transições, gráficos e números a mexer'}</small></span>
+        <i className={a.animations === false ? 'toggle' : 'toggle toggle-on'} />
+      </Botao>
       </div>
     </section>
   );
