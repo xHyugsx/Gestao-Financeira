@@ -89,17 +89,27 @@ async def t_cor_das_despesas(app):
 
 
 async def t_desligar_animacoes(app):
-    """Aparência › Animações (v2.64.0): desligar fica gravado e põe a app como com movimento reduzido."""
+    """Aparência › Animações (v2.64.0/v2.65.0): Todas · Leves · Desligadas; fica gravado. Na versão web, por omissão, todas."""
     await app.abrir({'transactions': []})
     p = app.page
     await aparencia(app)
-    sem = "document.documentElement.classList.contains('ff-sem-animacoes')"
-    verificar(not await p.evaluate(sem), 'animações desligadas por omissão')
-    await p.click('.ffanimacoes'); await p.wait_for_timeout(300)
-    verificar(await p.evaluate(sem), 'o interruptor não desligou as animações')
+    classes = "[...document.documentElement.classList].filter(c=>c.includes('anima')).join(' ')"
+    verificar(await p.evaluate(classes) == '', f'na versão web começa com todas: {await p.evaluate(classes)}')
+    await p.click('.ffanimacoes-niveis [data-nivel=leves]'); await p.wait_for_timeout(300)
+    verificar(await p.evaluate(classes) == 'ff-animacoes-leves', f'leves: {await p.evaluate(classes)}')
     dados = json.loads(await p.evaluate("P=>localStorage.getItem(P+'v3')", PREFIXO))
-    verificar(dados['appearance'].get('animations') is False, f'não gravou: {dados["appearance"]}')
-    duracao = await p.evaluate("getComputedStyle(document.querySelector('.ffanimacoes i')).transitionDuration")
+    verificar(dados['appearance'].get('animations') == 'leves', f'não gravou leves: {dados["appearance"]}')
+    # nas leves, as decorações sem fim param (anel do rendimento) e as janelas continuam animadas
+    await p.click('.ffanimacoes-niveis [data-nivel=nenhuma]'); await p.wait_for_timeout(300)
+    verificar(await p.evaluate(classes) == 'ff-sem-animacoes', f'desligadas: {await p.evaluate(classes)}')
+    duracao = await p.evaluate("getComputedStyle(document.querySelector('.ffanimacoes-niveis button')).transitionDuration")
     verificar(duracao in ('0.001s', '1e-03s', '0s'), f'transições não ficaram instantâneas: {duracao}')
     await p.reload(); await p.wait_for_timeout(800)
-    verificar(await p.evaluate(sem), 'ao abrir de novo, as animações voltaram')
+    verificar(await p.evaluate(classes) == 'ff-sem-animacoes', 'ao abrir de novo, as animações voltaram')
+
+
+async def t_animacoes_leves_param_decoracoes(app):
+    await app.abrir({'transactions': [], 'appearance': {'animations': 'leves'}})
+    p = app.page
+    it = await p.evaluate("(()=>{const e=document.querySelector('.ffanel-roda, .ffhero-ring');return e?getComputedStyle(e).animationIterationCount:'sem'})()")
+    verificar(it in ('1', 'sem'), f'decoração ainda anima sem fim: {it}')
