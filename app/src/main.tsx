@@ -1,4 +1,5 @@
 // Ponto de entrada da app.
+import { ErroApp } from './ui/ErroApp';
 import '../../css/app.css';
 import './v2.css';
 import './orbita.css';
@@ -28,7 +29,7 @@ if (tratarRespostaGoogle()) {
   iniciarLembretes();
   iniciarAndroid();
   void prepararAndroid().finally(() => {
-    createRoot(document.getElementById('root')!).render(<App />);
+    createRoot(document.getElementById('root')!).render(<ErroApp><App /></ErroApp>);
     // a app arrancou: a guarda da atualização sozinha (APK) já não volta atrás. Sem esperar por um fotograma:
     // a versão nova é aplicada com a app em segundo plano, onde não há fotogramas (v2.63.0)
     void confirmarArranque();

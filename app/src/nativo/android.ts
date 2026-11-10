@@ -31,7 +31,8 @@ async function verificarVersao(ignoradas: Set<string>) {
     const r = await fetch('https://api.github.com/repos/xHyugsx/Gestao-Financeira/releases/latest', { cache: 'no-store' });
     if (!r.ok) return;
     const rel = await r.json() as { tag_name?: string; assets?: { name: string; browser_download_url: string }[] };
-    const nova = rel.tag_name?.replace(/^apk-v/, '') ?? '';
+    // só algarismos e pontos (a versão vai para o HTML do aviso)
+    const nova = (rel.tag_name?.replace(/^apk-v/, '') ?? '').replace(/[^\d.]/g, '');
     const apk = rel.assets?.find((a) => /^financas-v[\d.]+\.apk$/.test(a.name));
     if (!apk || !maisRecente(nova, VERSAO) || ignoradas.has(nova) || document.getElementById('pwa-update-overlay')) return;
     const o = document.createElement('div');

@@ -26,7 +26,9 @@ async def t_jarvis_responde_como_a_referencia(app):
     await app.abrir(REF['dados'], REF['extra'])
     casos = [c['perguntas'] for c in REF['casos']]
     obtidas = await ler_respostas(app, casos)
-    esperada = lambda p, r: SEM_SALDO_NA_AJUDA(INTENCIONAIS[p](r) if p in INTENCIONAIS else r)
+    # v2.65.1: no mês atual (28/09) o Jarvis compara com o mesmo período do mês anterior, como a Análise
+    periodo = lambda r: r.replace('menos 19,6% do que em agosto', 'menos 19,6% do que de 1 a 28 de agosto') if r.startswith('Em setembro gastaste') else r
+    esperada = lambda p, r: periodo(SEM_SALDO_NA_AJUDA(INTENCIONAIS[p](r) if p in INTENCIONAIS else r))
     diferentes = [(c['perguntas'][i], esperada(c['perguntas'][i], c['respostas'][i]), o[i])
                   for c, o in zip(REF['casos'], obtidas) for i in range(len(o))
                   if not c['respostas'][i].startswith(SEM_SALDOS) and o[i] != esperada(c['perguntas'][i], c['respostas'][i])]

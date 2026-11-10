@@ -289,3 +289,29 @@ describe('dia do salário com feriados nacionais', () => {
   });
 });
 
+
+describe('contas guardadas (v2.65.1)', () => {
+  const ler = (d: object) => lerDados(memoria({ 'financas-familiar:v3': JSON.stringify({ transactions: [], ...d }) })).accounts.map((c) => c.id);
+  it('só a Principal fica só a Principal (a Revolut não volta)', () => {
+    expect(ler({ accounts: [{ id: 'principal', name: 'Principal' }] })).toEqual(['principal']);
+  });
+  it('a Principal volta se faltar; uma conta de omissão usada pelos movimentos também', () => {
+    expect(ler({ accounts: [{ id: 'cgd', name: 'CGD' }] })).toEqual(['principal', 'cgd']);
+    expect(ler({ accounts: [{ id: 'principal', name: 'Principal' }], transactions: [{ id: 1, title: 'x', amount: -1, date: '2026-10-01', detail: '1 outubro · X', movementType: 'expense', account: 'revolut' }] }))
+      .toEqual(['principal', 'revolut']);
+  });
+  it('sem contas guardadas, as de omissão', () => {
+    expect(ler({})).toEqual(['principal', 'revolut']);
+  });
+});
+
+describe('nome na saudação do Jarvis (v2.65.1)', () => {
+  it('só um nome de pessoa', async () => {
+    const { nomeParaSaudar } = await import('../movimentos/pessoas');
+    expect(nomeParaSaudar('Casa', ['Pessoa A', 'Pessoa B'])).toBe('');
+    expect(nomeParaSaudar('Casa', ['Pessoa A'])).toBe('Pessoa');
+    expect(nomeParaSaudar('Ana Silva', ['Ana', 'Rui'])).toBe('Ana');
+    expect(nomeParaSaudar('Ana', [])).toBe('Ana');
+    expect(nomeParaSaudar('', [])).toBe('');
+  });
+});

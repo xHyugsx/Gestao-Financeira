@@ -40,13 +40,13 @@ const saudacao = (h: number) => (h < 6 ? 'Boa noite' : h < 13 ? 'Bom dia' : h < 
  * Lê o mês da própria resposta («Em setembro gastaste …»), por isso só aparece quando o Jarvis respondeu isso.
  */
 export function cartaoDosGastos(texto: string, estado: Pick<Estado, 'transactions'>, agora: Date) {
-  const r = /^Em (\p{L}+)(?: de (\d{4}))? gastaste ([^,.]+,\d{2}\s?€)(?:, (mais|menos) ([\d.,]+%) do que em (\p{L}+))?/u.exec(texto);
+  const r = /^Em (\p{L}+)(?: de (\d{4}))? gastaste ([^,.]+,\d{2}\s?€)(?:, (mais|menos) ([\d.,]+%) do que (?:em (\p{L}+)|de (1(?: a \d+)? de \p{L}+)))?/u.exec(texto);
   const i = r ? MESES.indexOf(r[1]!.toLowerCase() as (typeof MESES)[number]) : -1;
   if (!r || i < 0) return null;
   const ano = r[2] ? Number(r[2]) : i <= agora.getMonth() ? agora.getFullYear() : agora.getFullYear() - 1;
   const meses = Array.from({ length: 6 }, (_, k) => new Date(ano, i - 5 + k, 1));
   const valores = meses.map((d) => gastos(estado.transactions.filter((m) => m.date.startsWith(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`))));
-  return { mes: MESES[i]!, valor: r[3]!, sobe: r[4] === 'mais', variacao: r[5] ? `${r[4] === 'mais' ? '↑' : '↓'} ${r[5]} vs ${r[6]}` : '', meses: meses.map((d, k) => ({ nome: MESES[d.getMonth()]!.slice(0, 3), v: valores[k]! })) };
+  return { mes: MESES[i]!, valor: r[3]!, sobe: r[4] === 'mais', variacao: r[5] ? `${r[4] === 'mais' ? '↑' : '↓'} ${r[5]} vs ${r[6] ?? r[7]}` : '', meses: meses.map((d, k) => ({ nome: MESES[d.getMonth()]!.slice(0, 3), v: valores[k]! })) };
 }
 
 const CONVERSAS = chave('conversaJarvis', PREFIXO);

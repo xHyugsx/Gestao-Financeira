@@ -33,6 +33,8 @@ function esperado(nome: string, caso: Caso, v: Record<string, unknown>): Record<
   if (!caso.entrada?.profile) alvo.profile = PERFIL_POR_OMISSAO;
   // Campos desconhecidos são preservados (a 1.9.x apagava-os ao gravar).
   if (nome === 'revolut_antigo_e_campos_extra') alvo.campoDesconhecido = { a: 1 };
+  // Uma só conta guardada fica como está (a 1.9.x repunha a Principal e a Revolut de omissão; v2.65.1).
+  if (nome === 'uma_conta_e_listas_vazias') alvo.accounts = (caso.entrada as { accounts: unknown }).accounts;
   return r;
 }
 
@@ -62,7 +64,8 @@ describe.each(Object.entries(REF.casos))('igual à 1.9.x: %s', (nome, caso) => {
 
   if (caso.saldos) it('saldos das contas', () => {
     const texto = estado.accounts.map((c) => `${c.name}: ${eur(saldoDaConta(c, estado.transactions, HOJE).atual)}`).join(' · ');
-    expect(`Saldos — ${texto}.`).toBe(semAgendados(nome, caso.saldos!));
+    const ref = nome === 'uma_conta_e_listas_vazias' ? 'Saldos — Principal: 50,00 €.' : semAgendados(nome, caso.saldos!);  // v2.65.1: a conta guardada fica
+    expect(`Saldos — ${texto}.`).toBe(ref);
   });
 
   if (caso.tendencias) it('tendência das contas', () => {
@@ -71,7 +74,9 @@ describe.each(Object.entries(REF.casos))('igual à 1.9.x: %s', (nome, caso) => {
       const t = tendencia(s), rotulo = s.nova ? 'início do mês' : s.mesAnterior;
       return `SALDO ${c.name.toUpperCase()} | ${t === null ? `— vs. ${rotulo}` : `${t >= 0 ? '↑' : '↓'} ${pct(t)} vs. ${rotulo}`}`;
     });
-    expect(linhas).toEqual(caso.tendencias!.map((l) => semAgendados(nome, l)));
+    const ref = caso.tendencias!.map((l) => semAgendados(nome, l));
+    // v2.65.1: sem a Revolut que a 1.9.x repunha e com o saldo guardado da Principal (50 €, já sem uso na interface)
+    expect(linhas).toEqual(nome === 'uma_conta_e_listas_vazias' ? ['SALDO PRINCIPAL | ↑ 0% vs. agosto'] : ref);
   });
 
   if (caso.rendimento) it('rendimento mensal (setembro de 2026 a dezembro de 2025)', () => {
