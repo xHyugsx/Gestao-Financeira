@@ -1,4 +1,4 @@
-import { type TouchEvent, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { type ComponentType, memo, type TouchEvent, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { EcraBloqueio } from '../bloqueio/EcraBloqueio';
 import { Dicas } from '../boasvindas/Dicas';
 import { aplicarTutorial, Tutorial } from '../boasvindas/Tutorial';
@@ -71,6 +71,14 @@ import { fazerBackupAuto } from '../nativo/backupAuto';
 import { iniciarNotificacoes, reagendar } from '../nativo/notificacoes';
 import { atualizarWidget } from '../nativo/widget';
 import { eGrande, reduzirImagem, TAMANHOS } from '../ui/imagem';
+
+// Páginas memorizadas (v2.66.0): ao arrastar, abrir janelas ou menus só voltam a desenhar se os dados mudarem
+// ou se mudar o dia (`hoje`, as páginas usam a data de hoje). O Veterinário fica de fora (lembretes fora do estado).
+function memoPorDia<P extends object>(Pagina: ComponentType<P>) {
+  return memo(function PaginaMemorizada({ hoje: _hoje, ...props }: P & { hoje: string }) { return <Pagina {...(props as P)} />; });
+}
+const PrincipalM = memoPorDia(Principal), AnaliseM = memoPorDia(Analise), CalendarioM = memoPorDia(Calendario);
+const CategoriasM = memoPorDia(Categorias), ResumoM = memoPorDia(Resumo), CombustivelM = memoPorDia(Combustivel);
 
 type Direcao = 'left' | 'right';
 
@@ -164,7 +172,7 @@ export function App() {
   const [periodoResumo, setPeriodoResumo] = useState<PeriodoResumo>('mes');
   const [diaEscolhido, setDiaEscolhido] = useState(() => new Date().getDate());
   const [vistaVet, setVistaVet] = useState<VistaVeterinario>(VISTA_VETERINARIO);
-  const mudarVistaVet = (v: Partial<VistaVeterinario>) => setVistaVet((a) => ({ ...a, ...v }));
+  const mudarVistaVet = useCallback((v: Partial<VistaVeterinario>) => setVistaVet((a) => ({ ...a, ...v })), []);
   const [abastecimento, setAbastecimento] = useState(false);
   const [despesaVet, setDespesaVet] = useState(false);
 
@@ -173,7 +181,13 @@ export function App() {
   const ocultos = estado.hideValues;
   const setOcultos = useCallback((v: boolean | ((a: boolean) => boolean)) =>
     setEstado((s) => ({ ...s, hideValues: typeof v === 'function' ? v(s.hideValues) : v })), [setEstado]);
-  const mes = inicioDoMes(agora, desvioMes);
+  const mesT = inicioDoMes(agora, desvioMes).getTime(), mes = useMemo(() => new Date(mesT), [mesT]);
+  const hoje = dia(agora);
+  const mudarVistaCategorias = useCallback((v: Partial<VistaCategorias>) => setVistaCategorias((a) => ({ ...a, ...v })), []);
+  const categoriaEliminada = useCallback((nome: string) => setEscolhas((e) => (e.categoria === nome ? { ...e, categoria: 'Outros' } : e)), []);
+  const categoriaRenomeada = useCallback((antigo: string, novo: string) => setEscolhas((e) => (e.categoria === antigo ? { ...e, categoria: novo } : e)), []);
+  const abrirJarvis = useCallback(() => { clearTimeout(fecharJarvisT.current); document.querySelector('.jarvis-overlay')?.classList.remove('is-out'); setJarvis(true); }, []);
+  const aspetos = useMemo(() => aspetosCategorias(visivel, mes), [visivel, mes]);
   const diasMes = diasDoMes(mes);
   useEffect(() => { setDiaEscolhido((d) => Math.min(d, diasMes)); }, [diasMes]);
   const aparencia = estado.appearance;
@@ -853,23 +867,22 @@ export function App() {
   const conteudo = (id: string) => {
     switch (id) {
       case 'principal':
-        return <Principal estado={visivel} todos={estado.transactions} mes={mes} ocultos={ocultos} lista={lista} mudarLista={setLista} vibrar={vibrar} abrirMovimento={setAEditar} abrirJarvis={abrirJarvis} />;
+        return <PrincipalM hoje={hoje} estado={visivel} todos={estado.transactions} mes={mes} ocultos={ocultos} lista={lista} mudarLista={setLista} vibrar={vibrar} abrirMovimento={setAEditar} abrirJarvis={abrirJarvis} />;
       case 'analise':
-        return <Analise estado={visivel} mes={mes} ocultos={ocultos} tipo={tipoAnalise} mudarTipo={setTipoAnalise} />;
+        return <AnaliseM hoje={hoje} estado={visivel} mes={mes} ocultos={ocultos} tipo={tipoAnalise} mudarTipo={setTipoAnalise} />;
       case 'calendario':
-        return <Calendario estado={visivel} mes={mes} ocultos={ocultos} diaEscolhido={diaEscolhido} escolherDia={setDiaEscolhido} aspetos={aspetosCategorias(visivel, mes)} abrirMovimento={setAEditar} />;
+        return <CalendarioM hoje={hoje} estado={visivel} mes={mes} ocultos={ocultos} diaEscolhido={diaEscolhido} escolherDia={setDiaEscolhido} aspetos={aspetos} abrirMovimento={setAEditar} />;
       case 'categorias':
         return (
-          <Categorias
-            estado={visivel} mes={mes} ocultos={ocultos} vista={vistaCategorias} mudarVista={(v) => setVistaCategorias((a) => ({ ...a, ...v }))}
-            mudarEstado={setEstado} categoriaEliminada={(nome) => setEscolhas((e) => (e.categoria === nome ? { ...e, categoria: 'Outros' } : e))}
-            categoriaRenomeada={(antigo, novo) => setEscolhas((e) => (e.categoria === antigo ? { ...e, categoria: novo } : e))}
+          <CategoriasM
+            hoje={hoje} estado={visivel} mes={mes} ocultos={ocultos} vista={vistaCategorias} mudarVista={mudarVistaCategorias}
+            mudarEstado={setEstado} categoriaEliminada={categoriaEliminada} categoriaRenomeada={categoriaRenomeada}
           />
         );
       case 'resumo':
-        return <Resumo estado={visivel} todos={estado.transactions} mes={mes} ocultos={ocultos} seccao={seccaoResumo} mudarSeccao={setSeccaoResumo} periodo={periodoResumo} mudarPeriodo={setPeriodoResumo} mudarEstado={setEstado} abrirMovimento={setAEditar} />;
+        return <ResumoM hoje={hoje} estado={visivel} todos={estado.transactions} mes={mes} ocultos={ocultos} seccao={seccaoResumo} mudarSeccao={setSeccaoResumo} periodo={periodoResumo} mudarPeriodo={setPeriodoResumo} mudarEstado={setEstado} abrirMovimento={setAEditar} />;
       case 'combustivel':
-        return <Combustivel estado={visivel} mes={mes} agora={agora} ocultos={ocultos} abrirMovimento={setAEditar} />;
+        return <CombustivelM hoje={hoje} estado={visivel} mes={mes} agora={agora} ocultos={ocultos} abrirMovimento={setAEditar} />;
       case 'veterinario':
         return <Veterinario estado={visivel} mes={mes} ocultos={ocultos} vista={vistaVet} mudarVista={mudarVistaVet} abrirMovimento={setAEditar} />;
       default:
@@ -877,7 +890,6 @@ export function App() {
     }
   };
 
-  const abrirJarvis = () => { clearTimeout(fecharJarvisT.current); document.querySelector('.jarvis-overlay')?.classList.remove('is-out'); setJarvis(true); };
   const mudarMes = (n: number) => { vibrar(8); setDesvioMes((d) => d + n); };
   // Meses em pílulas em todas as páginas (tocar ou deslizar muda de mês); a barra compacta mantém as setas
   const pilulasMeses = (
@@ -1044,7 +1056,7 @@ export function App() {
       ) : null}
       <NovoMovimento
         aberto={novoAberto} aoMudar={setNovoAberto} estado={visivel} escolhas={escolhas} mudarEscolhas={setEscolhas}
-        aspetos={aspetosCategorias(visivel, mes)} aoGuardar={guardarNovo}
+        aspetos={aspetos} aoGuardar={guardarNovo}
       />
       <NovaDespesaVet aberto={despesaVet} aoMudar={setDespesaVet} aoGuardar={guardarRegisto} animal={vistaVet.animal} contas={estado.accounts} />
       <NovoAbastecimento aberto={abastecimento} aoMudar={setAbastecimento} aoGuardar={guardarRegisto} estado={visivel} />
