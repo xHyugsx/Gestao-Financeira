@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { estadoInicial, type Movimento } from '../dados';
 import { gastosPorPessoa } from '../paginas/calculos';
-import { opcoesQuemFez, pessoasDaFamilia, quemFez, rotuloAmbos, ultimaPessoa } from './pessoas';
+import { opcoesQuemFez, pessoasDaFamilia, quemFez, rotuloAmbos } from './pessoas';
 import { movimentoEditado, novoMovimento } from './regras';
 
 const campos = (o: Record<string, string>) => { const f = new FormData(); for (const [k, v] of Object.entries(o)) f.set(k, v); return f; };
@@ -15,12 +15,6 @@ describe('quem fez a despesa', () => {
     expect(pessoasDaFamilia({ ...e, profile: { ...e.profile, members: ['Pessoa A', ' ', 'Pessoa B', 'Pessoa A'] } })).toEqual(['Pessoa A', 'Pessoa B']);
     expect(pessoasDaFamilia({ ...e, salaries: { '2025': { X: [] }, '2026': { Y: [], Z: [] } } })).toEqual(['Y', 'Z']);
     expect(pessoasDaFamilia(e)).toEqual([]);
-  });
-
-  it('pré-escolhe a pessoa da despesa mais recente', () => {
-    const l = [m(1, '2026-10-01', -5, 'Pessoa A'), m(3, '2026-10-03', -5, 'Pessoa B'), m(2, '2026-10-03', -5, 'Pessoa A'), m(4, '2026-10-09', 50, 'Pessoa A'), m(5, '2026-10-09', -5, 'Antiga')];
-    expect(ultimaPessoa(l, ['Pessoa A', 'Pessoa B'])).toBe('Pessoa B');
-    expect(ultimaPessoa([], ['Pessoa A'])).toBe('');
   });
 
   it('grava a pessoa só nas despesas; ao editar, «—» apaga-a', () => {

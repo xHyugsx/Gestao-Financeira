@@ -10,18 +10,7 @@ export function pessoasDaFamilia(e: Pick<Estado, 'profile' | 'salaries'>): strin
   return [];
 }
 
-/** Pessoa da despesa registada mais recentemente com pessoa (pré-escolhida no «Novo movimento»). */
-export function ultimaPessoa(l: Movimento[], pessoas: string[]): string {
-  let melhor: Movimento | null = null;
-  for (const m of l) {
-    if (m.movementType !== 'expense' || typeof m.person !== 'string' || !pessoas.includes(m.person)) continue;
-    if (!melhor || m.date > melhor.date || (m.date === melhor.date && (+m.id || 0) > (+melhor.id || 0))) melhor = m;
-  }
-  return melhor?.person ?? '';
-}
 
-// «Quem fez» (v2.61.0, decisões do dono): sem pessoa escolhida, a despesa é de **ambos** (com 3 ou mais membros, «Todos»);
-// com um só membro, é sempre dele. Os dados guardados não mudam: uma despesa sem `person` passa a ler-se como de ambos.
 export const rotuloAmbos = (n: number) => (n >= 3 ? 'Todos' : 'Ambos');
 
 let atuais: string[] = [];

@@ -132,25 +132,34 @@ async def main(filtro):
     ficheiros = sorted(pathlib.Path(__file__).parent.glob('teste_*.py'))
     # vários filtros separados por vírgulas (ex.: «teste_arranque,teste_offline»)
     if filtro: ficheiros = [f for f in ficheiros if any(x and x in f.name for x in filtro.split(','))]
-    resultados = []
+    # testes em paralelo (cada um tem o seu contexto de navegador); FF_PARALELO=1 volta a correr um a um
+    paralelo = max(1, int(os.environ.get('FF_PARALELO', '4')))
+    testes = []
+    for f in ficheiros:
+        spec = importlib.util.spec_from_file_location(f.stem, f); mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+        testes += [(f.stem, n, getattr(mod, n)) for n in dir(mod) if n.startswith('t_')]
+    resultados = [None] * len(testes)
     async with async_playwright() as pw:
         browser = await pw.chromium.launch()
-        for f in ficheiros:
-            spec = importlib.util.spec_from_file_location(f.stem, f); mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
-            for nome, fn in [(n, getattr(mod, n)) for n in dir(mod) if n.startswith('t_')]:
+        vez = asyncio.Semaphore(paralelo)
+
+        async def correr_um(i, fic, nome, fn):
+            async with vez:
                 ctx = await browser.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, timezone_id='Europe/Lisbon', locale='pt-PT', accept_downloads=True)
                 page = await ctx.new_page(); await page.clock.set_system_time(DATA_FIXA)
                 app = App(page, url, raiz); t0 = time.time()
                 try:
                     await fn(app)
                     verificar(not app.erros, f'erros na página: {app.erros[:2]}')
-                    resultados.append((f.stem, nome, True, '', time.time() - t0))
+                    resultados[i] = (fic, nome, True, '', time.time() - t0)
                 except Pendente as e:
-                    resultados.append((f.stem, nome, None, str(e), time.time() - t0))
+                    resultados[i] = (fic, nome, None, str(e), time.time() - t0)
                 except Exception as e:
                     msg = str(e).splitlines()[0][:160] if str(e) else traceback.format_exc().splitlines()[-1]
-                    resultados.append((f.stem, nome, False, msg, time.time() - t0))
+                    resultados[i] = (fic, nome, False, msg, time.time() - t0)
                 await ctx.close()
+
+        await asyncio.gather(*(correr_um(i, *t) for i, t in enumerate(testes)))
         await browser.close()
     srv.shutdown()
     ok = sum(1 for r in resultados if r[2])
