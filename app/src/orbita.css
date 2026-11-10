@@ -903,3 +903,11 @@ html.ff-animacoes-leves :not(:is([role=dialog], [data-state], .ffconf, .ffconf *
 .fferro-aviso { color: #fca5a5 !important; }
 .fferro details { margin-top: 1rem; font-size: .78rem; color: #8f96c8; }
 .fferro code { display: block; margin-top: .4rem; white-space: pre-wrap; word-break: break-word; }
+
+/* Textos pequenos mais legíveis (U4, v2.67.0): etiquetas e linhas de detalhe com 11 px; letras e números curtos dos gráficos com 10 px.
+   Os rótulos em maiúsculas (.ffbloco-rot, .ffgrupo, .ffrotulo, .eyebrow) e a barra inferior ficam como estão. */
+.cosmic-app :is(.ffest, .tx-acc, .ffdica small, .ffcat-nome small, .ffcat-valor small, .ffcascata small, .chart-legend small,
+  .ffmedia-linha b, .ffcal-semana, .ffcal-calor span, .ffmedias p, .pet-card-copy small),
+.cosmic-app .donut :is(span, small),
+.cosmic-app .transaction-row .min-w-0 > p { font-size: .6875rem; }
+.cosmic-app :is(.bar-chart > span, .ffbarras span, .ffsemana > span, .fffuel-barras small, .ffanu-meses > span) { font-size: .625rem; }
