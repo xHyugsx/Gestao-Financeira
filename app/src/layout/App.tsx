@@ -42,7 +42,7 @@ import { eReceitaDeSalario, perguntarQuandoSalario } from '../dados/rendimento';
 
 const CATEGORIA_INICIAL = 'Alimentação';
 import { animais, animaisDe, definirAnimais } from '../veterinario/animais';
-import { definirPessoas, pessoasDaFamilia } from '../movimentos/pessoas';
+import { definirPessoas, nomeParaSaudar, pessoasDaFamilia } from '../movimentos/pessoas';
 import { feito as lembreteFeito, info as infoLembrete, ordenados as lembretesOrdenados } from '../veterinario/lembretes';
 import { formatarEuros } from '../ui/formatos';
 import { type EscolhasNovo, NovoMovimento } from '../movimentos/NovoMovimento';
@@ -904,7 +904,8 @@ export function App() {
     </div>
   );
   const cabecalhoDe = transicao && !transicao.volta ? transicao.para : pagina;
-  const nome = (estado.profile?.profileName || '').trim().split(/\s+/)[0];
+  // nome na saudação do Jarvis: o do perfil só se for de uma pessoa (o tutorial grava lá o nome da casa; v2.65.1)
+  const nome = nomeParaSaudar(estado.profile?.profileName, pessoasDaFamilia(estado));
   const ferramentas = (
     <div className="head-tools">
       <button

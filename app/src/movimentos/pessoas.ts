@@ -42,3 +42,11 @@ export function opcoesQuemFez(pessoas: string[], extra: string[] = []) {
   return [{ valor: '', rotulo: rotuloAmbos(pessoas.length), classe: 'ffpambos' },
     ...nomes.map((p, k) => ({ valor: p, rotulo: p, classe: k === 0 ? 'ffp1' : k === 1 ? 'ffp2' : undefined }))];
 }
+
+/** Nome para a saudação: o do perfil se for um dos membros (ou se não houver membros); senão, o único membro; senão, nenhum. */
+export function nomeParaSaudar(perfil: string | undefined, membros: string[]): string {
+  const p = (perfil || '').trim().split(/\s+/)[0] || '';
+  const primeiro = (n: string) => n.trim().split(/\s+/)[0]!.toLocaleLowerCase('pt-PT');
+  if (p && (!membros.length || membros.some((m) => primeiro(m) === p.toLocaleLowerCase('pt-PT')))) return p;
+  return membros.length === 1 ? membros[0]!.trim().split(/\s+/)[0]! : '';
+}

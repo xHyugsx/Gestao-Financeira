@@ -7,7 +7,7 @@ import { categoriaDespesa, categoriaReceita } from '../movimentos/categorias';
 import { criaCopias, saltarEsteMes } from '../movimentos/recorrentes';
 import { tipoVisual } from '../movimentos/regras';
 import { categoriaPeloTitulo, categoriaSugerida } from '../movimentos/sugestoes';
-import { calorDoMes, categoriasDoMes, eCombustivel, gastosPorConta, percentagem, variacao } from '../paginas/calculos';
+import { ateDia, calorDoMes, categoriasDoMes, diaLimite, eCombustivel, gastosPorConta, percentagem, variacao } from '../paginas/calculos';
 import { recorrentesDoMes } from '../paginas/subscricoes';
 import { animais, deAnimal } from '../veterinario/animais';
 import type { InfoLembrete, Lembrete } from '../veterinario/lembretes';
@@ -491,7 +491,7 @@ export class MotorJarvis {
     };
     if (ffD) {
       ik = ik || this.tema || 'res';
-      const L = ffL(ffD), Dp = new Date(ffD.getFullYear(), ffD.getMonth() - 1, 1), Lp = ffL(Dp), tx = on(ffD), g = gastosDe(tx), gp = gastosDe(on(Dp));
+      const L = ffL(ffD), Dp = new Date(ffD.getFullYear(), ffD.getMonth() - 1, 1), Lp = ffL(Dp), tx = on(ffD), g = gastosDe(tx), limG = diaLimite(ffD, c.agora), gp = gastosDe(ateDia(on(Dp), limG));
       const rc = tx.filter((t) => t.movementType === 'income').reduce((e, t) => e + t.amount, 0);
       if (/previs|vou gastar/.test(n) && anoMes(ffD) > anoMes(ffNow) && c.previsao) {
         const total = gastosDe(c.previsao(ffD).filter((t) => t.date.startsWith(anoMes(ffD))));
@@ -521,12 +521,14 @@ export class MotorJarvis {
         return r ? `Rendimento de ${L} (salários de ${Ls}): ${A(r)}${rp ? `, ${r >= rp ? '+' : '−'}${pctAbs(variacao(r, rp))} face ao mês anterior` : ''}.` : `Não há salários registados em ${Ls}.`;
       }
       if (ik === 'rec') return `Receitas registadas em ${L}: ${A(rc)}.`;
-      if (ik === 'gas') return g ? `Em ${L} gastaste ${A(g)}${gp ? `, ${g > gp ? 'mais' : 'menos'} ${pctAbs(variacao(g, gp))} do que em ${Lp}` : ''}.` : `Não há gastos registados em ${L}.`;
+      if (ik === 'gas') return g ? `Em ${L} gastaste ${A(g)}${gp ? `, ${g > gp ? 'mais' : 'menos'} ${pctAbs(variacao(g, gp))} do que ${limG ? `de 1${limG > 1 ? ` a ${limG}` : ''} de ${Lp}` : `em ${Lp}`}` : ''}.` : `Não há gastos registados em ${L}.`;
       return g || rc || rendimentoDoMes(c.estado, ffD).valor ? `Resumo de ${L}: gastos ${A(g)} · receitas ${A(rc)} · rendimento ${A(rendimentoDoMes(c.estado, ffD).valor)}.` : `Não há movimentos registados em ${L}.`;
     }
 
     // Sem mês na pergunta: mês escolhido na app
-    const sn = gastosDe(on(It)), cn = gastosDe(on(an));
+    // no mês atual compara-se com o mesmo período do mês anterior (como a Análise; v2.65.1)
+    const limI = diaLimite(It, c.agora), sn = gastosDe(on(It)), cn = gastosDe(ateDia(on(an), limI));
+    const periodoAnt = limI ? `de 1${limI > 1 ? ` a ${limI}` : ''} de ${mp}` : `em ${mp}`;
     if (/combust|gasolin|gasoleo|abastec/.test(n)) {
       const Bt = It.getFullYear(), Vt = f.filter((t) => eCombustivel(t) && t.date.startsWith(`${Bt}-`)), Ht = Vt.filter((t) => Number(t.date.slice(5, 7)) === It.getMonth() + 1);
       const Gt = Vt.reduce((e, t) => e + Math.abs(t.amount), 0), Kt = Bt < ffNow.getFullYear() ? 12 : Bt > ffNow.getFullYear() ? 0 : ffNow.getMonth() + 1;
@@ -546,7 +548,7 @@ export class MotorJarvis {
     }
     if (/receit|recebi|ganhei/.test(n)) return `Receitas registadas em ${mm}: ${A(on(It).filter((t) => t.movementType === 'income').reduce((e, t) => e + t.amount, 0))}.`;
     if (/saldo|conta|revolut|dinheiro/.test(n)) return porConta(It, mm);
-    if (/gast|despes|paguei/.test(n)) return sn ? `Em ${mm} gastaste ${A(sn)}${cn ? `, ${sn > cn ? 'mais' : 'menos'} ${pctAbs(variacao(sn, cn))} do que em ${mp}` : ''}.` : `Ainda não há gastos registados em ${mm}.`;
+    if (/gast|despes|paguei/.test(n)) return sn ? `Em ${mm} gastaste ${A(sn)}${cn ? `, ${sn > cn ? 'mais' : 'menos'} ${pctAbs(variacao(sn, cn))} do que ${periodoAnt}` : ''}.` : `Ainda não há gastos registados em ${mm}.`;
     if (/obrigad/.test(n)) return 'De nada! Sempre que precisares, estou aqui.';
     if (/^(ola|oi|bom dia|boa tarde|boa noite)/.test(n)) return 'Olá! Pergunta-me por gastos, rendimento, categorias, combustível ou veterinário.';
     return 'Ainda não sei responder a isso. Experimenta perguntar por gastos, rendimento, receitas, categorias, combustível ou veterinário.';
