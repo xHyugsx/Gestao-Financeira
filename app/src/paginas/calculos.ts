@@ -103,42 +103,6 @@ export function categoriasDoMes(estado: Estado, mes: Date, tipo: 'despesas' | 'r
   }).sort((a, b) => b.amount - a.amount);
 }
 
-const escapar = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
-
-interface Legenda { nome: string; tone: string; x1: number; y1: number; x2: number; y: number; p: number; v: number; ly?: number }
-
-/** Setas com o nome e a percentagem de cada fatia do gráfico circular (SVG igual ao da app atual). */
-export function legendasDoGrafico(l: LinhaCategoria[], total: number): string {
-  const cx = 170, cy = 125, R = 78, G = 22, TOPO = 12, BASE = 236;
-  const ponto = (a: number, r: number) => [cx + r * Math.sin(a), cy - r * Math.cos(a)] as const;
-  const esquerda: Legenda[] = [], direita: Legenda[] = [];
-  let a = 0;
-  l.forEach((e) => {
-    const a1 = a + (e.amount / total) * Math.PI * 2, meio = (a + a1) / 2;
-    const [x1, y1] = ponto(meio, R + 2), [x2, y2] = ponto(meio, R + 10);
-    (Math.sin(meio) >= 0 ? direita : esquerda).push({ nome: e.name, tone: e.tone, x1, y1, x2, y: y2, p: (e.amount / total) * 100, v: e.amount });
-    a = a1;
-  });
-  const arrumar = (s: Legenda[]) => {
-    s.sort((p, q) => p.y - q.y);
-    const H = BASE - TOPO;
-    if (s.length * 16 > H) s = [...s].sort((p, q) => q.v - p.v).slice(0, Math.floor(H / 16)).sort((p, q) => p.y - q.y);
-    const g = Math.max(16, Math.min(G, H / Math.max(1, s.length)));
-    s.forEach((o, i) => { o.ly = Math.max(o.y, i ? s[i - 1]!.ly! + g : TOPO); });
-    for (let i = s.length - 1; i >= 0; i--) s[i]!.ly = Math.min(s[i]!.ly!, i === s.length - 1 ? BASE : s[i + 1]!.ly! - g);
-    return s;
-  };
-  let svg = '<defs><marker id="ff-ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L8 4L0 8z" style="fill:currentColor"/></marker></defs>';
-  ([[direita, 1], [esquerda, -1]] as const).forEach(([s, d]) => arrumar(s).forEach((q) => {
-    const ex = cx + d * (R + 18), tx = ex + d * 4, ancora = d > 0 ? 'start' : 'end';
-    const nome = q.nome.length > 13 ? `${q.nome.slice(0, 12)}…` : q.nome;
-    svg += `<polyline points="${ex},${q.ly} ${q.x2},${q.y} ${q.x1},${q.y1}" fill="none" stroke="currentColor" stroke-opacity=".75" stroke-width="1" marker-end="url(#ff-ah)"/>`
-      + `<text x="${tx}" y="${q.ly! - 1}" text-anchor="${ancora}" font-size="9" style="fill:var(--foreground);opacity:.85">${escapar(nome)}</text>`
-      + `<text x="${tx}" y="${q.ly! + 9}" text-anchor="${ancora}" font-size="9" font-weight="700" style="fill:${CORES[q.tone] || 'var(--primary)'}">${percentagem(Math.round(q.p * 10) / 10)}</text>`;
-  }));
-  return svg;
-}
-
 /**
  * Sem cores repetidas no mesmo gráfico: pela ordem alfabética, a primeira categoria de cada tom fica com ele e as
  * seguintes passam para o primeiro tom ainda livre (se não houver, mantêm o seu). Recebe todas as categorias do tipo,
