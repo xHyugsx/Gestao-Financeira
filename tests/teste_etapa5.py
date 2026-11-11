@@ -49,4 +49,4 @@ async def t_definicoes_em_grupos(app):
     verificar(await p.locator('.ffdef-grupo').count() == 3, 'três grupos')
     verificar(await p.inner_text('.setting-row:has-text("Backup") .ffdef-estado') == 'Em dia', 'estado do backup à vista')
     await p.click('.settings-list .setting-row:has-text("Aparência")'); await p.wait_for_timeout(400)
-    verificar(await p.locator('.fftema .fftema-tela').count() == 6, 'temas em miniaturas do ecrã')
+    verificar(await p.locator('.fftema .fftema-tela').count() == 7, 'temas em miniaturas do ecrã (7 desde o Obsidiana, v2.68.0)')

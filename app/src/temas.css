@@ -5,6 +5,7 @@
 @font-face { font-family: 'Nunito'; font-style: normal; font-weight: 400 800; font-display: swap; src: url('../../fonts/nunito.woff2') format('woff2'); }
 @font-face { font-family: 'Playfair Display'; font-style: normal; font-weight: 600 700; font-display: swap; src: url('../../fonts/playfair-display.woff2') format('woff2'); }
 @font-face { font-family: 'Manrope'; font-style: normal; font-weight: 400 700; font-display: swap; src: url('../../fonts/manrope.woff2') format('woff2'); }
+@font-face { font-family: 'Unbounded'; font-style: normal; font-weight: 400 800; font-display: swap; src: url('../../fonts/unbounded.woff2') format('woff2'); }
 
 /* ===== Aurora: noite polar, verdes e azuis, Outfit, anel a rodar mais devagar ===== */
 html[data-tema="aurora"] {
@@ -100,6 +101,75 @@ html[data-tema="floresta"] .ffhero-ring strong.ffhero-valor { font-family: 'Play
 html[data-tema="floresta"] .ffdica { background: rgba(20, 50, 28, .58); border-color: rgba(132, 204, 22, .28); } html[data-tema="floresta"] .ffdica svg { color: #bef264; }
 html[data-tema="floresta"] .bar-chart i { background: linear-gradient(to top, #15803d, #a3e635); }
 
+/* ===== Obsidiana líquida (v2.68.0, direção B das maquetas de 11/11/2026): vidro escuro sobre manchas de cor fluidas,
+   números gigantes em Unbounded, Manrope no texto, orbe no rendimento, esferas nos ícones, doca em cápsula.
+   Sem backdrop-filter (o vidro é feito com transparências e um brilho no topo); o «+» não muda. ===== */
+html[data-tema="obsidiana"] {
+  --background: oklch(9% .008 290); --card: oklch(100% 0 0 / .06); --secondary: oklch(100% 0 0 / .08); --muted: oklch(24% .01 290);
+  --primary: oklch(80% .11 300); --primary-foreground: oklch(9% .008 290); --accent: oklch(88% .12 195); --ring: oklch(80% .11 300);
+  --border: oklch(100% 0 0 / .1); --muted-foreground: oklch(78% .012 290); --cosmic-blue: oklch(88% .12 195);
+  --positive: oklch(85% .17 160); --negative: oklch(72% .18 25); --radius: 1.3rem; --font-display: 'Unbounded', sans-serif;
+  --orb-sup: oklch(100% 0 0 / .06); --orb-sup2: oklch(100% 0 0 / .1); --orb-linha: oklch(100% 0 0 / .1);
+  --obs-vidro: linear-gradient(160deg, rgba(255, 255, 255, .09), rgba(255, 255, 255, .035));
+  --obs-brilho: inset 0 1px 0 rgba(255, 255, 255, .14), 0 20px 40px -24px rgba(0, 0, 0, .9);
+}
+html[data-tema="obsidiana"] body, html[data-tema="obsidiana"] button, html[data-tema="obsidiana"] input, html[data-tema="obsidiana"] select { font-family: 'Manrope', sans-serif; }
+html[data-tema="obsidiana"] .cosmic-app:before {
+  background-image: radial-gradient(34% 26% at 16% 12%, rgba(139, 92, 246, .6), transparent 70%), radial-gradient(30% 22% at 88% 30%, rgba(0, 240, 255, .34), transparent 70%),
+    radial-gradient(36% 26% at 58% 98%, rgba(236, 72, 153, .42), transparent 70%), linear-gradient(#08080c, #050507);
+}
+/* vidro: cartões, blocos, painéis e linhas */
+html[data-tema="obsidiana"] .ffhero.ffhero-orbita, html[data-tema="obsidiana"] .ffbloco, html[data-tema="obsidiana"] .ffcartao, html[data-tema="obsidiana"] .chart-panel,
+html[data-tema="obsidiana"] .calendar-panel, html[data-tema="obsidiana"] .calendar-movements, html[data-tema="obsidiana"] .evolution-panel, html[data-tema="obsidiana"] .ffresumo-mes,
+html[data-tema="obsidiana"] .ffprincipal .transaction-list .transaction-row, html[data-tema="obsidiana"] .ffresumo .transaction-row, html[data-tema="obsidiana"] .calendar-movements .transaction-row,
+html[data-tema="obsidiana"] .ffap-cartao, html[data-tema="obsidiana"] .ffrec-cartao, html[data-tema="obsidiana"] .ffjv-cartao {
+  background: var(--obs-vidro); border: 1px solid rgba(255, 255, 255, .1); box-shadow: var(--obs-brilho);
+}
+html[data-tema="obsidiana"] .ffhero.ffhero-orbita { border-radius: 1.7rem; background: linear-gradient(160deg, rgba(255, 255, 255, .13), rgba(255, 255, 255, .05)); }
+html[data-tema="obsidiana"] .ffhero-orbita::before { display: none; }
+html[data-tema="obsidiana"] .ffbloco { border-radius: 1.5rem; }
+html[data-tema="obsidiana"] button.ffbloco { border-style: dashed; border-color: rgba(255, 255, 255, .18); }
+html[data-tema="obsidiana"] .ffprincipal .transaction-list .transaction-row, html[data-tema="obsidiana"] .ffresumo .transaction-row, html[data-tema="obsidiana"] .calendar-movements .transaction-row { border-radius: 1.4rem; }
+html[data-tema="obsidiana"] .ffresumo-mes::before { display: none; }
+/* rendimento: número em Unbounded e o anel vira uma orbe líquida (sem arco, órbita nem animação) */
+html[data-tema="obsidiana"] .ffhero-txt .ffhero-valor { font-weight: 700; letter-spacing: -.05em; font-size: clamp(1.4rem, 6.6vw, 1.75rem); }
+html[data-tema="obsidiana"] .ffhero-txt p { font-weight: 700; font-size: .66rem; letter-spacing: .08em; text-transform: uppercase; }
+html[data-tema="obsidiana"] .ffhero-anel {
+  width: 6.4rem; height: 6.4rem; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #7df9ff 0, #8b5cf6 48%, #ec4899 100%);
+  box-shadow: 0 0 44px rgba(139, 92, 246, .5), inset -14px -18px 30px rgba(0, 0, 0, .45), inset 10px 10px 28px rgba(255, 255, 255, .3);
+}
+html[data-tema="obsidiana"] .ffanel-fundo, html[data-tema="obsidiana"] .ffanel-arco, html[data-tema="obsidiana"] .ffanel-orbita, html[data-tema="obsidiana"] .ffanel-centro { display: none; }
+html[data-tema="obsidiana"] .ffanel-roda { animation: none; }
+html[data-tema="obsidiana"] .ffhero-anel text { font-size: 15px; font-weight: 700; fill: #fff; }
+html[data-tema="obsidiana"] .ffhero-compacto .ffhero-anel { width: 3.4rem; height: 3.4rem; box-shadow: 0 0 24px rgba(139, 92, 246, .45); }
+/* meses: o mês escolhido em Unbounded, sem pílula branca */
+html[data-tema="obsidiana"] .month-switcher.ffmeses > .ffmeses-atual { background: transparent; color: var(--foreground); font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: .98rem; letter-spacing: -.03em; padding: .45rem .5rem; }
+/* frase do Jarvis numa cápsula com a borda em gradiente */
+html[data-tema="obsidiana"] .ffblocos .ffdica {
+  border-radius: 999px; border: 1px solid transparent; padding: .7rem .9rem .7rem .7rem;
+  background: linear-gradient(rgba(16, 16, 24, .94), rgba(16, 16, 24, .94)) padding-box, linear-gradient(90deg, #00f0ff, #8b5cf6, #ec4899) border-box;
+}
+html[data-tema="obsidiana"] .ffdica-robo { border-radius: 50%; }
+html[data-tema="obsidiana"] .ffbloco-val { font-weight: 700; letter-spacing: -.04em; }
+html[data-tema="obsidiana"] .ffbloco-rot, html[data-tema="obsidiana"] .ffrotulo { font-weight: 800; }
+/* ícones das categorias em esferas (a cor do ícone passa à esfera; o símbolo fica branco) */
+html[data-tema="obsidiana"] .transaction-icon { border-radius: 50%; border: 0; background: radial-gradient(circle at 30% 30%, color-mix(in srgb, currentColor 65%, #fff), currentColor 55%, color-mix(in srgb, currentColor 55%, #000)); box-shadow: 0 6px 14px -5px currentColor; }
+html[data-tema="obsidiana"] .transaction-icon svg { color: #fff; }
+html[data-tema="obsidiana"] .ffcat-ic { border-radius: 50%; color: #fff; background: radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--c) 65%, #fff), var(--c) 55%, color-mix(in srgb, var(--c) 55%, #000)); }
+html[data-tema="obsidiana"] .ffdia .ffponto { box-shadow: 0 0 0 .25rem var(--background), 0 0 10px currentColor; }
+/* doca em cápsula; o ícone ativo brilha (sem o traço) */
+html[data-tema="obsidiana"] .bottom-nav { border-radius: 999px; background: rgba(18, 18, 26, .88); border-color: rgba(255, 255, 255, .12); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), 0 20px 40px rgba(0, 0, 0, .6); }
+html[data-tema="obsidiana"] .bottom-nav .nav-item-active svg { color: #fff; filter: drop-shadow(0 0 8px rgba(125, 249, 255, .85)); }
+html[data-tema="obsidiana"] .bottom-nav .nav-item-active:before { display: none; }
+/* folha de registo: vidro mais fechado, valor em Unbounded, Guardar em cápsula */
+html[data-tema="obsidiana"] .fffolha.ffregisto { background: rgba(14, 14, 20, .97); border-color: rgba(255, 255, 255, .16); border-radius: 2rem 2rem 0 0; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18); }
+html[data-tema="obsidiana"] .ffregisto-form .ffvalor input { font-weight: 700; letter-spacing: -.05em; font-size: 2.6rem; }
+html[data-tema="obsidiana"] .ffregisto-rodape .ffguardar { border-radius: 999px; }
+html[data-tema="obsidiana"] .ffchip-on, html[data-tema="obsidiana"] .segmented .ffseg-pilula { background: #fff; }
+html[data-tema="obsidiana"] .bar-chart i { background: linear-gradient(to top, #8b5cf6, #00f0ff); }
+html[data-tema="obsidiana"] .calendar-day-active { box-shadow: inset 0 0 0 2px #fff, 0 0 16px rgba(255, 255, 255, .5) !important; }
+
 /* Calendário: dia escolhido com as cores do tema (o mapa de calor é igual em todos) */
 html[data-tema="aurora"] .calendar-day-active { background: linear-gradient(135deg, #22d3ee, #10b981 60%, #3b82f6) !important; box-shadow: 0 0 16px rgba(16, 185, 129, .6) !important; }
 html[data-tema="por-do-sol"] .calendar-day-active { background: linear-gradient(135deg, #fbbf24, #fb923c 55%, #f43f5e) !important; box-shadow: 0 0 16px rgba(251, 146, 60, .6) !important; }
@@ -118,6 +188,10 @@ html[data-tema="dourado"] .calendar-day-active { background: linear-gradient(135
 .fftema-dourado i { background: conic-gradient(#8a6d1d, #f5d77a, #d4af37, #8a6d1d); }
 .fftema-oceano i { background: conic-gradient(#38bdf8, #22d3ee, #2563eb, #a5f3fc, #38bdf8); }
 .fftema-floresta i { background: conic-gradient(#84cc16, #22c55e, #14b8a6, #bef264, #84cc16); }
+.fftema-obsidiana i { background: radial-gradient(circle at 35% 30%, #7df9ff, #8b5cf6 50%, #ec4899); }
+.fftema-obsidiana .fftema-tela { background: radial-gradient(60% 50% at 20% 20%, rgba(139, 92, 246, .7), transparent 70%), radial-gradient(50% 40% at 90% 85%, rgba(236, 72, 153, .6), transparent 70%), linear-gradient(160deg, #0c0c12, #050507); }
+.fftema-obsidiana .fftema-tela i { background: radial-gradient(circle at 35% 30%, #7df9ff, #8b5cf6 50%, #ec4899); box-shadow: 0 0 10px rgba(139, 92, 246, .7); }
+.fftema-obsidiana strong { font-family: 'Unbounded', sans-serif; font-size: .74rem; letter-spacing: -.02em; }
 .fftema-oceano strong { font-family: 'Outfit', sans-serif; } .fftema-floresta strong { font-family: 'Playfair Display', serif; }
 .fftema-aurora strong { font-family: 'Outfit', sans-serif; } .fftema-por-do-sol strong { font-family: 'Nunito', sans-serif; } .fftema-dourado strong { font-family: 'Playfair Display', serif; }
 
