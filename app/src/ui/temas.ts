@@ -9,6 +9,7 @@ export const TEMAS = [
   { id: 'dourado', nome: 'Noite dourada', descricao: 'Preto e dourado, números em serifa' },
   { id: 'oceano', nome: 'Oceano', descricao: 'Mar profundo, azuis e água-marinha' },
   { id: 'floresta', nome: 'Floresta', descricao: 'Verdes de pinhal e musgo, títulos em serifa' },
+  { id: 'obsidiana', nome: 'Obsidiana', descricao: 'Vidro escuro, cor líquida e números gigantes' },
 ] as const;
 
 export type Tema = (typeof TEMAS)[number]['id'];
@@ -28,7 +29,7 @@ export function aplicarTema(tema: Tema | null): void {
 
 /** Cor da barra de estado do Android em cada tema (a do fundo). */
 export const COR_DA_BARRA: Record<Tema, string> = {
-  cosmico: '#05091F', aurora: '#03141c', 'por-do-sol': '#1c0816', dourado: '#0b0a08', oceano: '#04101f', floresta: '#06120a',
+  cosmico: '#05091F', aurora: '#03141c', 'por-do-sol': '#1c0816', dourado: '#0b0a08', oceano: '#04101f', floresta: '#06120a', obsidiana: '#050507',
 };
 
 /**

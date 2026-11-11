@@ -18,7 +18,7 @@ async def t_escolher_tema(app):
     p = app.page
     await aparencia(app)
     nomes = await p.evaluate("[...document.querySelectorAll('.fftema strong')].map(e=>e.textContent)")
-    verificar(nomes == ['Cósmico', 'Aurora', 'Pôr do sol', 'Noite dourada', 'Oceano', 'Floresta'], f'temas: {nomes}')
+    verificar(nomes == ['Cósmico', 'Aurora', 'Pôr do sol', 'Noite dourada', 'Oceano', 'Floresta', 'Obsidiana'], f'temas: {nomes}')
     verificar(await p.query_selector('.accent-options'), 'no Cósmico devia aparecer a cor de destaque')
     await p.click('.fftema-aurora'); await p.wait_for_timeout(400)
     verificar(await p.evaluate(TEMA) == 'aurora', 'o tema não foi aplicado')
@@ -49,7 +49,7 @@ async def t_temas_oceano_e_floresta(app):
     await app.abrir({'transactions': []})
     p = app.page
     await aparencia(app)
-    for tema, letra, titulo in [('oceano', 'Manrope', 'Outfit'), ('floresta', 'Nunito', 'Playfair Display')]:
+    for tema, letra, titulo in [('oceano', 'Manrope', 'Outfit'), ('floresta', 'Nunito', 'Playfair Display'), ('obsidiana', 'Manrope', 'Unbounded')]:
         await p.click(f'.fftema-{tema}'); await p.wait_for_timeout(400)
         verificar(await p.evaluate(TEMA) == tema, f'o tema {tema} não foi aplicado')
         fonte = await p.evaluate("getComputedStyle(document.body).fontFamily")
@@ -60,7 +60,7 @@ async def t_temas_oceano_e_floresta(app):
         fundo = await p.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--background')")
         verificar(fundo.strip() and 'oklch' in fundo, f'{tema}: cores próprias {fundo}')
     dados = json.loads(await p.evaluate("P=>localStorage.getItem(P+'v3')", PREFIXO))
-    verificar(dados['appearance'].get('theme') == 'floresta', f"não gravou: {dados['appearance']}")
+    verificar(dados['appearance'].get('theme') == 'obsidiana', f"não gravou: {dados['appearance']}")
     verificar(not app.erros, f'erros: {app.erros}')
 
 
@@ -113,3 +113,22 @@ async def t_animacoes_leves_param_decoracoes(app):
     p = app.page
     it = await p.evaluate("(()=>{const e=document.querySelector('.ffanel-roda, .ffhero-ring');return e?getComputedStyle(e).animationIterationCount:'sem'})()")
     verificar(it in ('1', 'sem'), f'decoração ainda anima sem fim: {it}')
+
+
+async def t_tema_obsidiana(app):
+    """Obsidiana líquida (v2.68.0): vidro escuro, orbe no rendimento, doca em cápsula, Unbounded nos números; o «+» não muda."""
+    await app.abrir({'appearance': {'theme': 'obsidiana'}, 'salaries': {'2026': {'A': [0, 0, 0, 0, 0, 0, 0, 1500, 1500, 0, 0, 0]}},
+                     'transactions': [{'id': 1, 'title': 'Padaria', 'amount': -3, 'date': '2026-09-20', 'detail': '20 setembro · Alimentação', 'movementType': 'expense'}]})
+    p = app.page
+    verificar(await p.evaluate(TEMA) == 'obsidiana', 'o tema não foi aplicado ao abrir')
+    verificar(await p.evaluate("document.fonts.load('16px Unbounded').then(l=>l.length>0)"), 'a letra Unbounded não carregou (offline)')
+    valor = await p.evaluate("getComputedStyle(document.querySelector('.ffhero-valor')).fontFamily")
+    verificar('Unbounded' in valor, f'o rendimento devia estar em Unbounded: {valor}')
+    verificar(await p.evaluate("getComputedStyle(document.querySelector('.ffhero-anel')).borderRadius") == '50%', 'o anel devia ser uma orbe')
+    verificar(await p.evaluate("getComputedStyle(document.querySelector('.ffanel-arco')).display") == 'none', 'o arco do anel devia estar escondido na orbe')
+    verificar(await p.evaluate("getComputedStyle(document.querySelector('.transaction-icon')).borderRadius") == '50%', 'os ícones das categorias deviam ser esferas')
+    verificar(await p.evaluate("getComputedStyle(document.querySelector('.bottom-nav')).borderRadius") == '999px', 'a doca devia ser uma cápsula')
+    verificar(await p.evaluate("document.querySelector('meta[name=theme-color]').content") == '#050507', 'a barra de estado devia ficar com o fundo do tema')
+    mais = await p.evaluate("getComputedStyle(document.querySelector('.add-button.ffplus'), '::before').backgroundImage")
+    verificar('#00f0ff' in mais or 'rgb(0, 240, 255)' in mais, f'o «+» tem de ficar igual ao Cósmico: {mais}')
+    verificar(not app.erros, f'erros: {app.erros}')
