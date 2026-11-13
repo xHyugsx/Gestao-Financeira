@@ -168,6 +168,7 @@ html[data-tema="obsidiana"] .ffregisto-form .ffvalor input { font-weight: 700; l
 html[data-tema="obsidiana"] .ffregisto-rodape .ffguardar { border-radius: 999px; }
 html[data-tema="obsidiana"] .ffchip-on, html[data-tema="obsidiana"] .segmented .ffseg-pilula { background: #fff; }
 html[data-tema="obsidiana"] .bar-chart i { background: linear-gradient(to top, #8b5cf6, #00f0ff); }
+html[data-tema="obsidiana"] .ffdonut-lado b { font-size: .7rem; letter-spacing: -.02em; } /* a Unbounded é larga: percentagens ao lado do donut um pouco mais pequenas */
 html[data-tema="obsidiana"] .calendar-day-active { box-shadow: inset 0 0 0 2px #fff, 0 0 16px rgba(255, 255, 255, .5) !important; }
 
 /* Calendário: dia escolhido com as cores do tema (o mapa de calor é igual em todos) */

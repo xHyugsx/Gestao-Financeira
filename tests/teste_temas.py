@@ -132,3 +132,22 @@ async def t_tema_obsidiana(app):
     mais = await p.evaluate("getComputedStyle(document.querySelector('.add-button.ffplus'), '::before').backgroundImage")
     verificar('#00f0ff' in mais or 'rgb(0, 240, 255)' in mais, f'o «+» tem de ficar igual ao Cósmico: {mais}')
     verificar(not app.erros, f'erros: {app.erros}')
+
+
+async def t_analise_cabe_no_ecra_estreito(app):
+    """v2.68.1: num telemóvel de 360 px a Análise não pode ficar mais larga que o ecrã (a legenda ao lado do donut empurrava a página)."""
+    p = app.page
+    await p.set_viewport_size({'width': 360, 'height': 780})
+    movs = [{'id': i, 'title': t, 'amount': -v, 'date': f'2026-09-{d:02d}', 'detail': f'{d} setembro · {c}', 'movementType': 'expense'}
+            for i, (t, v, d, c) in enumerate([('Continente', 88.1, 2, 'Alimentação'), ('Galp', 58.4, 7, 'Combustível'), ('Condomínio', 45, 1, 'Habitação'),
+                                               ('Restaurante', 36, 19, 'Restauração'), ('Farmácia', 12, 14, 'Saúde')], 1)]
+    for tema in ('cosmico', 'obsidiana'):
+        await app.abrir({'appearance': {'theme': tema}, 'transactions': movs})
+        await p.evaluate("window.ffGoPg('analise')"); await p.wait_for_timeout(900)
+        medidas = await p.evaluate("""(() => { const m = document.querySelector('.page-current main'); const g = document.querySelector('.page-current .chart-panel');
+          return { ecra: innerWidth, main: m.clientWidth, conteudo: m.scrollWidth, painel: Math.round(g.getBoundingClientRect().right), pagina: document.documentElement.scrollWidth }; })()""")
+        verificar(medidas['conteudo'] <= medidas['main'] + 1, f"{tema}: a Análise ficou mais larga que a coluna: {medidas}")
+        verificar(medidas['painel'] <= medidas['ecra'] and medidas['pagina'] <= medidas['ecra'], f"{tema}: o painel do gráfico sai do ecrã: {medidas}")
+        legenda = await p.evaluate("[...document.querySelectorAll('.page-current .ffdonut-lado li')].map(li => li.getBoundingClientRect().right <= li.parentElement.getBoundingClientRect().right + 1).every(Boolean)")
+        verificar(legenda, f'{tema}: a legenda do donut sai do painel')
+    await p.set_viewport_size({'width': 390, 'height': 844})
