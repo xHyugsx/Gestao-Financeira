@@ -187,9 +187,12 @@ html[data-tema="dourado"] .ffresumo-valor, html[data-tema="floresta"] .ffresumo-
 
 /* Circular com a legenda ao lado (sem setas) */
 .chart-panel { border-radius: 1.5rem; background: var(--orb-sup); border-color: var(--orb-linha); }
+/* v2.68.1: a coluna das páginas e dos painéis não pode crescer além do ecrã (como a .finance-grid): a legenda ao lado do donut
+   tinha uma largura mínima que, com letras mais largas (Obsidiana) num telemóvel de 360 px, empurrava a Análise para fora do ecrã */
+.detail-view, .chart-panel { grid-template-columns: minmax(0, 1fr); }
 .donut-wrap { aspect-ratio: auto; max-width: none; width: 100%; display: flex; align-items: center; gap: .9rem; }
-.donut-wrap .donut { position: relative; top: auto; left: auto; width: 9.6rem; flex: none; }
-.ffdonut-lado { flex: 1; min-width: 0; list-style: none; margin: 0; padding: 0; display: grid; gap: .45rem; animation: ffaparecer .45s ease .3s backwards; }
+.donut-wrap .donut { position: relative; top: auto; left: auto; width: min(9.6rem, 38vw); flex: none; }
+.ffdonut-lado { flex: 1; min-width: 0; list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: .45rem; animation: ffaparecer .45s ease .3s backwards; }
 .ffdonut-lado li { display: flex; align-items: center; gap: .45rem; font-size: .76rem; }
 .ffdonut-lado i { width: .6rem; height: .6rem; border-radius: .2rem; flex: none; }
 .ffdonut-lado span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
