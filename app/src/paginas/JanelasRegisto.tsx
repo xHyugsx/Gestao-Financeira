@@ -11,7 +11,7 @@ import { EscolhaData, Escolhas, Rotulo, ValorGrande, valorAltoPorConfirmar } fro
 import { Icone } from '../ui/Icone';
 import { animais } from '../veterinario/animais';
 
-const CATEGORIAS_VET = ['Consultas', 'Vacinas', 'Medicação', 'Exames', 'Cirurgia', 'Outros'];
+const CATEGORIAS_VET = ['Consultas', 'Vacinas', 'Medicação', 'Comida', 'Exames', 'Cirurgia', 'Outros'];
 
 function Guardar({ rotulo }: { rotulo: string }) {
   return <div className="ffregisto-rodape"><Botao type="submit" className="ffguardar">{rotulo}</Botao></div>;
@@ -89,7 +89,7 @@ export function NovaDespesaVet({ aberto, aoMudar, aoGuardar, animal, contas = []
   const [conta, setConta] = useState('principal');
   useEffect(() => { if (aberto) { setPet(animal || lista[0]!); setCat('Consultas'); setConta('principal'); } }, [aberto]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <Dialogo folha aberto={aberto} aoMudar={aoMudar} className="movement-dialog ffregisto" titulo="Nova despesa veterinária" descricao="Regista uma consulta, medicação ou outro cuidado.">
+    <Dialogo folha aberto={aberto} aoMudar={aoMudar} className="movement-dialog ffregisto" titulo="Nova despesa veterinária" descricao="Regista uma consulta, medicação, comida ou outro cuidado.">
       <form className="movement-form ffregisto-form" onSubmit={submeter(novaDespesaVet, aoGuardar)}>
         <ValorGrande tipo="expense" required />
         <label className="fftitulo"><Icone nome="pencil" /><span className="sr-only">Descrição</span><input name="title" placeholder="Ex.: consulta, medicação..." autoComplete="off" /></label>

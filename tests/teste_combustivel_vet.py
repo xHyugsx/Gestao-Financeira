@@ -42,6 +42,19 @@ async def t_registar_despesa_veterinaria(app):
     verificar(await p.query_selector('.page-current .vet-month-list [aria-label="Editar Despesa veterinária"]'), 'não aparece na lista do mês')
 
 
+
+async def t_despesa_veterinaria_comida(app):
+    await app.abrir(ANIMAIS)
+    p = app.page
+    await ir(app, 'veterinario')
+    await p.click('[aria-label="Adicionar despesa veterinária"]'); await p.wait_for_timeout(500)
+    await app.escolher('vetCategory', 'Comida', '[role=dialog]')
+    await p.fill('[role=dialog] input[name=title]', 'Ração')
+    await p.fill('[role=dialog] input[name=amount]', '42')
+    await p.click('[role=dialog] button[type=submit]'); await p.wait_for_timeout(500)
+    m = (await dados(app))['transactions'][0]
+    verificar(m['vetCategory'] == 'Comida' and m['detail'].endswith('· Comida') and m['amount'] == -42, f'despesa de comida: {m}')
+
 async def t_fotografia_do_animal(app):
     await app.abrir(ANIMAIS)
     p = app.page
